@@ -1,0 +1,130 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+.header__container {
+  background: rgba(15, 15, 19, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(236, 72, 153, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.header__content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header__logo {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.header__nav {
+  display: none;
+}
+
+.header__nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header__link {
+  color: #d1d5db;
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.header__link:hover {
+  color: #ec4899;
+}
+
+.header__link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background: linear-gradient(to right, #ec4899, #db2777);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.header__link:hover::after {
+  width: 100%;
+}
+
+.header__button {
+  padding: 0.5rem 1.5rem;
+  color: white;
+  border-radius: 0.375rem;
+  background: linear-gradient(to right, #ec4899, #db2777);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.header__button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: all 0.5s ease;
+}
+
+.header__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.header__button:hover::before {
+  left: 100%;
+}
+
+.header__mobile-toggle {
+  display: block;
+  color: white;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .header__nav {
+    display: flex;
+  }
+
+  .header__mobile-toggle {
+    display: none;
+  }
+}
