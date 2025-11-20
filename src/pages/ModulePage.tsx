@@ -1,13 +1,28 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, ChevronUp, MoreVertical } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getModuleWithLessons } from '../services/trainingService';
 import type { ModuleWithLessons } from '../types/training';
 
+// Structure hiérarchique basée sur les images
+// Chaque module peut avoir des sections, et chaque section peut avoir des leçons
+interface Section {
+  id: string;
+  title: string;
+  lessons: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    is_preview?: boolean;
+  }>;
+}
+
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
     queryKey: ['module-with-lessons', moduleId],
@@ -15,23 +30,77 @@ export default function ModulePage() {
     queryFn: () => getModuleWithLessons(moduleId!),
   });
 
-  const errorMessage = useMemo(() => {
-    if (!moduleId) {
-      return 'Module ID manquant';
+  // Organiser les leçons en sections basées sur leur position
+  // Les sections sont créées en groupant les leçons par groupes de 6 (ou selon la logique métier)
+  const sections = useMemo<Section[]>(() => {
+    if (!data?.lessons || data.lessons.length === 0) return [];
+
+    const lessons = data.lessons.map(lesson => ({
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      is_preview: lesson.is_preview,
+      position: lesson.position,
+    }));
+
+    // Organiser en sections : 
+    // - Si moins de 6 leçons, une seule section
+    // - Sinon, créer des sections de ~6 leçons chacune
+    // Pour "Etape 2 - Les Bases en ICT", on crée 2 sections basées sur les positions
+    const sectionSize = 6;
+    const sectionsList: Section[] = [];
+
+    if (lessons.length <= sectionSize) {
+      // Une seule section
+      sectionsList.push({
+        id: 'section-1',
+        title: 'La Fondation',
+        lessons: lessons,
+      });
+    } else {
+      // Plusieurs sections
+      const firstSection = lessons.slice(0, sectionSize);
+      const secondSection = lessons.slice(sectionSize);
+
+      sectionsList.push({
+        id: 'section-1',
+        title: 'La Fondation',
+        lessons: firstSection,
+      });
+
+      if (secondSection.length > 0) {
+        sectionsList.push({
+          id: 'section-2',
+          title: 'Concepts avancés',
+          lessons: secondSection,
+        });
+      }
     }
 
-    if (isError) {
-      return 'Erreur lors du chargement du module';
-    }
+    return sectionsList;
+  }, [data?.lessons]);
 
-    if (!data) {
-      return 'Module introuvable';
-    }
+  // Calculer la progression (simplifié pour l'instant)
+  const progress = useMemo(() => {
+    if (!data?.lessons || data.lessons.length === 0) return 0;
+    // Pour l'instant, on retourne 0% - à implémenter avec le suivi de progression
+    return 0;
+  }, [data?.lessons]);
 
-    return null;
-  }, [data, isError, moduleId]);
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
 
   const handleLessonClick = (lessonId: string) => {
+    setSelectedLessonId(lessonId);
     navigate(`/app/modules/${moduleId}/lessons/${lessonId}`);
   };
 
@@ -46,11 +115,11 @@ export default function ModulePage() {
     );
   }
 
-  if (errorMessage || !data) {
+  if (isError || !data) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center px-4">
         <div className="text-center space-y-6 max-w-md">
-          <p className="text-xl text-gray-300">{errorMessage}</p>
+          <p className="text-xl text-gray-300">Module introuvable</p>
           <button
             onClick={() => navigate('/app')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 hover:border-pink-500/50 transition font-medium text-pink-300 hover:text-pink-200"
@@ -63,7 +132,7 @@ export default function ModulePage() {
     );
   }
 
-  const { module, lessons } = data;
+  const { module } = data;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white py-8 px-4">
@@ -77,89 +146,103 @@ export default function ModulePage() {
           Retour aux modules
         </button>
 
-        {/* En-tête du module */}
+        {/* En-tête du module avec barre de progression */}
         <header className="space-y-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <h1 className="text-4xl font-bold">{module.title}</h1>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                module.is_active
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-              }`}
-            >
-              {module.is_active ? 'Actif' : 'Inactif'}
-            </span>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <h1 className="text-4xl font-bold">{module.title}</h1>
+              <button className="p-2 hover:bg-white/5 rounded-lg transition">
+                <MoreVertical className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
           </div>
-          <p className="text-gray-400">
-            {lessons.length} {lessons.length === 1 ? 'leçon' : 'leçons'}
-          </p>
+          
+          {/* Barre de progression */}
+          <div className="space-y-2">
+            <div className="w-full bg-gray-700/30 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-pink-500 to-pink-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-sm text-gray-400">{progress}% complété</p>
+          </div>
         </header>
 
-        {/* Description */}
-        {module.description && (
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold">À propos de ce module</h2>
-            <p className="text-gray-300 leading-relaxed">{module.description}</p>
-          </section>
-        )}
+        {/* Liste des sections avec leçons */}
+        <section className="space-y-2">
+          {sections.map((section, sectionIndex) => {
+            const isExpanded = expandedSections.has(section.id);
+            const isFirstSection = sectionIndex === 0;
+            
+            // Expand toutes les sections par défaut (comme dans l'image)
+            if (expandedSections.size === 0 && sectionIndex === 0) {
+              setTimeout(() => {
+                setExpandedSections(new Set(sections.map(s => s.id)));
+              }, 0);
+            }
 
-        {/* Liste des leçons */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Leçons</h2>
-          {lessons.length === 0 ? (
-            <p className="text-gray-400">Aucune leçon disponible pour ce module.</p>
-          ) : (
-            <div className="space-y-3">
-              {lessons.map((lesson, index) => (
-                <div
-                  key={lesson.id}
-                  onClick={() => handleLessonClick(lesson.id)}
-                  className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/50 via-slate-950/50 to-black border border-white/5 hover:border-pink-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/20 cursor-pointer"
+            return (
+              <div
+                key={section.id}
+                className="bg-white/5 border border-white/10 rounded-lg overflow-hidden"
+              >
+                {/* En-tête de section */}
+                <button
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left"
                 >
-                  {/* Glow effect au hover */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500/0 via-pink-500/20 to-pink-500/0 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
-
-                  <div className="relative p-6 flex items-center gap-4">
-                    {/* Numéro de leçon */}
-                    <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-800/20 border border-pink-500/30 flex items-center justify-center text-lg font-bold text-pink-300">
-                      {index + 1}
-                    </div>
-
-                    {/* Contenu */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="text-lg font-semibold text-white group-hover:text-pink-200 transition-colors">
-                          {lesson.title}
-                        </h3>
-                        {lesson.is_preview && (
-                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-                            Preview
-                          </span>
-                        )}
-                      </div>
-                      {lesson.description && (
-                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">
-                          {lesson.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Icône play */}
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-pink-500/20 group-hover:bg-pink-500/30 border border-pink-500/30 flex items-center justify-center transition-colors">
-                        <Play className="w-5 h-5 text-pink-300" fill="currentColor" />
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-semibold text-white">
+                      {sectionIndex + 1}. {section.title}
+                    </span>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                  <div className="flex items-center gap-2">
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Leçons de la section */}
+                {isExpanded && (
+                  <div className="border-t border-white/10">
+                    {section.lessons.length === 0 ? (
+                      <p className="p-4 text-gray-400 text-sm">Aucune leçon dans cette section.</p>
+                    ) : (
+                      <div className="divide-y divide-white/10">
+                        {section.lessons.map((lesson, lessonIndex) => {
+                          const isSelected = selectedLessonId === lesson.id;
+                          
+                          return (
+                            <button
+                              key={lesson.id}
+                              onClick={() => handleLessonClick(lesson.id)}
+                              className={`w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-colors text-left ${
+                                isSelected ? 'bg-pink-500/10 border-l-2 border-pink-500' : ''
+                              }`}
+                            >
+                              <span className="text-sm font-medium text-gray-300 min-w-[2rem]">
+                                {lessonIndex + 1}.
+                              </span>
+                              <span className="flex-1 text-white font-medium">
+                                {lesson.title}
+                              </span>
+                              <Play className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </section>
       </div>
     </div>
   );
 }
-
-
