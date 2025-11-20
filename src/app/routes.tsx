@@ -21,7 +21,6 @@ import ProgressPage from '../pages/ProgressPage';
 import ChallengesPage from '../pages/ChallengesPage';
 import EventsPage from '../pages/EventsPage';
 import SettingsPage from '../pages/SettingsPage';
-import TrackRecord from '../pages/TrackRecord';
 import Testimonials from '../pages/Testimonials';
 import PricingPage from '../pages/PricingPage';
 import SuccessPage from '../pages/SuccessPage';
@@ -101,7 +100,6 @@ export const dashboardRoutes: DashboardRouteConfig[] = [
   { path: '/app/settings', element: <SettingsPage /> },
   { path: '/app/modules/:moduleId', element: <ModulePage /> },
   { path: '/app/modules/:moduleId/lessons/:lessonId', element: <LessonPlayerPage /> },
-  { path: '/track-record', element: <TrackRecord /> },
   { path: '/testimonials', element: <Testimonials /> },
   { path: '/admin', element: <AdminLayout activeSection="dashboard"><DashboardPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/users', element: <AdminLayout activeSection="users"><UsersPage /></AdminLayout>, allowedRoles: ['admin'] },
