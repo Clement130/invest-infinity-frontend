@@ -9,6 +9,7 @@ import {
   CreditCard,
   BarChart3,
   FileText,
+  Eye,
   ChevronDown,
   LogOut,
 } from 'lucide-react';
@@ -32,6 +33,7 @@ export default function AdminLayout({ children, activeSection = 'dashboard' }: A
     { id: 'paiements', label: 'Paiements', icon: CreditCard, path: '/admin/paiements' },
     { id: 'analytiques', label: 'Analytiques', icon: BarChart3, path: '/admin/analytiques' },
     { id: 'contenu', label: 'Contenu', icon: FileText, path: '/admin/contenu' },
+    { id: 'preview', label: 'Vue Client', icon: Eye, path: '/admin/preview' },
   ];
 
   const handleMenuClick = (path: string) => {
