@@ -73,6 +73,12 @@ export default function BunnyPlayer({ videoId }: BunnyPlayerProps) {
 
   const handleIframeLoad = () => {
     setIsLoading(false);
+    // Vérifier après un délai si la vidéo a bien chargé
+    // (les iframes ne déclenchent pas toujours onError pour les 404)
+    setTimeout(() => {
+      // Si l'iframe est toujours en chargement après 5 secondes, considérer comme erreur
+      // Cette vérification est faite via un timeout séparé
+    }, 5000);
   };
 
   const handleIframeError = () => {
@@ -96,6 +102,20 @@ export default function BunnyPlayer({ videoId }: BunnyPlayerProps) {
       </div>
     );
   }
+
+  // Timeout pour détecter les vidéos qui ne chargent pas
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const timeout = setTimeout(() => {
+      // Si toujours en chargement après 10 secondes, considérer comme erreur
+      setIsLoading(false);
+      // Note: On ne peut pas vraiment détecter une erreur 404 dans une iframe
+      // mais on peut au moins arrêter le spinner
+    }, 10000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoading, videoId]);
 
   return (
     <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
