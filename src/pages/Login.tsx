@@ -51,12 +51,13 @@ export default function Login() {
 
 
     try {
-
+      console.log('[Login] Tentative de connexion pour:', email);
       await signIn(email, password);
+      console.log('[Login] Connexion réussie');
 
-      // Si le signIn réussit, on redirige vers l'espace client
-
-      navigate('/app', { replace: true });
+      // Attendre un peu que le profil se charge avant de rediriger
+      // Le useEffect dans Login redirigera automatiquement quand user sera disponible
+      // On ne force pas la redirection ici pour éviter les conflits
 
     } catch (err: any) {
 

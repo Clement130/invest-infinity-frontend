@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { X, Mail, User, Loader2 } from 'lucide-react';
+import { X, Mail, User, Loader2, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CustomMuiTelInput } from './CustomMuiTelInput';
 import { matchIsValidTel } from 'mui-tel-input';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
+import { leadApi } from '../services/leadApi';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'login' | 'register';
+  redirectTo?: 'client' | 'admin';
 }
 
 interface FormData {
@@ -22,15 +26,21 @@ interface FormErrors {
   budget?: string;
 }
 
-export default function AuthModal({ isOpen, onClose, type }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client' }: AuthModalProps) {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [telTouched, setTelTouched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     prenom: '',
     email: '',
     phone: '',
     budget: '',
+  });
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -93,37 +103,88 @@ export default function AuthModal({ isOpen, onClose, type }: AuthModalProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    
+    if (!loginData.email || !loginData.password) {
+      setLoginError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signIn(loginData.email, loginData.password);
+      
+      // Attendre un peu que le profil se charge
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Récupérer l'utilisateur actuel
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setLoginError('Erreur lors de la connexion');
+        return;
+      }
+
+      // Vérifier si l'utilisateur est admin
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', {
+        uid: user.id,
+      });
+
+      if (adminError) {
+        console.error('Erreur lors de la vérification admin:', adminError);
+      }
+
+      onClose();
+      
+      // Rediriger selon le contexte
+      if (redirectTo === 'admin') {
+        if (isAdmin) {
+          navigate('/admin');
+        } else {
+          // Afficher un message d'erreur et rediriger vers la page d'accueil
+          alert('Accès réservé aux administrateurs');
+          navigate('/');
+        }
+      } else {
+        // Redirection vers /app pour les clients
+        navigate('/app');
+      }
+    } catch (error: any) {
+      console.error('Erreur de connexion:', error);
+      setLoginError(error?.message || 'Erreur lors de la connexion. Vérifiez vos identifiants.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
-      const requestBody = {
+      await leadApi.registerLead({
         boardId: 9406097805,
         prenom: formData.prenom,
         email: formData.email,
         telephone: formData.phone,
         statut: 'Lead',
-        capital: formData.budget,
+        capital: parseInt(formData.budget, 10),
         newsLetter: true,
-      };
-
-      const response = await fetch('/api/user/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
       });
 
-      if (response.ok) {
-        localStorage.setItem('userEmail', formData.email);
-        onClose();
-        navigate('/trading-account');
-      } else {
-        console.error('Erreur API:', await response.text());
-      }
+      localStorage.setItem('userEmail', formData.email);
+      onClose();
+      navigate('/confirmation');
     } catch (error) {
       console.error('Erreur lors de la requête :', error);
+      setErrors((prev) => ({
+        ...prev,
+        budget:
+          'Impossible de finaliser votre inscription pour le moment. Merci de réessayer plus tard.',
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -144,12 +205,83 @@ export default function AuthModal({ isOpen, onClose, type }: AuthModalProps) {
           </button>
 
           <div className="p-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Accès Discord à la formation</h2>
-            <p className="text-gray-400 mb-6">
-              Utilise tes coordonnées pour recevoir tes accès 🔐
-            </p>
+            {type === 'login' ? (
+              <>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {redirectTo === 'admin' ? 'Connexion Admin' : 'Connexion'}
+                </h2>
+                <p className="text-gray-400 mb-6">
+                  {redirectTo === 'admin' 
+                    ? 'Accès réservé aux administrateurs' 
+                    : 'Connecte-toi à ton espace client'}
+                </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleLogin} className="space-y-6">
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="email"
+                        value={loginData.email}
+                        onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                        required
+                        disabled={isLoading}
+                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 px-4 pl-10 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="votre@email.com"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mot de passe */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="password"
+                        value={loginData.password}
+                        onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                        required
+                        disabled={isLoading}
+                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 px-4 pl-10 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="Votre mot de passe"
+                      />
+                    </div>
+                  </div>
+
+                  {loginError && (
+                    <div className="rounded-lg border border-red-500/40 bg-red-500/10 text-red-100 text-sm px-3 py-2">
+                      {loginError}
+                    </div>
+                  )}
+
+                  {/* Bouton */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg py-3 px-4 font-medium hover:from-pink-500 hover:to-pink-800 transition-all transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Connexion en cours...
+                      </>
+                    ) : (
+                      'Se connecter'
+                    )}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-white mb-2">Accès Discord à la formation</h2>
+                <p className="text-gray-400 mb-6">
+                  Utilise tes coordonnées pour recevoir tes accès 🔐
+                </p>
+
+                <form onSubmit={handleRegister} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Prénom */}
                 <div>
@@ -259,6 +391,8 @@ export default function AuthModal({ isOpen, onClose, type }: AuthModalProps) {
                 )}
               </button>
             </form>
+              </>
+            )}
           </div>
         </div>
       </div>

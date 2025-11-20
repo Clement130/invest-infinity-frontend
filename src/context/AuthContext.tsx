@@ -3,98 +3,198 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import type { UserRole } from '../types/training';
+import type { Tables } from '../types/supabase';
+
+type ProfileRow = Tables<'profiles'>;
 
 interface AuthContextType {
   user: User | null;
+  profile: ProfileRow | null;
   role: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
-
-type ProfileRow = {
-  role: UserRole | null;
-  user_id?: string;
-};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  async function loadProfileForSession(sessionUser: User | null) {
-    if (!sessionUser) {
-      setRole(null);
-      return;
+  const loadProfile = useCallback(async (userId: string) => {
+    try {
+      console.log('[AuthContext] Chargement du profil pour userId:', userId);
+      
+      // Timeout de 5 secondes pour éviter l'attente infinie
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: chargement du profil trop long')), 5000);
+      });
+
+      const profilePromise = supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('[AuthContext] Erreur profil:', error);
+        console.error('[AuthContext] Code:', error.code, 'Message:', error.message);
+        
+        // Si le profil n'existe pas, on le crée automatiquement avec le rôle 'client' par défaut
+        if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
+          console.log('[AuthContext] Profil non trouvé, tentative de création...');
+          
+          // Récupérer l'email de l'utilisateur auth
+          const { data: authUser } = await supabase.auth.getUser();
+          if (authUser?.user?.email) {
+            const { data: newProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert({
+                id: userId,
+                email: authUser.user.email,
+                role: 'client',
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error('[AuthContext] Erreur lors de la création du profil:', createError);
+              setProfile(null);
+              return;
+            }
+
+            console.log('[AuthContext] Profil créé automatiquement:', { id: newProfile.id, email: newProfile.email, role: newProfile.role });
+            setProfile(newProfile);
+            return;
+          }
+        }
+        
+        setProfile(null);
+        return;
+      }
+
+      if (!data) {
+        console.warn('[AuthContext] Profil non trouvé (data est null)');
+        // Essayer de créer le profil si l'utilisateur auth existe
+        const { data: authUser } = await supabase.auth.getUser();
+        if (authUser?.user?.email) {
+          console.log('[AuthContext] Tentative de création du profil...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: authUser.user.email,
+              role: 'client',
+            })
+            .select()
+            .single();
+
+          if (!createError && newProfile) {
+            console.log('[AuthContext] Profil créé:', { id: newProfile.id, email: newProfile.email, role: newProfile.role });
+            setProfile(newProfile);
+            return;
+          }
+        }
+        setProfile(null);
+        return;
+      }
+
+      console.log('[AuthContext] Profil chargé:', { id: data.id, email: data.email, role: data.role });
+      setProfile(data);
+    } catch (err: any) {
+      console.error('[AuthContext] Exception lors du chargement du profil:', err);
+      if (err.message?.includes('Timeout')) {
+        console.error('[AuthContext] Timeout: le chargement du profil a pris plus de 5 secondes');
+      }
+      setProfile(null);
+    }
+  }, []);
+
+  const bootstrapSession = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase.auth.getSession();
+    const sessionUser = data.session?.user ?? null;
+    setUser(sessionUser);
+
+    if (sessionUser) {
+      await loadProfile(sessionUser.id);
+    } else {
+      setProfile(null);
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', sessionUser.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Erreur profil:', error);
-      setRole(null);
-      return;
-    }
-
-    const profile = (data ?? null) as ProfileRow | null;
-    setRole(profile?.role ?? null);
-  }
+    setLoading(false);
+  }, [loadProfile]);
 
   useEffect(() => {
-    async function init() {
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-
-      setUser(session?.user ?? null);
-      await loadProfileForSession(session?.user ?? null);
-
-      setLoading(false);
-    }
-
-    init();
+    bootstrapSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_, session) => {
-        setUser(session?.user ?? null);
-        await loadProfileForSession(session?.user ?? null);
+        const sessionUser = session?.user ?? null;
+        setUser(sessionUser);
+
+        if (sessionUser) {
+          await loadProfile(sessionUser.id);
+        } else {
+          setProfile(null);
+        }
       }
     );
 
     return () => listener?.subscription.unsubscribe();
-  }, []);
+  }, [bootstrapSession, loadProfile]);
 
-  async function signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-    setUser(data.user);
-    await loadProfileForSession(data.user);
-  }
+      setUser(data.user);
+      await loadProfile(data.user.id);
+    },
+    [loadProfile]
+  );
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
-    setRole(null);
-  }
+    setProfile(null);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (user) {
+      await loadProfile(user.id);
+    }
+  }, [loadProfile, user]);
 
   return (
     <AuthContext.Provider
-      value={{ user, role, loading, signIn, signOut }}
+      value={{
+        user,
+        profile,
+        role: profile?.role ?? null,
+        loading,
+        signIn,
+        signOut,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

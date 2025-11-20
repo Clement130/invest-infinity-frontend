@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { leadApi } from '../services/leadApi';
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -24,28 +25,18 @@ export default function Welcome() {
       return;
     }
 
-    const updateCapitalRequest = {
-      boardId: 9406097805,
-      email: userEmail,
-      capital: budget,
-    };
-
     setIsUpdating(true);
     try {
-      const response = await fetch('/api/user/updateCapital', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateCapitalRequest),
+      await leadApi.updateCapital({
+        email: userEmail,
+        capital: budgetNumber,
       });
-      if (response.ok) {
-        navigate('/trading-account');
-      } else {
-        const errText = await response.text();
-        setError(`Erreur lors de la mise à jour du capital : ${errText}`);
-      }
-    } catch (err) {
-      console.error("Erreur lors de la mise à jour du capital :", err);
-      setError("Erreur lors de la mise à jour du capital.");
+      navigate('/trading-account');
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour du capital :', err);
+      setError(
+        err?.message ?? 'Erreur lors de la mise à jour du capital. Réessaie.',
+      );
     } finally {
       setIsUpdating(false);
     }

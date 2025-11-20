@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { getModuleWithLessons, getLessonById } from '../services/trainingService';
 import type { TrainingLesson } from '../types/training';
 import BunnyPlayer from '../components/training/BunnyPlayer';
@@ -8,59 +9,29 @@ import BunnyPlayer from '../components/training/BunnyPlayer';
 export default function LessonPlayerPage() {
   const { moduleId, lessonId } = useParams<{ moduleId: string; lessonId: string }>();
   const navigate = useNavigate();
-  const [lesson, setLesson] = useState<TrainingLesson | null>(null);
-  const [allLessons, setAllLessons] = useState<TrainingLesson[]>([]);
-  const [moduleTitle, setModuleTitle] = useState<string>('Module');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadLesson = async () => {
-      if (!moduleId || !lessonId) {
-        setError('Module ID ou Lesson ID manquant');
-        setLoading(false);
-        return;
-      }
+  const moduleQuery = useQuery({
+    queryKey: ['module-with-lessons', moduleId],
+    enabled: Boolean(moduleId),
+    queryFn: () => getModuleWithLessons(moduleId!),
+  });
 
-      try {
-        setLoading(true);
-        setError(null);
+  const lessonQuery = useQuery({
+    queryKey: ['lesson', lessonId],
+    enabled: Boolean(lessonId) && !moduleQuery.data?.lessons?.find((l) => l.id === lessonId),
+    queryFn: () => getLessonById(lessonId!),
+  });
 
-        // Option 1: Charger le module avec toutes les leçons
-        const moduleData = await getModuleWithLessons(moduleId);
-        if (!moduleData) {
-          setError('Module introuvable');
-          setLoading(false);
-          return;
-        }
+  const lesson = useMemo<TrainingLesson | null>(() => {
+    if (moduleQuery.data) {
+      return moduleQuery.data.lessons.find((l) => l.id === lessonId) ?? null;
+    }
 
-        setModuleTitle(moduleData.module.title);
-        setAllLessons(moduleData.lessons);
+    return lessonQuery.data ?? null;
+  }, [lessonId, lessonQuery.data, moduleQuery.data]);
 
-        // Trouver la leçon courante
-        const currentLesson = moduleData.lessons.find((l) => l.id === lessonId);
-        if (!currentLesson) {
-          // Option 2: Essayer de charger directement la leçon
-          const directLesson = await getLessonById(lessonId);
-          if (!directLesson) {
-            setError('Leçon introuvable');
-            setLoading(false);
-            return;
-          }
-          setLesson(directLesson);
-        } else {
-          setLesson(currentLesson);
-        }
-      } catch (err) {
-        console.error('Erreur lors du chargement de la leçon:', err);
-        setError('Erreur lors du chargement de la leçon');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadLesson();
-  }, [moduleId, lessonId]);
+  const allLessons = moduleQuery.data?.lessons ?? [];
+  const moduleTitle = moduleQuery.data?.module.title ?? 'Module';
 
   const currentIndex = allLessons.findIndex((l) => l.id === lessonId);
   const previousLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
@@ -68,6 +39,11 @@ export default function LessonPlayerPage() {
     currentIndex >= 0 && currentIndex < allLessons.length - 1
       ? allLessons[currentIndex + 1]
       : null;
+
+  const isLoading = moduleQuery.isLoading || lessonQuery.isLoading;
+  const hasError =
+    !moduleId || !lessonId || moduleQuery.isError || lessonQuery.isError || (!moduleQuery.data && !lesson);
+  const errorMessage = !moduleId || !lessonId ? 'Module ID ou Lesson ID manquant' : 'Leçon introuvable';
 
   const handlePreviousLesson = () => {
     if (previousLesson && moduleId) {
@@ -81,7 +57,7 @@ export default function LessonPlayerPage() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -92,11 +68,11 @@ export default function LessonPlayerPage() {
     );
   }
 
-  if (error || !lesson) {
+  if (hasError || !lesson) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center px-4">
         <div className="text-center space-y-6 max-w-md">
-          <p className="text-xl text-gray-300">{error || 'Leçon introuvable'}</p>
+          <p className="text-xl text-gray-300">{errorMessage}</p>
           <button
             onClick={() => navigate(moduleId ? `/app/modules/${moduleId}` : '/app')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 hover:border-pink-500/50 transition font-medium text-pink-300 hover:text-pink-200"

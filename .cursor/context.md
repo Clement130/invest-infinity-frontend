@@ -2,22 +2,23 @@
 
 Project Name: Invest Infinity Training Platform
 
-Frontend: React + Vite (existing frontend built by a developer)
+Nature: LMS (formation en trading) — aucune fonctionnalité de bot ou d'automatisation de trading.
 
-Backend: Supabase (Auth, DB, Storage, RLS, Functions)
+Frontend: React + Vite (base existante à étendre proprement)
 
-Payments: Stripe
+Backend: Supabase (Auth, DB, Storage, RLS, Functions, Edge Functions)
 
-Videos: Bunny Stream (secure embed + signed URLs)
+Payments: Stripe (paiements, abonnements, webhooks)
+
+Videos: Bunny Stream (cours vidéo sécurisés via URLs signées)
 
 Users:
-  - client (students)
-  - admin (teachers/internal staff)
+  - client : élève humain qui suit les cours
+  - admin : formateur ou membre du staff
 
 Objectives:
-  - Add a complete backend
-  - Create a full client space (courses, lessons, video embeds)
-  - Create a full admin space (manage courses, users, modules)
-  - Implement roles with Supabase RLS
-  - Build a clean LMS-style structure
-  - Follow professional architecture and security practices
+  - Créer un espace client complet (modules, leçons, progression vidéo)
+  - Créer un espace admin complet (CRUD modules/lessons, gestion accès élèves)
+  - Implémenter les rôles client/admin avec Supabase Auth + RLS
+  - Connecter les paiements Stripe aux accès contenus
+  - Garantir une architecture front/back propre, sécurisée et maintenable

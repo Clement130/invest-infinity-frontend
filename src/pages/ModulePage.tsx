@@ -1,49 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { getModuleWithLessons } from '../services/trainingService';
 import type { ModuleWithLessons } from '../types/training';
 
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
-  const [data, setData] = useState<ModuleWithLessons | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
+    queryKey: ['module-with-lessons', moduleId],
+    enabled: Boolean(moduleId),
+    queryFn: () => getModuleWithLessons(moduleId!),
+  });
+
+  const errorMessage = useMemo(() => {
     if (!moduleId) {
-      setError('Module ID manquant');
-      setLoading(false);
-      return;
+      return 'Module ID manquant';
     }
 
-    const loadModule = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await getModuleWithLessons(moduleId);
-        if (!result) {
-          setError('Module introuvable');
-        } else {
-          setData(result);
-        }
-      } catch (err) {
-        console.error('Erreur lors du chargement du module:', err);
-        setError('Erreur lors du chargement du module');
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (isError) {
+      return 'Erreur lors du chargement du module';
+    }
 
-    loadModule();
-  }, [moduleId]);
+    if (!data) {
+      return 'Module introuvable';
+    }
+
+    return null;
+  }, [data, isError, moduleId]);
 
   const handleLessonClick = (lessonId: string) => {
     navigate(`/app/modules/${moduleId}/lessons/${lessonId}`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -54,11 +46,11 @@ export default function ModulePage() {
     );
   }
 
-  if (error || !data) {
+  if (errorMessage || !data) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center px-4">
         <div className="text-center space-y-6 max-w-md">
-          <p className="text-xl text-gray-300">{error || 'Module introuvable'}</p>
+          <p className="text-xl text-gray-300">{errorMessage}</p>
           <button
             onClick={() => navigate('/app')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 hover:border-pink-500/50 transition font-medium text-pink-300 hover:text-pink-200"

@@ -5,6 +5,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { CustomMuiTelInput } from '../CustomMuiTelInput';
 import { matchIsValidTel } from 'mui-tel-input';
 import TradingAccountCard from './TradingAccountCard';
+import { leadApi } from '../../services/leadApi';
 
 interface FormData {
   prenom: string;
@@ -104,31 +105,25 @@ const LeadForm: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/user/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          boardId: 7669473566,
-          prenom: formData.prenom,
-          nom: '',
-          email: formData.email,
-          telephone: formData.phone,
-          statut: 'Lead',
-          newsLetter: true,
-          capital: formData.budget,
-        }),
+      await leadApi.registerLead({
+        boardId: 7669473566,
+        prenom: formData.prenom,
+        email: formData.email,
+        telephone: formData.phone,
+        statut: 'Lead',
+        newsLetter: true,
+        capital: parseInt(formData.budget, 10),
       });
 
-      if (response.ok) {
-        localStorage.setItem('userEmail', formData.email);
-        setIsRegistered(true);
-      } else {
-        const errText = await response.text();
-        setErrors({ budget: `Erreur lors de l'enregistrement: ${errText}` });
-      }
-    } catch (err) {
+      localStorage.setItem('userEmail', formData.email);
+      setIsRegistered(true);
+    } catch (err: any) {
       console.error(err);
-      setErrors({ budget: 'Erreur lors de la soumission.' });
+      setErrors({
+        budget:
+          err?.message ??
+          "Erreur lors de l'enregistrement, merci de réessayer.",
+      });
     } finally {
       setIsSubmitting(false);
     }

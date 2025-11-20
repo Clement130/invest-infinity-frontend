@@ -30,4 +30,25 @@ create table if not exists public.training_access (
   unique (user_id, module_id)
 );
 
+-- Table de suivi de progression par leçon
+create table if not exists public.training_progress (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  lesson_id uuid not null references public.training_lessons(id) on delete cascade,
+  done boolean not null default false,
+  last_viewed timestamptz,
+  unique (user_id, lesson_id)
+);
+
+-- Table des achats connectés à Stripe
+create table if not exists public.purchases (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  module_id uuid not null references public.training_modules(id) on delete cascade,
+  stripe_session_id text not null,
+  status text not null,
+  created_at timestamptz not null default now(),
+  unique (stripe_session_id)
+);
+
 
