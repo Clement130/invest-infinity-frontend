@@ -1,4 +1,6 @@
-import { Calendar, Clock, Users, Star } from 'lucide-react';
+import { Calendar, Clock, Users, Star, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Event } from '../../services/memberStatsService';
 
 interface EventsCalendarProps {
@@ -6,6 +8,34 @@ interface EventsCalendarProps {
 }
 
 export default function EventsCalendar({ events }: EventsCalendarProps) {
+  const queryClient = useQueryClient();
+  const [registeringEventId, setRegisteringEventId] = useState<string | null>(null);
+
+  const registerMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      // Simuler l'inscription (à remplacer par un vrai appel API)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return { success: true, eventId };
+    },
+    onSuccess: (data) => {
+      // Mettre à jour le cache pour marquer l'événement comme inscrit
+      queryClient.setQueryData(['member-events'], (oldEvents: Event[] | undefined) => {
+        if (!oldEvents) return oldEvents;
+        return oldEvents.map((event) =>
+          event.id === data.eventId ? { ...event, registered: true } : event
+        );
+      });
+      setRegisteringEventId(null);
+    },
+    onError: () => {
+      setRegisteringEventId(null);
+    },
+  });
+
+  const handleRegister = async (eventId: string) => {
+    setRegisteringEventId(eventId);
+    registerMutation.mutate(eventId);
+  };
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('fr-FR', {
@@ -86,10 +116,24 @@ export default function EventsCalendar({ events }: EventsCalendarProps) {
               {event.registrationRequired && (
                 <div className="flex items-center justify-between pt-2 border-t border-white/10">
                   {event.registered ? (
-                    <span className="text-sm text-green-400">✓ Inscrit</span>
+                    <div className="flex items-center gap-2 text-sm text-green-400">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Inscrit</span>
+                    </div>
                   ) : (
-                    <button className="px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 transition text-sm font-medium">
-                      S'inscrire
+                    <button
+                      onClick={() => handleRegister(event.id)}
+                      disabled={registeringEventId === event.id}
+                      className="px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed transition text-sm font-medium flex items-center gap-2"
+                    >
+                      {registeringEventId === event.id ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Inscription...
+                        </>
+                      ) : (
+                        'S\'inscrire'
+                      )}
                     </button>
                   )}
                 </div>

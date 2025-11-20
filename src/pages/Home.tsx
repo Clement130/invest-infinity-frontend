@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Hero from '../components/Hero';
 import Services from '../components/Services';
 import JoinSteps from '../components/JoinSteps';
+import TestimonialsSection from '../components/TestimonialsSection';
 import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 
@@ -17,6 +18,7 @@ export default function Home() {
         <Services onOpenRegister={() => setIsRegisterOpen(true)} />
       </div>
       <JoinSteps onOpenRegister={() => setIsRegisterOpen(true)} />
+      <TestimonialsSection onOpenRegister={() => setIsRegisterOpen(true)} />
       <FAQ onOpenRegister={() => setIsRegisterOpen(true)} />
       <AuthModal
         isOpen={isRegisterOpen}

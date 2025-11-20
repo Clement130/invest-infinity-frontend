@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Sparkles, Users, TrendingUp, ArrowRight, Gift, Shield } from 'lucide-react';
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { useAuth } from '../context/AuthContext';
+import TestimonialsSection from '../components/TestimonialsSection';
 
 export default function ConfirmationPage() {
   const navigate = useNavigate();
@@ -121,6 +122,11 @@ export default function ConfirmationPage() {
               <p className="text-gray-400 text-sm">Support disponible</p>
             </div>
           </div>
+        </div>
+
+        {/* Témoignages pour inciter à l'upgrade */}
+        <div className="mb-12">
+          <TestimonialsSection showCTA={false} maxItems={3} />
         </div>
 
         {/* Offre Premium - Présentation transparente */}
