@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, ChevronDown, ChevronUp, MoreVertical } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -87,6 +87,13 @@ export default function ModulePage() {
     return 0;
   }, [data?.lessons]);
 
+  // Initialiser les sections expandées par défaut
+  useEffect(() => {
+    if (sections.length > 0 && expandedSections.size === 0) {
+      setExpandedSections(new Set(sections.map(s => s.id)));
+    }
+  }, [sections]);
+
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => {
       const newSet = new Set(prev);
@@ -173,14 +180,6 @@ export default function ModulePage() {
         <section className="space-y-2">
           {sections.map((section, sectionIndex) => {
             const isExpanded = expandedSections.has(section.id);
-            const isFirstSection = sectionIndex === 0;
-            
-            // Expand toutes les sections par défaut (comme dans l'image)
-            if (expandedSections.size === 0 && sectionIndex === 0) {
-              setTimeout(() => {
-                setExpandedSections(new Set(sections.map(s => s.id)));
-              }, 0);
-            }
 
             return (
               <div
