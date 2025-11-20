@@ -14,6 +14,7 @@ import PaiementsPage from '../pages/admin/PaiementsPage';
 import AnalyticsPage from '../pages/admin/AnalyticsPage';
 import ContenuPage from '../pages/admin/ContenuPage';
 import ClientPreviewPage from '../pages/admin/ClientPreviewPage';
+import ChallengesPage from '../pages/admin/ChallengesPage';
 import ModulePage from '../pages/ModulePage';
 import LessonPlayerPage from '../pages/LessonPlayerPage';
 import MemberDashboard from '../pages/MemberDashboard';
@@ -109,4 +110,5 @@ export const dashboardRoutes: DashboardRouteConfig[] = [
   { path: '/admin/analytiques', element: <AdminLayout activeSection="analytiques"><AnalyticsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/contenu', element: <AdminLayout activeSection="contenu"><ContenuPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/preview', element: <AdminLayout activeSection="preview"><ClientPreviewPage /></AdminLayout>, allowedRoles: ['admin'] },
+  { path: '/admin/challenges', element: <AdminLayout activeSection="challenges"><ChallengesPage /></AdminLayout>, allowedRoles: ['admin'] },
 ];

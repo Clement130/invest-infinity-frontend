@@ -232,38 +232,30 @@ async function getUserBadges(
 
 // Récupérer les défis actifs
 export async function getActiveChallenges(userId: string): Promise<Challenge[]> {
-  // Pour l'instant, on retourne des défis mockés
-  // À implémenter avec une vraie table de défis
-  const challenges: Challenge[] = [
-    {
-      id: 'weekly-analysis',
-      title: 'Top 3 Analyses de la Semaine',
-      description: 'Partage tes 3 meilleures analyses de trading cette semaine',
-      type: 'weekly',
-      startDate: new Date().toISOString(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 0,
-      target: 3,
-      reward: 'Badge exclusif + 100 XP',
-      participants: 42,
-      userRank: undefined,
-    },
-    {
-      id: 'risk-management',
-      title: 'Défi Risk Management',
-      description: 'Applique les règles de gestion du risque pendant 7 jours',
-      type: 'weekly',
-      startDate: new Date().toISOString(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 2,
-      target: 7,
-      reward: 'Certificat + 200 XP',
-      participants: 28,
-      userRank: 15,
-    },
-  ];
-
-  return challenges;
+  // Utiliser le nouveau service de défis
+  const { getActiveChallenges: getChallenges } = await import('./challengesService');
+  try {
+    const challenges = await getChallenges(userId);
+    
+    // Convertir au format Challenge
+    return challenges.map((c) => ({
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      type: c.type,
+      startDate: c.startDate,
+      endDate: c.endDate,
+      progress: c.progress,
+      target: c.target,
+      reward: c.reward,
+      participants: c.participants,
+      userRank: c.userRank,
+    }));
+  } catch (error) {
+    console.error('Error fetching challenges:', error);
+    // Retourner une liste vide en cas d'erreur (table peut ne pas exister encore)
+    return [];
+  }
 }
 
 // Récupérer la heatmap d'activité (365 derniers jours)
