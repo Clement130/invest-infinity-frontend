@@ -21,6 +21,12 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
       return false;
     }
 
+    // Le rôle 'developer' a les mêmes permissions que 'admin'
+    // Si les routes admin sont autorisées, le développeur y a aussi accès
+    if (role === 'developer' && allowedRoles?.includes('admin')) {
+      return true;
+    }
+
     return allowedRoles?.includes(role) ?? false;
   }, [allowedRoles, requiresRole, role, user]);
 

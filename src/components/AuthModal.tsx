@@ -129,20 +129,25 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
         return;
       }
 
-      // Vérifier si l'utilisateur est admin
-      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', {
-        uid: user.id,
-      });
+      // Vérifier si l'utilisateur est admin ou développeur
+      // Récupérer le profil pour vérifier le rôle
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (adminError) {
-        console.error('Erreur lors de la vérification admin:', adminError);
+      if (profileError) {
+        console.error('Erreur lors de la récupération du profil:', profileError);
       }
+
+      const isAdminOrDeveloper = profile?.role === 'admin' || profile?.role === 'developer';
 
       onClose();
       
       // Rediriger selon le contexte
       if (redirectTo === 'admin') {
-        if (isAdmin) {
+        if (isAdminOrDeveloper) {
           navigate('/admin');
         } else {
           // Afficher un message d'erreur et rediriger vers la page d'accueil
