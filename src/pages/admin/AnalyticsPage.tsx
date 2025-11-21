@@ -39,11 +39,11 @@ export default function AnalyticsPage() {
     overviewLoading || revenueLoading || userStatsLoading || moduleStatsLoading || lessonStatsLoading;
 
   const handleExportRevenue = () => {
-    if (!revenueStats) return;
+    if (!revenueStats || !revenueStats.byMonth) return;
     const csvContent = [
       ['Mois', 'Revenus (€)', 'Nombre de ventes'].join(','),
       ...revenueStats.byMonth.map((m) =>
-        [m.month, (m.revenue / 100).toFixed(2), m.count].join(',')
+        [m.month, ((m.revenue || 0) / 100).toFixed(2), m.count || 0].join(',')
       ),
     ].join('\n');
 
@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
         <KPICard
           icon={Wallet}
           label="Revenus totaux"
-          value={overview ? `€ ${(overview.totalRevenue / 100).toFixed(2)}` : '€ 0.00'}
+          value={overview ? `€ ${((overview.totalRevenue || 0) / 100).toFixed(2)}` : '€ 0.00'}
           isLoading={isLoading}
           color="purple"
         />
