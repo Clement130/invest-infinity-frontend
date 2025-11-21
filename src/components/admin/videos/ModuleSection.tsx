@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { ChevronDown, ChevronRight, Plus, Edit2, GripVertical } from 'lucide-react';
 import { LessonRow } from './LessonRow';
 import { StatusBadge } from './StatusIndicators';

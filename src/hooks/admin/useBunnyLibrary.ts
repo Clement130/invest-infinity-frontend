@@ -35,7 +35,15 @@ export const useBunnyLibrary = () => {
         `);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Array<{
+        id: string;
+        title: string;
+        bunny_video_id: string | null;
+        training_modules: {
+          id: string;
+          title: string;
+        };
+      }>;
     },
   });
 
@@ -46,7 +54,7 @@ export const useBunnyLibrary = () => {
       ...video,
       assignedToLessonId: lesson?.id,
       assignedToLessonTitle: lesson?.title,
-      assignedToModuleTitle: lesson?.training_modules?.title,
+      assignedToModuleTitle: (lesson as any)?.training_modules?.title,
       isOrphan: !lesson,
     };
   });

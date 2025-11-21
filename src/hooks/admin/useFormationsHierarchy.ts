@@ -80,7 +80,7 @@ export const useFormationsHierarchy = () => {
 
       if (modulesError) throw modulesError;
 
-      const modulesWithLessons: ModuleWithLessons[] = (modulesData || []).map((module) => ({
+      const modulesWithLessons: ModuleWithLessons[] = (modulesData || []).map((module: any) => ({
         ...module,
         lessons: (module.training_lessons || []) as TrainingLesson[],
       }));

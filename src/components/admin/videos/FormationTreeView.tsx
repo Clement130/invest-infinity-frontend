@@ -1,5 +1,4 @@
-import { useState, useMemo } from 'react';
-import { Plus, Edit2, BarChart3, Eye, Settings } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { ModuleSection } from './ModuleSection';
 import type { ModuleWithLessons } from '../../hooks/admin/useFormationsHierarchy';
 import type { TrainingLesson } from '../../../types/training';
