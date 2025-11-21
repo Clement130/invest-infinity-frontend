@@ -14,21 +14,21 @@ export type Database = {
           id: string
           email: string
           full_name: string | null
-          role: 'client' | 'admin'
+          role: 'client' | 'admin' | 'developer'
           created_at: string
         }
         Insert: {
           id: string
           email: string
           full_name?: string | null
-          role?: 'client' | 'admin'
+          role?: 'client' | 'admin' | 'developer'
           created_at?: string
         }
         Update: {
           id?: string
           email?: string
           full_name?: string | null
-          role?: 'client' | 'admin'
+          role?: 'client' | 'admin' | 'developer'
           created_at?: string
         }
         Relationships: [
@@ -228,6 +228,36 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      developer_license: {
+        Row: {
+          id: string
+          is_active: boolean
+          last_payment_date: string
+          deactivated_at: string | null
+          admin_revocation_days: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          last_payment_date?: string
+          deactivated_at?: string | null
+          admin_revocation_days?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          last_payment_date?: string
+          deactivated_at?: string | null
+          admin_revocation_days?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
