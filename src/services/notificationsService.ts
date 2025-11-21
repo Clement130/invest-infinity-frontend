@@ -3,7 +3,6 @@
  * Récupère les notifications en temps réel (nouveaux leads, paiements, etc.)
  */
 
-import { supabase } from '../lib/supabaseClient';
 import { listLeads } from './leadsService';
 import { getPurchasesForAdmin } from './purchasesService';
 
