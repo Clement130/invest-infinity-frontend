@@ -144,7 +144,11 @@ export default function LicenseStatusWidget() {
         </div>
 
         {/* Statut admin client */}
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-black/40 border border-white/10">
+        <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+          adminStatus === 'active' 
+            ? 'bg-black/40 border-white/10' 
+            : 'bg-red-500/10 border-red-500/30'
+        }`}>
           {adminStatus === 'active' ? (
             <UserCheck className="w-5 h-5 text-green-400 mt-0.5" />
           ) : (
@@ -155,6 +159,11 @@ export default function LicenseStatusWidget() {
             <p className={`font-medium ${adminStatus === 'active' ? 'text-green-400' : 'text-red-400'}`}>
               {adminStatus === 'active' ? '✅ Actif' : '🔴 Révoqué'}
             </p>
+            {adminStatus === 'revoked' && (
+              <p className="text-xs text-orange-400 mt-1">
+                ⚠️ Le rôle admin sera restauré automatiquement lors de la validation du paiement
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -178,9 +187,21 @@ export default function LicenseStatusWidget() {
             </>
           )}
         </button>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          Cliquez pour valider le paiement reçu et réactiver la licence pour 30 jours
-        </p>
+        <div className="mt-2 space-y-1">
+          <p className="text-xs text-gray-400 text-center">
+            Cliquez pour valider le paiement reçu et réactiver la licence pour 30 jours
+          </p>
+          {adminStatus === 'revoked' && (
+            <p className="text-xs text-orange-400 text-center font-medium">
+              ⚠️ Le rôle admin sera automatiquement restauré pour investinfinityfr@gmail.com
+            </p>
+          )}
+          {adminStatus === 'active' && daysRemaining > 0 && (
+            <p className="text-xs text-green-400 text-center">
+              ✅ Le rôle admin reste actif tant que le paiement est à jour
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

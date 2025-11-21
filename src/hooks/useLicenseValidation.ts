@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { supabase } from '../lib/supabaseClient';
 import {
   getLicenseStatusWithCalculations,
   validatePayment,
@@ -36,9 +37,25 @@ export function useLicenseValidation() {
   // Mutation pour valider le paiement
   const validatePaymentMutation = useMutation({
     mutationFn: validatePayment,
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['developer-license'] });
-      toast.success('✅ Paiement validé avec succès ! La licence est active pour 30 jours.');
+      
+      // Vérifier si le rôle admin a été restauré
+      const { data: clientProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('email', 'investinfinityfr@gmail.com')
+        .maybeSingle();
+      
+      const adminRestored = clientProfile?.role === 'admin';
+      const wasRevoked = licenseStatus?.adminStatus === 'revoked';
+      
+      if (adminRestored && wasRevoked) {
+        toast.success('✅ Paiement validé ! La licence est active pour 30 jours et le rôle admin a été restauré.');
+      } else {
+        toast.success('✅ Paiement validé avec succès ! La licence est active pour 30 jours.');
+      }
+      
       // Rafraîchir après un court délai pour s'assurer que les données sont à jour
       setTimeout(() => {
         refetch();
