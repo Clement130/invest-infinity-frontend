@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import CookieBanner from '../components/CookieBanner';
+import RGPDModal from '../components/RGPDModal';
 import { LeadboosterLoader } from '../components/LeadboosterLoader';
 
 interface MarketingLayoutProps {
@@ -16,12 +19,16 @@ export default function MarketingLayout({
   showFooter = true,
   showLeadbooster = true,
 }: MarketingLayoutProps) {
+  const [isRGPDModalOpen, setIsRGPDModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {showHeader && <Header />}
       {showLeadbooster && <LeadboosterLoader />}
       <main className="flex-1">{children}</main>
-      {showFooter && <Footer />}
+      {showFooter && <Footer onOpenRGPD={() => setIsRGPDModalOpen(true)} />}
+      <CookieBanner onOpenRGPD={() => setIsRGPDModalOpen(true)} />
+      <RGPDModal isOpen={isRGPDModalOpen} onClose={() => setIsRGPDModalOpen(false)} />
     </div>
   );
 }

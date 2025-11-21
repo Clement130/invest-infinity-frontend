@@ -1,7 +1,11 @@
 import React from 'react';
 import { Youtube, Mail, Instagram, Video } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  onOpenRGPD?: () => void;
+}
+
+export default function Footer({ onOpenRGPD }: FooterProps) {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -23,7 +27,7 @@ export default function Footer() {
               />
             </button>
             <p className="text-gray-400 mb-6 max-w-md">
-            Le mentor qu’il te faut pour réussir en trading. Accède au discord dès maintenant et copie mes alertes pour commencer à générer tes premiers gains en trading.
+            Le mentor qu'il te faut pour réussir en trading. Accède au discord dès maintenant et copie mes alertes pour commencer à générer tes premiers gains en trading.
             </p>
           </div>
 
@@ -31,10 +35,30 @@ export default function Footer() {
 
         {/* Bottom section */}
         <div className="border-t border-pink-500/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm mb-4 md:mb-0">
-              © {new Date().getFullYear()} Tous droits réservés.
-            </p>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+              <p className="text-gray-400 text-sm">
+                © {new Date().getFullYear()} Tous droits réservés.
+              </p>
+              <div className="flex items-center gap-4 text-sm">
+                <button 
+                  onClick={onOpenRGPD}
+                  className="text-gray-400 hover:text-pink-500 transition-colors"
+                >
+                  Mentions légales & RGPD
+                </button>
+                <span className="text-gray-600">•</span>
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem('cookieConsent');
+                    window.location.reload();
+                  }}
+                  className="text-gray-400 hover:text-pink-500 transition-colors"
+                >
+                  Gérer les cookies
+                </button>
+              </div>
+            </div>
             <button onClick={scrollToTop} className="text-gray-400 hover:text-pink-500 transition-colors text-sm">
               Retour en haut ↑
             </button>
