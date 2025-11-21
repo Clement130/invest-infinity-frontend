@@ -308,7 +308,7 @@ export default function VideosManagement() {
     }
   }, [hierarchy.modules]);
 
-  const handleSaveLesson = useCallback(async (data: Partial<TrainingLesson> & { title: string; module_id: string }) => {
+  const handleCreateLessonSave = useCallback(async (data: Partial<TrainingLesson> & { title: string; module_id: string }) => {
     await createLessonMutation.mutateAsync(data);
   }, [createLessonMutation]);
 
@@ -483,7 +483,7 @@ export default function VideosManagement() {
             setLessonModalModuleId(null);
             setGuideState('idle');
           }}
-          onSave={handleSaveLesson}
+          onSave={handleCreateLessonSave}
           isSaving={createLessonMutation.isPending}
         />
       </div>
