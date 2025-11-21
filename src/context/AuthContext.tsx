@@ -34,9 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('[AuthContext] Chargement du profil pour userId:', userId);
       
-      // Timeout de 5 secondes pour éviter l'attente infinie
+      // Timeout de 10 secondes pour éviter l'attente infinie (augmenté pour les connexions lentes)
       const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout: chargement du profil trop long')), 5000);
+        setTimeout(() => reject(new Error('Timeout: chargement du profil trop long')), 10000);
       });
 
       const profilePromise = supabase
@@ -115,8 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       console.error('[AuthContext] Exception lors du chargement du profil:', err);
       if (err.message?.includes('Timeout')) {
-        console.error('[AuthContext] Timeout: le chargement du profil a pris plus de 5 secondes');
+        console.warn('[AuthContext] Timeout: le chargement du profil a pris plus de 10 secondes. Vérifiez votre connexion ou la configuration Supabase.');
       }
+      // Ne pas bloquer l'application si le profil ne charge pas - l'utilisateur peut continuer
       setProfile(null);
     }
   }, []);

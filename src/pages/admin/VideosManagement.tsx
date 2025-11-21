@@ -18,7 +18,7 @@ import type { TrainingLesson, TrainingModule } from '../../types/training';
 
 export default function VideosManagement() {
   const queryClient = useQueryClient();
-  const { hierarchy, isLoading, refetch } = useFormationsHierarchy();
+  const { hierarchy, isLoading: isLoadingHierarchy, refetch } = useFormationsHierarchy();
   const { orphanVideos } = useBunnyLibrary();
 
   // State management
@@ -343,6 +343,7 @@ export default function VideosManagement() {
         <VideosDashboard
           hierarchy={hierarchy}
           orphanVideosCount={orphanVideos.length}
+          isLoading={isLoadingHierarchy}
           onNewFormation={handleCreateModule}
           onUpload={() => {
             setShowUploadModal(true);
