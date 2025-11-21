@@ -30,7 +30,8 @@ export function LessonRow({
 
   return (
     <div
-      className={`group relative flex items-center gap-3 rounded-lg border px-4 py-3 transition ${
+      onClick={() => onSelect?.(lesson.id)}
+      className={`group relative flex items-center gap-3 rounded-lg border px-4 py-3 transition cursor-pointer ${
         isSelected
           ? 'border-purple-500/50 bg-purple-500/10'
           : isMultiSelected
