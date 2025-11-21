@@ -36,6 +36,8 @@ export async function getPurchasesForAdmin(): Promise<Purchase[]> {
     return data ?? [];
   } catch (err: any) {
     console.error('[purchasesService] Exception dans getPurchasesForAdmin:', err);
-    throw err;
+    // Retourner un tableau vide au lieu de throw pour éviter de bloquer l'interface
+    // Les erreurs sont déjà loggées pour le débogage
+    return [];
   }
 }

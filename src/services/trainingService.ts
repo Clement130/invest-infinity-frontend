@@ -75,13 +75,13 @@ export async function getModules(options?: {
   } catch (err: any) {
     console.error('[trainingService] Exception dans getModules:', err);
     
-    // Si c'est un timeout, on retourne un tableau vide
+    // Retourner un tableau vide pour toutes les erreurs pour éviter de bloquer l'interface
+    // Les erreurs sont déjà loggées pour le débogage
     if (err.message?.includes('Timeout')) {
       console.error('[trainingService] Timeout: la récupération des modules a pris plus de 10 secondes');
-      return [];
     }
     
-    throw err;
+    return [];
   }
 }
 

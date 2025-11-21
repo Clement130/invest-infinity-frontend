@@ -36,7 +36,9 @@ export async function listLeads(): Promise<Lead[]> {
     return data || [];
   } catch (err: any) {
     console.error('[leadsService] Exception dans listLeads:', err);
-    throw err;
+    // Retourner un tableau vide au lieu de throw pour éviter de bloquer l'interface
+    // Les erreurs sont déjà loggées pour le débogage
+    return [];
   }
 }
 

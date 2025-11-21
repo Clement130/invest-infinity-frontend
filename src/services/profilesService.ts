@@ -39,6 +39,8 @@ export async function listProfiles(): Promise<Profile[]> {
     return data ?? [];
   } catch (err: any) {
     console.error('[profilesService] Exception dans listProfiles:', err);
-    throw err;
+    // Retourner un tableau vide au lieu de throw pour éviter de bloquer l'interface
+    // Les erreurs sont déjà loggées pour le débogage
+    return [];
   }
 }
