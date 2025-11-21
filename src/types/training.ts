@@ -20,6 +20,10 @@ export interface ModuleWithLessons {
   lessons: TrainingLesson[];
 }
 
+export interface LessonWithModule extends TrainingLesson {
+  module: TrainingModule;
+}
+
 export interface LessonProgressSnapshot {
   lessonId: string;
   completed: boolean;

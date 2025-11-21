@@ -4,6 +4,7 @@ import type {
   TrainingLesson,
   TrainingAccess,
   ModuleWithLessons,
+  LessonWithModule,
   AccessType,
 } from '../types/training';
 import type { Tables } from '../types/supabase';
@@ -120,6 +121,26 @@ export async function getLessonsForModule(moduleId: string): Promise<TrainingLes
   }
 
   return data ?? [];
+}
+
+export async function getLessonsWithModules(): Promise<LessonWithModule[]> {
+  const { data, error } = await supabase
+    .from('training_lessons')
+    .select('*, module:module_id(*)')
+    .order('module_id', { ascending: true })
+    .order('position', { ascending: true });
+
+  if (error) {
+    console.error('[trainingService] Erreur lors de la récupération des leçons avec modules:', error);
+    throw error;
+  }
+
+  return (
+    data?.map((lesson: any) => ({
+      ...lesson,
+      module: lesson.module,
+    })) ?? []
+  ) as LessonWithModule[];
 }
 
 export async function getLessonById(id: string): Promise<TrainingLesson | null> {

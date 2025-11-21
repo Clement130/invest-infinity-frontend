@@ -14,12 +14,13 @@ import PaiementsPage from '../pages/admin/PaiementsPage';
 import AnalyticsPage from '../pages/admin/AnalyticsPage';
 import ContenuPage from '../pages/admin/ContenuPage';
 import ClientPreviewPage from '../pages/admin/ClientPreviewPage';
-import ChallengesPage from '../pages/admin/ChallengesPage';
+import AdminChallengesPage from '../pages/admin/ChallengesPage';
+import VideosManagerPage from '../pages/admin/VideosManagerPage';
 import ModulePage from '../pages/ModulePage';
 import LessonPlayerPage from '../pages/LessonPlayerPage';
 import MemberDashboard from '../pages/MemberDashboard';
 import ProgressPage from '../pages/ProgressPage';
-import ChallengesPage from '../pages/ChallengesPage';
+import ClientChallengesPage from '../pages/ChallengesPage';
 import EventsPage from '../pages/EventsPage';
 import SettingsPage from '../pages/SettingsPage';
 import Testimonials from '../pages/Testimonials';
@@ -96,7 +97,7 @@ export const dashboardRoutes: DashboardRouteConfig[] = [
   { path: '/app', element: <ClientApp /> },
   { path: '/app/dashboard', element: <MemberDashboard /> },
   { path: '/app/progress', element: <ProgressPage /> },
-  { path: '/app/challenges', element: <ChallengesPage /> },
+{ path: '/app/challenges', element: <ClientChallengesPage /> },
   { path: '/app/events', element: <EventsPage /> },
   { path: '/app/settings', element: <SettingsPage /> },
   { path: '/app/modules/:moduleId', element: <ModulePage /> },
@@ -109,6 +110,7 @@ export const dashboardRoutes: DashboardRouteConfig[] = [
   { path: '/admin/paiements', element: <AdminLayout activeSection="paiements"><PaiementsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/analytiques', element: <AdminLayout activeSection="analytiques"><AnalyticsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/contenu', element: <AdminLayout activeSection="contenu"><ContenuPage /></AdminLayout>, allowedRoles: ['admin'] },
-  { path: '/admin/preview', element: <AdminLayout activeSection="preview"><ClientPreviewPage /></AdminLayout>, allowedRoles: ['admin'] },
-  { path: '/admin/challenges', element: <AdminLayout activeSection="challenges"><ChallengesPage /></AdminLayout>, allowedRoles: ['admin'] },
+{ path: '/admin/preview', element: <AdminLayout activeSection="preview"><ClientPreviewPage /></AdminLayout>, allowedRoles: ['admin'] },
+{ path: '/admin/videos', element: <AdminLayout activeSection="videos"><VideosManagerPage /></AdminLayout>, allowedRoles: ['admin'] },
+{ path: '/admin/challenges', element: <AdminLayout activeSection="challenges"><AdminChallengesPage /></AdminLayout>, allowedRoles: ['admin'] },
 ];

@@ -18,6 +18,91 @@ interface Section {
   }>;
 }
 
+type SectionLayout = {
+  title: string;
+  lessons: string[];
+};
+
+const moduleLayouts: Record<string, SectionLayout[]> = {
+  'etape-1-la-fondation': [
+    {
+      title: 'La base du trading',
+      lessons: [
+        'La Base du Vocabulaire en Trading',
+        'Les Différents Types de Marchés',
+        'Les Différents Profils en Trading',
+        'Les Différentes Stratégies En Trading',
+      ],
+    },
+    {
+      title: 'Gestion du Risque',
+      lessons: [
+        'Avoir son Money Management',
+        'Avoir un Track Record & Data',
+        'Faire des Trades Recaps',
+      ],
+    },
+    {
+      title: 'La psycho a adopté',
+      lessons: ['La Clé de ton succès se joue ici.'],
+    },
+  ],
+  'etape-2-les-bases-en-ict': [
+    {
+      title: 'La Fondation',
+      lessons: [
+        'La Structure de marché',
+        'Le Breaker block & Mitigation block',
+        'La FVG',
+        "L'OB.",
+        'La Liquidité',
+        'La SMT',
+      ],
+    },
+    {
+      title: 'Concepts avancés',
+      lessons: ['BreakerAway Gap', 'La IFVG', 'OB sans Corps'],
+    },
+  ],
+  'etape-3-la-strategie-ict-mickael': [
+    {
+      title: 'Stratégie expliquée',
+      lessons: [
+        'Introduction',
+        'Définir mon biais',
+        'Définir mes zones',
+        'Mes confirmations pour prendre position',
+        'Où TP, SL et BE ?',
+      ],
+    },
+    {
+      title: 'Conditions de marché obligatoires',
+      lessons: [
+        'Displacement + création d’une FVG',
+        'Si Accumulation (je ne la trade que sous condition)',
+      ],
+    },
+  ],
+  'metatrader-topstepx': [
+    {
+      title: 'MetaTrader',
+      lessons: ['Comment installer son compte MetaTrader ?', 'Comment prendre un Trade sur MetaTrader ?'],
+    },
+    {
+      title: 'TopStepX',
+      lessons: ['TopStepX - Comment l’utiliser ?'],
+    },
+  ],
+};
+
+const slugify = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -30,55 +115,93 @@ export default function ModulePage() {
     queryFn: () => getModuleWithLessons(moduleId!),
   });
 
-  // Organiser les leçons en sections basées sur leur position
-  // Les sections sont créées en groupant les leçons par groupes de 6 (ou selon la logique métier)
   const sections = useMemo<Section[]>(() => {
-    if (!data?.lessons || data.lessons.length === 0) return [];
+    if (!data?.lessons || !data.module) return [];
 
-    const lessons = data.lessons.map(lesson => ({
-      id: lesson.id,
-      title: lesson.title,
-      description: lesson.description,
-      is_preview: lesson.is_preview,
-      position: lesson.position,
-    }));
+    const lessons = (data.lessons ?? [])
+      .map((lesson) => ({
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description,
+        is_preview: lesson.is_preview,
+        position: lesson.position,
+        slug: slugify(lesson.title),
+      }))
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
-    // Organiser en sections : 
-    // - Si moins de 6 leçons, une seule section
-    // - Sinon, créer des sections de ~6 leçons chacune
-    // Pour "Etape 2 - Les Bases en ICT", on crée 2 sections basées sur les positions
-    const sectionSize = 6;
-    const sectionsList: Section[] = [];
+    const moduleSlug = slugify(data.module.title);
+    const layout = moduleLayouts[moduleSlug];
 
-    if (lessons.length <= sectionSize) {
-      // Une seule section
-      sectionsList.push({
-        id: 'section-1',
-        title: 'La Fondation',
-        lessons: lessons,
-      });
-    } else {
-      // Plusieurs sections
-      const firstSection = lessons.slice(0, sectionSize);
-      const secondSection = lessons.slice(sectionSize);
+    if (!layout) {
+      const sectionSize = 6;
+      const sectionsList: Section[] = [];
 
-      sectionsList.push({
-        id: 'section-1',
-        title: 'La Fondation',
-        lessons: firstSection,
-      });
-
-      if (secondSection.length > 0) {
+      if (lessons.length <= sectionSize) {
         sectionsList.push({
-          id: 'section-2',
-          title: 'Concepts avancés',
-          lessons: secondSection,
+          id: 'section-default',
+          title: 'Leçons',
+          lessons,
         });
+      } else {
+        const firstSection = lessons.slice(0, sectionSize);
+        const secondSection = lessons.slice(sectionSize);
+
+        sectionsList.push({
+          id: 'section-1',
+          title: 'La Fondation',
+          lessons: firstSection,
+        });
+
+        if (secondSection.length > 0) {
+          sectionsList.push({
+            id: 'section-2',
+            title: 'Concepts avancés',
+            lessons: secondSection,
+          });
+        }
       }
+
+      return sectionsList;
     }
 
-    return sectionsList;
-  }, [data?.lessons]);
+    const usedLessons = new Set<string>();
+    const layoutSections: Section[] = layout
+      .map((section, sectionIndex) => {
+        const sectionLessons = section.lessons
+          .map((lessonTitle) => {
+            const normalizedTitle = slugify(lessonTitle);
+            const match = lessons.find(
+              (lesson) => lesson.slug === normalizedTitle && !usedLessons.has(lesson.id)
+            );
+
+            if (match) {
+              usedLessons.add(match.id);
+            }
+
+            return match ?? null;
+          })
+          .filter((lesson): lesson is Section['lessons'][number] => Boolean(lesson));
+
+        return {
+          id: `${moduleSlug}-section-${sectionIndex}`,
+          title: section.title,
+          lessons: sectionLessons,
+        };
+      })
+      .filter((section) => section.lessons.length > 0);
+
+    const remaining = lessons.filter((lesson) => !usedLessons.has(lesson.id));
+
+    if (remaining.length > 0) {
+      layoutSections.push({
+        id: `${moduleSlug}-section-extra`,
+        title: 'Autres leçons',
+        lessons: remaining,
+      });
+    }
+
+    return layoutSections;
+  }, [data?.lessons, data?.module]);
 
   // Calculer la progression (simplifié pour l'instant)
   const progress = useMemo(() => {
