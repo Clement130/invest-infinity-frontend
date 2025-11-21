@@ -34,11 +34,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('[AuthContext] Chargement du profil pour userId:', userId);
       
-      const { data, error } = await supabase
+      // Timeout de 5 secondes pour éviter les blocages
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: chargement du profil trop long')), 5000);
+      });
+      
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
+      
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]);
 
       if (error && error.code !== 'PGRST116') {
         console.error('[AuthContext] Erreur profil:', error);
@@ -107,6 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(data);
     } catch (err: any) {
       console.error('[AuthContext] Exception lors du chargement du profil:', err);
+      if (err.message?.includes('Timeout')) {
+        console.warn('[AuthContext] Timeout: le chargement du profil a pris plus de 5 secondes');
+      }
       // Ne pas bloquer l'application si le profil ne charge pas - l'utilisateur peut continuer
       setProfile(null);
     }
