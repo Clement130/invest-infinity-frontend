@@ -34,18 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('[AuthContext] Chargement du profil pour userId:', userId);
       
-      // Timeout de 10 secondes pour éviter l'attente infinie (augmenté pour les connexions lentes)
-      const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout: chargement du profil trop long')), 10000);
-      });
-
-      const profilePromise = supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-
-      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
 
       if (error && error.code !== 'PGRST116') {
         console.error('[AuthContext] Erreur profil:', error);
@@ -114,27 +107,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(data);
     } catch (err: any) {
       console.error('[AuthContext] Exception lors du chargement du profil:', err);
-      if (err.message?.includes('Timeout')) {
-        console.warn('[AuthContext] Timeout: le chargement du profil a pris plus de 10 secondes. Vérifiez votre connexion ou la configuration Supabase.');
-      }
       // Ne pas bloquer l'application si le profil ne charge pas - l'utilisateur peut continuer
       setProfile(null);
     }
   }, []);
 
   const bootstrapSession = useCallback(async () => {
-    setLoading(true);
-    const { data } = await supabase.auth.getSession();
-    const sessionUser = data.session?.user ?? null;
-    setUser(sessionUser);
+    try {
+      setLoading(true);
+      const { data } = await supabase.auth.getSession();
+      const sessionUser = data.session?.user ?? null;
+      setUser(sessionUser);
 
-    if (sessionUser) {
-      await loadProfile(sessionUser.id);
-    } else {
+      if (sessionUser) {
+        await loadProfile(sessionUser.id);
+      } else {
+        setProfile(null);
+      }
+    } catch (err) {
+      console.error('[AuthContext] Erreur dans bootstrapSession:', err);
+      // Ne pas bloquer l'application même en cas d'erreur
       setProfile(null);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [loadProfile]);
 
   useEffect(() => {
