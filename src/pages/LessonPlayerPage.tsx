@@ -1,34 +1,81 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getModuleWithLessons, getLessonById } from '../services/trainingService';
 import type { TrainingLesson } from '../types/training';
 import BunnyPlayer from '../components/training/BunnyPlayer';
+import { VideoPlayerSkeleton } from '../components/common/Skeleton';
+import { useSession } from '../hooks/useSession';
+import { useToast } from '../hooks/useToast';
+import type { VideoProgressEvent } from '../services/progressTrackingService';
 
 export default function LessonPlayerPage() {
   const { moduleId, lessonId } = useParams<{ moduleId: string; lessonId: string }>();
   const navigate = useNavigate();
+  const { user } = useSession();
+  const toast = useToast();
+  const queryClient = useQueryClient();
+
+  // Logging pour le débogage
+  useEffect(() => {
+    console.log('[LessonPlayerPage] Initialisation:', { moduleId, lessonId, userId: user?.id });
+  }, [moduleId, lessonId, user?.id]);
 
   const moduleQuery = useQuery({
     queryKey: ['module-with-lessons', moduleId],
     enabled: Boolean(moduleId),
     queryFn: () => getModuleWithLessons(moduleId!),
+    onError: (error) => {
+      console.error('[LessonPlayerPage] Erreur moduleQuery:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[LessonPlayerPage] Module chargé:', { 
+        moduleTitle: data?.module.title, 
+        lessonsCount: data?.lessons.length 
+      });
+    },
   });
 
   const lessonQuery = useQuery({
     queryKey: ['lesson', lessonId],
     enabled: Boolean(lessonId) && !moduleQuery.data?.lessons?.find((l) => l.id === lessonId),
     queryFn: () => getLessonById(lessonId!),
+    onError: (error) => {
+      console.error('[LessonPlayerPage] Erreur lessonQuery:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[LessonPlayerPage] Leçon chargée:', { 
+        lessonTitle: data?.title, 
+        videoId: data?.bunny_video_id 
+      });
+    },
   });
 
   const lesson = useMemo<TrainingLesson | null>(() => {
     if (moduleQuery.data) {
-      return moduleQuery.data.lessons.find((l) => l.id === lessonId) ?? null;
+      const found = moduleQuery.data.lessons.find((l) => l.id === lessonId);
+      if (!found) {
+        console.warn('[LessonPlayerPage] Leçon non trouvée dans les leçons du module:', lessonId);
+      }
+      return found ?? null;
     }
 
     return lessonQuery.data ?? null;
   }, [lessonId, lessonQuery.data, moduleQuery.data]);
+
+  // Log quand la leçon change
+  useEffect(() => {
+    if (lesson) {
+      console.log('[LessonPlayerPage] Leçon disponible:', {
+        id: lesson.id,
+        title: lesson.title,
+        videoId: lesson.bunny_video_id,
+      });
+    } else if (!moduleQuery.isLoading && !lessonQuery.isLoading) {
+      console.warn('[LessonPlayerPage] Aucune leçon disponible après chargement');
+    }
+  }, [lesson, moduleQuery.isLoading, lessonQuery.isLoading]);
 
   const allLessons = moduleQuery.data?.lessons ?? [];
   const moduleTitle = moduleQuery.data?.module.title ?? 'Module';
@@ -41,9 +88,23 @@ export default function LessonPlayerPage() {
       : null;
 
   const isLoading = moduleQuery.isLoading || lessonQuery.isLoading;
+  
+  // Amélioration de la détection d'erreur
   const hasError =
-    !moduleId || !lessonId || moduleQuery.isError || lessonQuery.isError || (!moduleQuery.data && !lesson);
-  const errorMessage = !moduleId || !lessonId ? 'Module ID ou Lesson ID manquant' : 'Leçon introuvable';
+    !moduleId || 
+    !lessonId || 
+    moduleQuery.isError || 
+    lessonQuery.isError || 
+    (!isLoading && !moduleQuery.data && !lessonQuery.data) ||
+    (!isLoading && moduleQuery.data && !lesson);
+  
+  const errorMessage = !moduleId || !lessonId 
+    ? 'Module ID ou Lesson ID manquant' 
+    : moduleQuery.isError || lessonQuery.isError
+    ? 'Erreur lors du chargement des données'
+    : !lesson
+    ? 'Leçon introuvable'
+    : 'Erreur inconnue';
 
   const handlePreviousLesson = () => {
     if (previousLesson && moduleId) {
@@ -57,22 +118,45 @@ export default function LessonPlayerPage() {
     }
   };
 
+  const handleProgress = async (event: VideoProgressEvent) => {
+    // Invalider les queries de progression pour mettre à jour l'UI
+    if (user?.id) {
+      queryClient.invalidateQueries({ queryKey: ['member-progress', user.id] });
+      
+      // Feedback visuel pour la progression
+      if (event.percentage >= 90) {
+        toast.success('Leçon complétée ! 🎉', { duration: 3000 });
+      }
+    }
+  };
+
+  // État de chargement
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto" />
-          <p className="text-gray-400">Chargement de la leçon...</p>
+      <div className="w-full bg-gradient-to-b from-black via-slate-950 to-black text-white -m-6 p-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <VideoPlayerSkeleton />
+          <div className="space-y-4">
+            <div className="h-8 bg-white/10 rounded-lg w-3/4 animate-pulse" />
+            <div className="h-4 bg-white/10 rounded-lg w-full animate-pulse" />
+            <div className="h-4 bg-white/10 rounded-lg w-2/3 animate-pulse" />
+          </div>
         </div>
       </div>
     );
   }
 
+  // État d'erreur ou leçon introuvable
   if (hasError || !lesson) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center px-4">
+      <div className="w-full min-h-[60vh] bg-gradient-to-b from-black via-slate-950 to-black text-white -m-6 flex items-center justify-center px-4 py-16">
         <div className="text-center space-y-6 max-w-md">
           <p className="text-xl text-gray-300">{errorMessage}</p>
+          {moduleQuery.data && (
+            <p className="text-sm text-gray-500">
+              Module: {moduleQuery.data.module.title}
+            </p>
+          )}
           <button
             onClick={() => navigate(moduleId ? `/app/modules/${moduleId}` : '/app')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 hover:border-pink-500/50 transition font-medium text-pink-300 hover:text-pink-200"
@@ -86,7 +170,7 @@ export default function LessonPlayerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white py-8 px-4">
+    <div className="w-full bg-gradient-to-b from-black via-slate-950 to-black text-white -m-6 p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Fil d'Ariane */}
         <div className="flex items-center gap-2 text-sm">
@@ -103,7 +187,12 @@ export default function LessonPlayerPage() {
 
         {/* Lecteur vidéo */}
         <div className="space-y-4">
-          <BunnyPlayer videoId={lesson.bunny_video_id || ''} />
+          <BunnyPlayer
+            videoId={lesson.bunny_video_id || ''}
+            userId={user?.id}
+            lessonId={lessonId}
+            onProgress={handleProgress}
+          />
         </div>
 
         {/* Informations de la leçon */}

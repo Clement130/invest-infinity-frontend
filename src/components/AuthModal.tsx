@@ -6,6 +6,7 @@ import { matchIsValidTel } from 'mui-tel-input';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { leadApi } from '../services/leadApi';
+import { useToast } from '../hooks/useToast';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface FormErrors {
 
 export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client' }: AuthModalProps) {
   const navigate = useNavigate();
+  const toast = useToast();
   const { signIn } = useAuth();
   const [telTouched, setTelTouched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -144,11 +146,12 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
           navigate('/admin');
         } else {
           // Afficher un message d'erreur et rediriger vers la page d'accueil
-          alert('Accès réservé aux administrateurs');
+          toast.error('Accès réservé aux administrateurs');
           navigate('/');
         }
       } else {
         // Redirection vers /app pour les clients
+        toast.success('Connexion réussie !', { duration: 2000 });
         navigate('/app');
       }
     } catch (error: any) {

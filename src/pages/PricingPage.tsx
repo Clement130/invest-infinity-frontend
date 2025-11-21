@@ -5,10 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { supabase } from '../lib/supabaseClient';
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
+import { useToast } from '../hooks/useToast';
 
 export default function PricingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -29,7 +31,12 @@ export default function PricingPage() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        alert('Vous devez être connecté pour effectuer un achat.');
+        toast.error('Vous devez être connecté pour effectuer un achat.', {
+          action: {
+            label: 'Se connecter',
+            onClick: () => navigate('/login'),
+          },
+        });
         setLoading(null);
         return;
       }
@@ -58,7 +65,12 @@ export default function PricingPage() {
       if (!response.ok) {
         const error = await response.text();
         console.error('Erreur lors de la création de la session Checkout:', error);
-        alert('Erreur lors de la création de la session de paiement. Veuillez réessayer.');
+        toast.error('Erreur lors de la création de la session de paiement. Veuillez réessayer.', {
+          action: {
+            label: 'Réessayer',
+            onClick: () => handlePurchase(plan),
+          },
+        });
         setLoading(null);
         return;
       }
@@ -66,16 +78,17 @@ export default function PricingPage() {
       const { url } = await response.json();
 
       if (!url) {
-        alert('Erreur : URL de checkout non reçue.');
+        toast.error('Erreur : URL de checkout non reçue. Veuillez réessayer.');
         setLoading(null);
         return;
       }
 
       // Rediriger vers la page de checkout Stripe
+      toast.success('Redirection vers le paiement...', { duration: 2000 });
       window.location.href = url;
     } catch (error) {
       console.error('Erreur lors de l\'achat:', error);
-      alert('Une erreur est survenue. Veuillez réessayer.');
+      toast.error('Une erreur est survenue. Veuillez réessayer.');
       setLoading(null);
     }
   };

@@ -4,10 +4,12 @@ import { CheckCircle, Sparkles, Users, TrendingUp, ArrowRight, Gift, Shield } fr
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { useAuth } from '../context/AuthContext';
 import TestimonialsSection from '../components/TestimonialsSection';
+import { useToast } from '../hooks/useToast';
 
 export default function ConfirmationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -47,11 +49,19 @@ export default function ConfirmationPage() {
 
       const { url } = await response.json();
       if (url) {
+        toast.success('Redirection vers le paiement...', { duration: 2000 });
         window.location.href = url;
+      } else {
+        toast.error('Erreur : URL de checkout non reçue.');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      alert('Une erreur est survenue. Veuillez réessayer.');
+      toast.error('Une erreur est survenue. Veuillez réessayer.', {
+        action: {
+          label: 'Réessayer',
+          onClick: () => handlePurchase(plan),
+        },
+      });
     } finally {
       setLoading(false);
     }

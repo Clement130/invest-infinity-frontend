@@ -1,12 +1,13 @@
 import { CheckCircle2, Circle, Trophy } from 'lucide-react';
 import type { TrainingModule } from '../../types/training';
+import type { ModuleProgressDetail } from '../../services/progressService';
 
 interface ProgressChecklistProps {
   modules: TrainingModule[];
-  completedLessons: Set<string>;
+  moduleProgress?: Record<string, ModuleProgressDetail>;
 }
 
-export default function ProgressChecklist({ modules, completedLessons }: ProgressChecklistProps) {
+export default function ProgressChecklist({ modules, moduleProgress }: ProgressChecklistProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -16,8 +17,9 @@ export default function ProgressChecklist({ modules, completedLessons }: Progres
 
       <div className="space-y-3">
         {modules.map((module) => {
-          // Calculer la progression du module (simplifié)
-          const progress = 40; // À calculer avec les vraies données
+          const progress = moduleProgress?.[module.id]?.completionRate ?? 0;
+          const isCompleted = moduleProgress?.[module.id]?.isCompleted ?? false;
+          const nextLessonTitle = moduleProgress?.[module.id]?.nextLessonTitle;
 
           return (
             <div
@@ -26,17 +28,20 @@ export default function ProgressChecklist({ modules, completedLessons }: Progres
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {progress === 100 ? (
+                  {isCompleted ? (
                     <CheckCircle2 className="w-5 h-5 text-green-400" />
                   ) : (
                     <Circle className="w-5 h-5 text-gray-400" />
                   )}
                   <div>
                     <h4 className="font-medium text-white">{module.title}</h4>
-                    <p className="text-sm text-gray-400">{progress}% complété</p>
+                    <p className="text-sm text-gray-400">
+                      {progress}% complété
+                      {!isCompleted && nextLessonTitle ? ` · Prochaine: ${nextLessonTitle}` : ''}
+                    </p>
                   </div>
                 </div>
-                {progress === 100 && (
+                {isCompleted && (
                   <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">
                     Certifié
                   </span>

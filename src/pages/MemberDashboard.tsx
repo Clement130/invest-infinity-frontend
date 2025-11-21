@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '../hooks/useSession';
 import {
@@ -6,11 +8,14 @@ import {
   getActivityHeatmap,
   getUpcomingEvents,
 } from '../services/memberStatsService';
+import { getUserProgressSummary } from '../services/progressService';
 import ActivityHeatmap from '../components/member/ActivityHeatmap';
 import ProgressChecklist from '../components/member/ProgressChecklist';
 import EventsCalendar from '../components/member/EventsCalendar';
 import BadgesDisplay from '../components/member/BadgesDisplay';
 import ChallengesList from '../components/member/ChallengesList';
+import EmptyState from '../components/common/EmptyState';
+import { DashboardSkeleton } from '../components/common/Skeleton';
 import {
   TrendingUp,
   BookOpen,
@@ -20,11 +25,13 @@ import {
   Target,
   Calendar,
   BarChart3,
+  Rocket,
 } from 'lucide-react';
 import { getModules } from '../services/trainingService';
 
 export default function MemberDashboard() {
   const { user } = useSession();
+  const navigate = useNavigate();
 
   const statsQuery = useQuery({
     queryKey: ['member-stats', user?.id],
@@ -55,18 +62,91 @@ export default function MemberDashboard() {
     queryFn: () => getModules(),
   });
 
+  const progressQuery = useQuery({
+    queryKey: ['member-progress', user?.id],
+    queryFn: () => getUserProgressSummary(user?.id || ''),
+    enabled: !!user?.id,
+  });
+
   const stats = statsQuery.data;
   const challenges = challengesQuery.data || [];
   const heatmap = heatmapQuery.data || [];
   const events = eventsQuery.data || [];
   const modules = modulesQuery.data || [];
+  const progressSummary = progressQuery.data;
+
+  const moduleProgressMap = useMemo(() => {
+    if (!progressSummary) return {};
+    return progressSummary.modules.reduce<Record<string, (typeof progressSummary.modules)[number]>>(
+      (acc, detail) => {
+        acc[detail.moduleId] = detail;
+        return acc;
+      },
+      {},
+    );
+  }, [progressSummary]);
+
+  const continueLearning = progressSummary?.continueLearning;
+
+  const recommendedModules = useMemo(() => {
+    return modules
+      .map((module) => ({
+        module,
+        completion: moduleProgressMap[module.id]?.completionRate ?? 0,
+        nextLesson: moduleProgressMap[module.id]?.nextLessonTitle,
+      }))
+      .filter((item) => item.completion < 100)
+      .sort((a, b) => a.completion - b.completion)
+      .slice(0, 2);
+  }, [modules, moduleProgressMap]);
+
+  const quickActions = useMemo(() => {
+    const actions: Array<{
+      title: string;
+      description: string;
+      cta?: () => void;
+    }> = [];
+
+    if (continueLearning) {
+      actions.push({
+        title: 'Reprendre ta formation',
+        description: `${continueLearning.lessonTitle} (${continueLearning.completionRate}% du module "${continueLearning.moduleTitle}")`,
+        cta: () =>
+          navigate(`/app/modules/${continueLearning.moduleId}/lessons/${continueLearning.lessonId}`),
+      });
+    }
+
+    if (challenges.length > 0) {
+      const challenge = challenges[0];
+      actions.push({
+        title: 'Défi en cours',
+        description: `${challenge.title} · ${challenge.progress}/${challenge.target}`,
+      });
+    }
+
+    if (events.length > 0) {
+      const nextEvent = events[0];
+      const date = new Date(nextEvent.date);
+      actions.push({
+        title: 'Prochain événement',
+        description: `${nextEvent.title} · ${date.toLocaleDateString('fr-FR', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        })}`,
+      });
+    }
+
+    return actions;
+  }, [continueLearning, challenges, events, navigate]);
 
   const isLoading =
     statsQuery.isLoading ||
     challengesQuery.isLoading ||
     heatmapQuery.isLoading ||
     eventsQuery.isLoading ||
-    modulesQuery.isLoading;
+    modulesQuery.isLoading ||
+    progressQuery.isLoading;
 
   return (
     <div className="space-y-8">
@@ -77,7 +157,17 @@ export default function MemberDashboard() {
       </header>
 
         {isLoading ? (
-          <div className="text-center py-12 text-gray-400">Chargement...</div>
+          <DashboardSkeleton />
+        ) : !user ? (
+          <EmptyState
+            emoji="🔒"
+            title="Session expirée"
+            description="Votre session a expiré. Veuillez vous reconnecter pour accéder à votre dashboard."
+            action={{
+              label: 'Se reconnecter',
+              onClick: () => navigate('/login'),
+            }}
+          />
         ) : (
           <>
             {/* Stats Cards */}
@@ -108,6 +198,60 @@ export default function MemberDashboard() {
               />
             </div>
 
+            {/* Continue Learning */}
+            {continueLearning && (
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-purple-600/20 to-pink-600/10 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-pink-300">Continuer</p>
+                  <h3 className="text-2xl font-semibold text-white mt-1">
+                    {continueLearning.lessonTitle}
+                  </h3>
+                  <p className="text-gray-300">
+                    Module {continueLearning.moduleTitle} · {continueLearning.completionRate}% complété
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/app/modules/${continueLearning.moduleId}/lessons/${continueLearning.lessonId}`,
+                    )
+                  }
+                  className="inline-flex items-center justify-center rounded-xl bg-pink-500/90 hover:bg-pink-500 px-6 py-3 font-medium text-white transition"
+                >
+                  Reprendre la leçon
+                </button>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            {quickActions.length > 0 && (
+              <div className="rounded-xl border border-white/5 bg-white/5 p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-pink-400" />
+                  <h3 className="text-lg font-semibold">Actions rapides</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {quickActions.map((action) => (
+                    <div
+                      key={action.title}
+                      className="rounded-lg border border-white/10 bg-black/20 p-4 space-y-2"
+                    >
+                      <p className="text-sm text-gray-400">{action.title}</p>
+                      <p className="text-white font-medium">{action.description}</p>
+                      {action.cta && (
+                        <button
+                          onClick={action.cta}
+                          className="text-sm text-pink-400 hover:text-pink-300 transition"
+                        >
+                          Voir
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Level & XP */}
             {stats && (
               <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
@@ -129,13 +273,62 @@ export default function MemberDashboard() {
               </div>
             )}
 
+            {/* Recommendations */}
+            {recommendedModules.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-purple-400" />
+                  <h3 className="text-lg font-semibold text-white">Recommandations personnalisées</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {recommendedModules.map(({ module, completion, nextLesson }) => (
+                    <div
+                      key={module.id}
+                      className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-400">Module</p>
+                          <h4 className="text-xl font-semibold text-white">{module.title}</h4>
+                        </div>
+                        <span className="text-pink-400 font-semibold">{completion}%</span>
+                      </div>
+                      {nextLesson && (
+                        <p className="text-sm text-gray-400">Prochaine leçon : {nextLesson}</p>
+                      )}
+                      <button
+                        onClick={() => navigate(`/app/modules/${module.id}`)}
+                        className="text-sm text-pink-400 hover:text-pink-300 transition"
+                      >
+                        Ouvrir le module
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              modules.length > 0 && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+                  <EmptyState
+                    icon={Rocket}
+                    title="Tous tes modules sont complétés !"
+                    description="Félicitations ! Tu as terminé tous tes modules. De nouveaux contenus seront bientôt disponibles."
+                    action={{
+                      label: 'Voir mes statistiques',
+                      onClick: () => navigate('/app/progress'),
+                    }}
+                  />
+                </div>
+              )
+            )}
+
             {/* Main Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column */}
               <div className="space-y-6">
                 <ProgressChecklist
                   modules={modules}
-                  completedLessons={new Set()}
+                  moduleProgress={moduleProgressMap}
                 />
                 <ActivityHeatmap data={heatmap} />
                 <BadgesDisplay badges={stats?.badges || []} />

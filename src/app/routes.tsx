@@ -16,6 +16,8 @@ import ContenuPage from '../pages/admin/ContenuPage';
 import ClientPreviewPage from '../pages/admin/ClientPreviewPage';
 import AdminChallengesPage from '../pages/admin/ChallengesPage';
 import VideosManagerPage from '../pages/admin/VideosManagerPage';
+import VideosManagement from '../pages/admin/VideosManagement';
+import SettingsPage from '../pages/admin/SettingsPage';
 import ModulePage from '../pages/ModulePage';
 import LessonPlayerPage from '../pages/LessonPlayerPage';
 import MemberDashboard from '../pages/MemberDashboard';
@@ -111,6 +113,7 @@ export const dashboardRoutes: DashboardRouteConfig[] = [
   { path: '/admin/analytiques', element: <AdminLayout activeSection="analytiques"><AnalyticsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/contenu', element: <AdminLayout activeSection="contenu"><ContenuPage /></AdminLayout>, allowedRoles: ['admin'] },
 { path: '/admin/preview', element: <AdminLayout activeSection="preview"><ClientPreviewPage /></AdminLayout>, allowedRoles: ['admin'] },
-{ path: '/admin/videos', element: <AdminLayout activeSection="videos"><VideosManagerPage /></AdminLayout>, allowedRoles: ['admin'] },
+{ path: '/admin/videos', element: <AdminLayout activeSection="videos"><VideosManagement /></AdminLayout>, allowedRoles: ['admin'] },
 { path: '/admin/challenges', element: <AdminLayout activeSection="challenges"><AdminChallengesPage /></AdminLayout>, allowedRoles: ['admin'] },
+{ path: '/admin/settings', element: <AdminLayout activeSection="settings"><SettingsPage /></AdminLayout>, allowedRoles: ['admin'] },
 ];

@@ -1,245 +1,294 @@
+/**
+ * Service pour les analytics et statistiques de la plateforme
+ */
+
 import { supabase } from '../lib/supabaseClient';
-import type { TrainingProgress } from '../types/training';
+import { getModules, getAccessList } from './trainingService';
+import { listProfiles } from './profilesService';
+import { getPurchasesForAdmin } from './purchasesService';
+import { getProgressSummary } from './progressService';
+import type { TrainingModule, TrainingAccess } from '../types/training';
+import type { Profile } from './profilesService';
+import type { Purchase } from '../types/training';
 
-export interface DailyStats {
-  date: string;
-  revenue: number;
-  newUsers: number;
-  lessonsCompleted: number;
-  engagementRate: number;
+export interface AnalyticsOverview {
+  totalUsers: number;
+  activeUsers: number; // Utilisateurs ayant accès à au moins une formation
+  totalRevenue: number; // En centimes
+  totalPurchases: number;
+  completedPurchases: number;
+  totalModules: number;
+  activeModules: number;
+  totalLessons: number;
+  totalAccess: number;
 }
 
-export interface WeeklyStats {
-  revenue: number;
-  newUsers: number;
-  retentionRate: number;
-  averageEngagement: number;
-  revenueChange: number;
-  usersChange: number;
-  retentionChange: number;
-  engagementChange: number;
+export interface RevenueStats {
+  total: number;
+  byMonth: Array<{ month: string; revenue: number; count: number }>;
+  byModule: Array<{ moduleId: string; moduleTitle: string; revenue: number; count: number }>;
 }
 
-export interface AnalyticsData {
-  weekly: WeeklyStats;
-  daily: DailyStats[];
-  averageRevenuePerDay: number;
-  averageUsersPerDay: number;
-  averageRetentionRate: number;
-  averageEngagement: number;
+export interface UserStats {
+  total: number;
+  byMonth: Array<{ month: string; count: number }>;
+  byRole: Array<{ role: string; count: number }>;
 }
 
-// Récupérer les données de progression pour les analytiques
-export async function getProgressData(): Promise<TrainingProgress[]> {
-  const { data, error } = await supabase
-    .from('training_progress')
-    .select('*')
-    .order('last_viewed', { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return data ?? [];
+export interface ModuleStats {
+  moduleId: string;
+  moduleTitle: string;
+  totalAccess: number;
+  totalCompletions: number;
+  completionRate: number;
+  averageProgress: number;
+  totalViews: number;
 }
 
-// Calculer les statistiques hebdomadaires
-export async function getWeeklyStats(): Promise<WeeklyStats> {
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+export interface LessonStats {
+  lessonId: string;
+  lessonTitle: string;
+  moduleTitle: string;
+  totalViews: number;
+  totalCompletions: number;
+  completionRate: number;
+  averageWatchTime: number; // En secondes
+}
 
-  // Récupérer les profils
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('created_at, role')
-    .order('created_at', { ascending: false });
+/**
+ * Récupère les statistiques générales de la plateforme
+ */
+export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
+  const [profiles, modules, accessList, purchases] = await Promise.all([
+    listProfiles(),
+    getModules({ includeInactive: true }),
+    getAccessList(),
+    getPurchasesForAdmin(),
+  ]);
 
-  // Récupérer les achats
-  const { data: purchases } = await supabase
-    .from('purchases')
-    .select('*')
-    .order('created_at', { ascending: false });
+  // Compter les leçons
+  const { data: lessonsData } = await supabase
+    .from('training_lessons')
+    .select('id');
 
-  // Récupérer les progressions
-  const { data: progress } = await supabase
-    .from('training_progress')
-    .select('*')
-    .order('last_viewed', { ascending: false });
+  const totalLessons = lessonsData?.length || 0;
 
-  // Calculer les stats de cette semaine
-  const thisWeekProfiles = profiles?.filter(
-    (p) => new Date(p.created_at) >= weekAgo
-  ) || [];
-  const thisWeekPurchases = purchases?.filter(
-    (p) => p.created_at && new Date(p.created_at) >= weekAgo
-  ) || [];
-  const thisWeekProgress = progress?.filter(
-    (p) => p.last_viewed && new Date(p.last_viewed) >= weekAgo
-  ) || [];
-
-  // Calculer les stats de la semaine dernière
-  const lastWeekProfiles = profiles?.filter(
-    (p) => {
-      const date = new Date(p.created_at);
-      return date >= twoWeeksAgo && date < weekAgo;
-    }
-  ) || [];
-  const lastWeekPurchases = purchases?.filter(
-    (p) => {
-      if (!p.created_at) return false;
-      const date = new Date(p.created_at);
-      return date >= twoWeeksAgo && date < weekAgo;
-    }
-  ) || [];
-  const lastWeekProgress = progress?.filter(
-    (p) => {
-      if (!p.last_viewed) return false;
-      const date = new Date(p.last_viewed);
-      return date >= twoWeeksAgo && date < weekAgo;
-    }
-  ) || [];
+  // Utilisateurs actifs (ayant au moins un accès)
+  const usersWithAccess = new Set(accessList.map((a) => a.user_id));
+  const activeUsers = usersWithAccess.size;
 
   // Revenus
-  const thisWeekRevenue = thisWeekPurchases
-    .filter((p) => p.status === 'completed')
-    .reduce((sum, p) => sum + (p.amount || 0), 0);
-  const lastWeekRevenue = lastWeekPurchases
-    .filter((p) => p.status === 'completed')
-    .reduce((sum, p) => sum + (p.amount || 0), 0);
-  const revenueChange = lastWeekRevenue > 0
-    ? ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100
-    : 0;
-
-  // Nouveaux utilisateurs
-  const thisWeekNewUsers = thisWeekProfiles.filter((p) => p.role === 'client').length;
-  const lastWeekNewUsers = lastWeekProfiles.filter((p) => p.role === 'client').length;
-  const usersChange = lastWeekNewUsers > 0
-    ? ((thisWeekNewUsers - lastWeekNewUsers) / lastWeekNewUsers) * 100
-    : 0;
-
-  // Taux de rétention (simplifié : utilisateurs actifs cette semaine / total utilisateurs)
-  const totalUsers = profiles?.filter((p) => p.role === 'client').length || 0;
-  const activeUsers = new Set(thisWeekProgress.map((p) => p.user_id)).size;
-  const retentionRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
-  const lastWeekActiveUsers = new Set(lastWeekProgress.map((p) => p.user_id)).size;
-  const lastWeekRetention = totalUsers > 0 ? (lastWeekActiveUsers / totalUsers) * 100 : 0;
-  const retentionChange = lastWeekRetention > 0
-    ? retentionRate - lastWeekRetention
-    : 0;
-
-  // Engagement moyen (leçons complétées / utilisateurs actifs)
-  const completedLessons = thisWeekProgress.filter((p) => p.done).length;
-  const averageEngagement = activeUsers > 0 ? (completedLessons / activeUsers) * 100 : 0;
-  const lastWeekCompleted = lastWeekProgress.filter((p) => p.done).length;
-  const lastWeekEngagement = lastWeekActiveUsers > 0
-    ? (lastWeekCompleted / lastWeekActiveUsers) * 100
-    : 0;
-  const engagementChange = lastWeekEngagement > 0
-    ? averageEngagement - lastWeekEngagement
-    : 0;
+  const completedPurchases = purchases.filter((p) => p.status === 'completed');
+  const totalRevenue = completedPurchases.reduce(
+    (sum, p) => sum + (p.amount || 0),
+    0
+  );
 
   return {
-    revenue: thisWeekRevenue / 100, // Convertir centimes en euros
-    newUsers: thisWeekNewUsers,
-    retentionRate,
-    averageEngagement,
-    revenueChange,
-    usersChange,
-    retentionChange,
-    engagementChange,
+    totalUsers: profiles.length,
+    activeUsers,
+    totalRevenue,
+    totalPurchases: purchases.length,
+    completedPurchases: completedPurchases.length,
+    totalModules: modules.length,
+    activeModules: modules.filter((m) => m.is_active).length,
+    totalLessons,
+    totalAccess: accessList.length,
   };
 }
 
-// Calculer les statistiques quotidiennes
-export async function getDailyStats(): Promise<DailyStats[]> {
-  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-  const dailyStats: DailyStats[] = [];
+/**
+ * Récupère les statistiques de revenus
+ */
+export async function getRevenueStats(): Promise<RevenueStats> {
+  const purchases = await getPurchasesForAdmin();
+  const modules = await getModules({ includeInactive: true });
 
-  // Récupérer les données
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('created_at, role')
-    .order('created_at', { ascending: false });
+  const completedPurchases = purchases.filter((p) => p.status === 'completed');
 
-  const { data: purchases } = await supabase
-    .from('purchases')
-    .select('*')
-    .order('created_at', { ascending: false });
+  // Revenus par mois
+  const revenueByMonth = new Map<string, { revenue: number; count: number }>();
+  completedPurchases.forEach((purchase) => {
+    if (!purchase.created_at) return;
+    const date = new Date(purchase.created_at);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-  const { data: progress } = await supabase
+    const existing = revenueByMonth.get(monthKey) || { revenue: 0, count: 0 };
+    revenueByMonth.set(monthKey, {
+      revenue: existing.revenue + (purchase.amount || 0),
+      count: existing.count + 1,
+    });
+  });
+
+  // Revenus par module
+  const revenueByModule = new Map<
+    string,
+    { moduleTitle: string; revenue: number; count: number }
+  >();
+  completedPurchases.forEach((purchase) => {
+    if (!purchase.module_id) return;
+    const module = modules.find((m) => m.id === purchase.module_id);
+    const moduleTitle = module?.title || 'Module inconnu';
+
+    const existing = revenueByModule.get(purchase.module_id) || {
+      moduleTitle,
+      revenue: 0,
+      count: 0,
+    };
+    revenueByModule.set(purchase.module_id, {
+      moduleTitle,
+      revenue: existing.revenue + (purchase.amount || 0),
+      count: existing.count + 1,
+    });
+  });
+
+  return {
+    total: completedPurchases.reduce((sum, p) => sum + (p.amount || 0), 0),
+    byMonth: Array.from(revenueByMonth.entries())
+      .map(([month, data]) => ({ month, ...data }))
+      .sort((a, b) => a.month.localeCompare(b.month)),
+    byModule: Array.from(revenueByModule.values()).sort(
+      (a, b) => b.revenue - a.revenue
+    ),
+  };
+}
+
+/**
+ * Récupère les statistiques des utilisateurs
+ */
+export async function getUserStats(): Promise<UserStats> {
+  const profiles = await listProfiles();
+
+  // Inscriptions par mois
+  const registrationsByMonth = new Map<string, number>();
+  profiles.forEach((profile) => {
+    if (!profile.created_at) return;
+    const date = new Date(profile.created_at);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    registrationsByMonth.set(
+      monthKey,
+      (registrationsByMonth.get(monthKey) || 0) + 1
+    );
+  });
+
+  // Utilisateurs par rôle
+  const usersByRole = new Map<string, number>();
+  profiles.forEach((profile) => {
+    const role = profile.role || 'client';
+    usersByRole.set(role, (usersByRole.get(role) || 0) + 1);
+  });
+
+  return {
+    total: profiles.length,
+    byMonth: Array.from(registrationsByMonth.entries())
+      .map(([month, count]) => ({ month, count }))
+      .sort((a, b) => a.month.localeCompare(b.month)),
+    byRole: Array.from(usersByRole.entries()).map(([role, count]) => ({
+      role,
+      count,
+    })),
+  };
+}
+
+/**
+ * Récupère les statistiques détaillées par module
+ */
+export async function getModuleStats(): Promise<ModuleStats[]> {
+  const modules = await getModules({ includeInactive: true });
+  const accessList = await getAccessList();
+
+  // Récupérer les progressions
+  const { data: progressData } = await supabase
     .from('training_progress')
-    .select('*')
-    .order('last_viewed', { ascending: false });
+    .select('*');
 
-  // Calculer pour chaque jour de la semaine
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dayStart = new Date(date.setHours(0, 0, 0, 0));
-    const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+  const stats: ModuleStats[] = [];
 
-    const dayProfiles = profiles?.filter(
-      (p) => {
-        const created = new Date(p.created_at);
-        return created >= dayStart && created <= dayEnd && p.role === 'client';
-      }
+  for (const module of modules) {
+    const moduleAccess = accessList.filter((a) => a.module_id === module.id);
+    const moduleProgress = progressData?.filter(
+      (p) => p.module_id === module.id
     ) || [];
 
-    const dayPurchases = purchases?.filter(
-      (p) => {
-        if (!p.created_at) return false;
-        const created = new Date(p.created_at);
-        return created >= dayStart && created <= dayEnd;
-      }
-    ) || [];
+    // Compter les complétions (progress à 100%)
+    const completions = moduleProgress.filter((p) => p.progress_percentage >= 100);
 
-    const dayProgress = progress?.filter(
-      (p) => {
-        if (!p.last_viewed) return false;
-        const viewed = new Date(p.last_viewed);
-        return viewed >= dayStart && viewed <= dayEnd;
-      }
-    ) || [];
+    // Calculer la progression moyenne
+    const totalProgress =
+      moduleProgress.reduce((sum, p) => sum + (p.progress_percentage || 0), 0) /
+      (moduleProgress.length || 1);
 
-    const revenue = dayPurchases
-      .filter((p) => p.status === 'completed')
-      .reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
+    // Compter les vues (progress > 0)
+    const views = moduleProgress.filter((p) => (p.progress_percentage || 0) > 0).length;
 
-    const newUsers = dayProfiles.length;
-    const lessonsCompleted = dayProgress.filter((p) => p.done).length;
-    const activeUsers = new Set(dayProgress.map((p) => p.user_id)).size;
-    const engagementRate = activeUsers > 0 ? (lessonsCompleted / activeUsers) * 100 : 0;
-
-    dailyStats.push({
-      date: days[6 - i],
-      revenue,
-      newUsers,
-      lessonsCompleted,
-      engagementRate,
+    stats.push({
+      moduleId: module.id,
+      moduleTitle: module.title,
+      totalAccess: moduleAccess.length,
+      totalCompletions: completions.length,
+      completionRate:
+        moduleAccess.length > 0
+          ? (completions.length / moduleAccess.length) * 100
+          : 0,
+      averageProgress: totalProgress,
+      totalViews: views,
     });
   }
 
-  return dailyStats;
+  return stats.sort((a, b) => b.totalAccess - a.totalAccess);
 }
 
-// Récupérer toutes les données analytiques
-export async function getAnalyticsData(): Promise<AnalyticsData> {
-  const [weekly, daily] = await Promise.all([getWeeklyStats(), getDailyStats()]);
+/**
+ * Récupère les statistiques détaillées par leçon
+ */
+export async function getLessonStats(): Promise<LessonStats[]> {
+  const { data: lessons } = await supabase
+    .from('training_lessons')
+    .select('*, module:training_modules(title)');
 
-  const averageRevenuePerDay = daily.reduce((sum, d) => sum + d.revenue, 0) / 7;
-  const averageUsersPerDay = daily.reduce((sum, d) => sum + d.newUsers, 0) / 7;
-  const averageRetentionRate = weekly.retentionRate;
-  const averageEngagement = daily.reduce((sum, d) => sum + d.engagementRate, 0) / 7;
+  const { data: progressData } = await supabase
+    .from('training_progress')
+    .select('*');
 
-  return {
-    weekly,
-    daily,
-    averageRevenuePerDay,
-    averageUsersPerDay,
-    averageRetentionRate,
-    averageEngagement,
-  };
+  if (!lessons) return [];
+
+  const stats: LessonStats[] = [];
+
+  for (const lesson of lessons) {
+    const lessonProgress = progressData?.filter(
+      (p) => p.lesson_id === lesson.id
+    ) || [];
+
+    // Compter les complétions (completed = true)
+    const completions = lessonProgress.filter((p) => p.completed === true);
+
+    // Calculer le temps de visionnage moyen
+    // Note: On utilise une estimation basée sur la progression
+    // Pour un suivi précis, il faudrait stocker le temps réel de visionnage
+    const averageWatchTime = lessonProgress.length > 0
+      ? lessonProgress.reduce((sum, p) => {
+          // Estimation: si progress à 100%, on considère la vidéo complète (ex: 10 min = 600s)
+          // Sinon, on estime proportionnellement
+          const estimatedDuration = 600; // 10 minutes par défaut
+          return sum + ((p.progress_percentage || 0) / 100) * estimatedDuration;
+        }, 0) / lessonProgress.length
+      : 0;
+
+    // Compter les vues (progress > 0 ou completed = true)
+    const views = lessonProgress.filter(
+      (p) => (p.progress_percentage || 0) > 0 || p.completed === true
+    ).length;
+
+    stats.push({
+      lessonId: lesson.id,
+      lessonTitle: lesson.title,
+      moduleTitle: (lesson.module as any)?.title || 'Module inconnu',
+      totalViews: views,
+      totalCompletions: completions.length,
+      completionRate: views > 0 ? (completions.length / views) * 100 : 0,
+      averageWatchTime: Math.round(averageWatchTime),
+    });
+  }
+
+  return stats.sort((a, b) => b.totalViews - a.totalViews);
 }
-
-

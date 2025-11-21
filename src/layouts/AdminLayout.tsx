@@ -14,6 +14,7 @@ import {
   Video,
   ChevronDown,
   LogOut,
+  Settings,
 } from 'lucide-react';
 import { useSession } from '../hooks/useSession';
 
@@ -38,6 +39,7 @@ export default function AdminLayout({ children, activeSection = 'dashboard' }: A
     { id: 'videos', label: 'Vidéos', icon: Video, path: '/admin/videos' },
     { id: 'challenges', label: 'Défis', icon: Target, path: '/admin/challenges' },
     { id: 'preview', label: 'Vue Client', icon: Eye, path: '/admin/preview' },
+    { id: 'settings', label: 'Paramètres', icon: Settings, path: '/admin/settings' },
   ];
 
   const handleMenuClick = (path: string) => {

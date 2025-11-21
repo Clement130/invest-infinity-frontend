@@ -1,10 +1,14 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '../hooks/useSession';
 import { getUserStats, getActivityHeatmap } from '../services/memberStatsService';
+import { getUserProgressSummary } from '../services/progressService';
 import ActivityHeatmap from '../components/member/ActivityHeatmap';
 import ProgressChecklist from '../components/member/ProgressChecklist';
+import EmptyState from '../components/common/EmptyState';
+import { StatCardSkeleton } from '../components/common/Skeleton';
 import { getModules } from '../services/trainingService';
-import { TrendingUp, Award, Calendar, Target } from 'lucide-react';
+import { TrendingUp, Award, Calendar, Target, BookOpen } from 'lucide-react';
 
 export default function ProgressPage() {
   const { user } = useSession();
@@ -26,9 +30,26 @@ export default function ProgressPage() {
     queryFn: () => getModules(),
   });
 
+  const progressSummaryQuery = useQuery({
+    queryKey: ['member-progress', user?.id],
+    queryFn: () => getUserProgressSummary(user?.id || ''),
+    enabled: !!user?.id,
+  });
+
   const stats = statsQuery.data;
   const heatmap = heatmapQuery.data || [];
   const modules = modulesQuery.data || [];
+  const moduleProgressMap = useMemo(() => {
+    const summary = progressSummaryQuery.data;
+    if (!summary) return {};
+    return summary.modules.reduce<Record<string, (typeof summary.modules)[number]>>(
+      (acc, detail) => {
+        acc[detail.moduleId] = detail;
+        return acc;
+      },
+      {},
+    );
+  }, [progressSummaryQuery.data]);
 
   return (
     <div className="space-y-8">
@@ -37,8 +58,40 @@ export default function ProgressPage() {
         <p className="text-gray-400">Suivez votre évolution et vos accomplissements</p>
       </header>
 
-      {statsQuery.isLoading ? (
-        <div className="text-center py-12 text-gray-400">Chargement...</div>
+      {statsQuery.isLoading || progressSummaryQuery.isLoading ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <StatCardSkeleton key={i} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4 animate-pulse">
+              <div className="h-6 bg-white/10 rounded w-1/2" />
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-20 bg-white/10 rounded" />
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4 animate-pulse">
+              <div className="h-6 bg-white/10 rounded w-1/2" />
+              <div className="h-64 bg-white/10 rounded" />
+            </div>
+          </div>
+        </div>
+      ) : !user ? (
+        <EmptyState
+          emoji="🔒"
+          title="Session expirée"
+          description="Votre session a expiré. Veuillez vous reconnecter pour voir votre progression."
+        />
+      ) : modules.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title="Aucun module disponible"
+          description="Il n'y a pas encore de modules de formation disponibles. Reviens bientôt pour commencer ton apprentissage !"
+        />
       ) : (
         <>
           {/* Stats Overview */}
@@ -89,7 +142,7 @@ export default function ProgressPage() {
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ProgressChecklist modules={modules} completedLessons={new Set()} />
+            <ProgressChecklist modules={modules} moduleProgress={moduleProgressMap} />
             <ActivityHeatmap data={heatmap} />
           </div>
         </>

@@ -1,153 +1,171 @@
 import { useQuery } from '@tanstack/react-query';
-import { Wallet, Users, Calendar, TrendingUp } from 'lucide-react';
-import { getAnalyticsData } from '../../services/analyticsService';
+import { Wallet, Users, Calendar, TrendingUp, Download, BarChart3, Video, BookOpen } from 'lucide-react';
+import {
+  getAnalyticsOverview,
+  getRevenueStats,
+  getUserStats,
+  getModuleStats,
+  getLessonStats,
+} from '../../services/analyticsService';
+import toast from 'react-hot-toast';
 
 export default function AnalyticsPage() {
-  const { data: analytics, isLoading, isError } = useQuery({
-    queryKey: ['admin', 'analytics'],
-    queryFn: () => getAnalyticsData(),
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ['admin', 'analytics', 'overview'],
+    queryFn: () => getAnalyticsOverview(),
   });
 
-  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const { data: revenueStats, isLoading: revenueLoading } = useQuery({
+    queryKey: ['admin', 'analytics', 'revenue'],
+    queryFn: () => getRevenueStats(),
+  });
 
-  if (isError) {
-    return (
-      <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-        Erreur lors du chargement des analytiques
-      </div>
-    );
-  }
+  const { data: userStats, isLoading: userStatsLoading } = useQuery({
+    queryKey: ['admin', 'analytics', 'users'],
+    queryFn: () => getUserStats(),
+  });
 
-  const weekly = analytics?.weekly || {
-    revenue: 0,
-    newUsers: 0,
-    retentionRate: 0,
-    averageEngagement: 0,
-    revenueChange: 0,
-    usersChange: 0,
-    retentionChange: 0,
-    engagementChange: 0,
+  const { data: moduleStats, isLoading: moduleStatsLoading } = useQuery({
+    queryKey: ['admin', 'analytics', 'modules'],
+    queryFn: () => getModuleStats(),
+  });
+
+  const { data: lessonStats, isLoading: lessonStatsLoading } = useQuery({
+    queryKey: ['admin', 'analytics', 'lessons'],
+    queryFn: () => getLessonStats(),
+  });
+
+  const isLoading =
+    overviewLoading || revenueLoading || userStatsLoading || moduleStatsLoading || lessonStatsLoading;
+
+  const handleExportRevenue = () => {
+    if (!revenueStats) return;
+    const csvContent = [
+      ['Mois', 'Revenus (€)', 'Nombre de ventes'].join(','),
+      ...revenueStats.byMonth.map((m) =>
+        [m.month, (m.revenue / 100).toFixed(2), m.count].join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `revenus-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Export CSV généré');
   };
-
-  const daily = analytics?.daily || days.map((day) => ({
-    date: day,
-    revenue: 0,
-    newUsers: 0,
-    lessonsCompleted: 0,
-    engagementRate: 0,
-  }));
-
-  const maxRevenue = Math.max(...daily.map((d) => d.revenue), 1);
-  const maxUsers = Math.max(...daily.map((d) => d.newUsers), 1);
-  const maxLessons = Math.max(...daily.map((d) => d.lessonsCompleted), 1);
-  const maxEngagement = Math.max(...daily.map((d) => d.engagementRate), 1);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Analytiques</h1>
-        <p className="text-gray-400">Consultez vos statistiques et métriques de performance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Analytiques</h1>
+          <p className="text-gray-400">Consultez vos statistiques et métriques de performance</p>
+        </div>
+        {revenueStats && (
+          <button
+            onClick={handleExportRevenue}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition"
+          >
+            <Download className="w-4 h-4" />
+            Export revenus
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           icon={Wallet}
-          label="Revenus cette semaine"
-          value={`€ ${weekly.revenue.toFixed(2)}`}
-          change={weekly.revenueChange}
+          label="Revenus totaux"
+          value={overview ? `€ ${(overview.totalRevenue / 100).toFixed(2)}` : '€ 0.00'}
           isLoading={isLoading}
           color="purple"
         />
         <KPICard
           icon={Users}
-          label="Nouveaux utilisateurs"
-          value={weekly.newUsers.toString()}
-          change={weekly.usersChange}
+          label="Utilisateurs actifs"
+          value={overview ? `${overview.activeUsers}` : '0'}
           isLoading={isLoading}
-          color="purple"
-        />
-        <KPICard
-          icon={Calendar}
-          label="Taux de rétention"
-          value={`${weekly.retentionRate.toFixed(1)}%`}
-          change={weekly.retentionChange}
-          isLoading={isLoading}
-          color="purple"
-        />
-        <KPICard
-          icon={TrendingUp}
-          label="Engagement moyen"
-          value={`${weekly.averageEngagement.toFixed(1)}%`}
-          change={weekly.engagementChange}
-          isLoading={isLoading}
-          color="purple"
-        />
-      </div>
-
-      {/* Daily Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <DailyChart
-          title="Revenus par jour"
-          data={daily}
-          maxValue={maxRevenue}
-          getValue={(d) => d.revenue}
-          color="pink"
-          formatValue={(v) => `€ ${v.toFixed(2)}`}
-        />
-        <DailyChart
-          title="Nouveaux utilisateurs par jour"
-          data={daily}
-          maxValue={maxUsers}
-          getValue={(d) => d.newUsers}
           color="blue"
-          formatValue={(v) => v.toString()}
         />
-        <DailyChart
-          title="Leçons complétées"
-          data={daily}
-          maxValue={maxLessons}
-          getValue={(d) => d.lessonsCompleted}
+        <KPICard
+          icon={BookOpen}
+          label="Modules actifs"
+          value={overview ? `${overview.activeModules}` : '0'}
+          isLoading={isLoading}
           color="green"
-          formatValue={(v) => v.toString()}
         />
-        <DailyChart
-          title="Taux d'engagement (%)"
-          data={daily}
-          maxValue={maxEngagement}
-          getValue={(d) => d.engagementRate}
-          color="purple"
-          formatValue={(v) => `${v.toFixed(1)}%`}
+        <KPICard
+          icon={Video}
+          label="Leçons totales"
+          value={overview ? `${overview.totalLessons}` : '0'}
+          isLoading={isLoading}
+          color="pink"
         />
       </div>
 
-      {/* Footer Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/10">
-        <div className="text-center">
-          <p className="text-sm text-gray-400">Moyenne revenue/jour</p>
-          <p className="text-lg font-semibold text-white">
-            € {analytics?.averageRevenuePerDay.toFixed(2) || '0.00'}
-          </p>
+      {/* Revenue Chart */}
+      {revenueStats && revenueStats.byMonth.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Revenus par mois</h3>
+          <MonthlyChart data={revenueStats.byMonth} />
         </div>
-        <div className="text-center">
-          <p className="text-sm text-gray-400">Moyenne utilisateurs/jour</p>
-          <p className="text-lg font-semibold text-white">
-            {analytics?.averageUsersPerDay.toFixed(0) || '0'}
-          </p>
+      )}
+
+      {/* Module Stats */}
+      {moduleStats && moduleStats.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Statistiques par formation</h3>
+          <div className="space-y-3">
+            {moduleStats.slice(0, 5).map((stat) => (
+              <div key={stat.moduleId} className="p-4 rounded-lg bg-black/40">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-white font-medium">{stat.moduleTitle}</h4>
+                  <span className="text-sm text-gray-400">{stat.totalAccess} accès</span>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-400">
+                  <span>Taux de complétion: {stat.completionRate.toFixed(1)}%</span>
+                  <span>Vues: {stat.totalViews}</span>
+                  <span>Progression moyenne: {stat.averageProgress.toFixed(1)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-gray-400">Taux de rétention</p>
-          <p className="text-lg font-semibold text-white">
-            {analytics?.averageRetentionRate.toFixed(1) || '0'}%
-          </p>
+      )}
+
+      {/* User Stats */}
+      {userStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Inscriptions par mois</h3>
+            {userStats.byMonth.length > 0 ? (
+              <MonthlyChart
+                data={userStats.byMonth.map((m) => ({ month: m.month, revenue: m.count, count: 0 }))}
+                formatValue={(v) => v.toString()}
+              />
+            ) : (
+              <p className="text-gray-400">Aucune donnée</p>
+            )}
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Utilisateurs par rôle</h3>
+            <div className="space-y-2">
+              {userStats.byRole.map((role) => (
+                <div key={role.role} className="flex items-center justify-between p-2 rounded-lg bg-black/40">
+                  <span className="text-white capitalize">{role.role}</span>
+                  <span className="text-purple-400 font-semibold">{role.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-gray-400">Engagement moyen</p>
-          <p className="text-lg font-semibold text-white">
-            {analytics?.averageEngagement.toFixed(1) || '0'}%
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -200,49 +218,32 @@ function KPICard({
   );
 }
 
-function DailyChart({
-  title,
+function MonthlyChart({
   data,
-  maxValue,
-  getValue,
-  color,
-  formatValue,
+  formatValue = (v) => `€ ${(v / 100).toFixed(2)}`,
 }: {
-  title: string;
-  data: Array<{ date: string; [key: string]: any }>;
-  maxValue: number;
-  getValue: (d: any) => number;
-  color: 'pink' | 'blue' | 'green' | 'purple';
-  formatValue: (v: number) => string;
+  data: Array<{ month: string; revenue: number; count: number }>;
+  formatValue?: (v: number) => string;
 }) {
-  const colorClasses = {
-    pink: 'bg-pink-500',
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    purple: 'bg-purple-500',
-  };
+  const maxValue = Math.max(...data.map((d) => d.revenue), 1);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <div className="flex items-end justify-between gap-2 h-32">
-        {data.map((day, index) => {
-          const value = getValue(day);
-          const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
-          return (
-            <div key={index} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-full flex items-end justify-center h-full">
-                <div
-                  className={`w-full ${colorClasses[color]} rounded-t transition-all`}
-                  style={{ height: `${Math.max(height, 2)}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-400">{day.date}</span>
-              <span className="text-xs text-gray-500">{formatValue(value)}</span>
+    <div className="flex items-end justify-between gap-2 h-48">
+      {data.map((item, index) => {
+        const height = maxValue > 0 ? (item.revenue / maxValue) * 100 : 0;
+        return (
+          <div key={index} className="flex-1 flex flex-col items-center gap-2">
+            <div className="w-full flex items-end justify-center h-full">
+              <div
+                className="w-full bg-gradient-to-t from-purple-500 to-pink-500 rounded-t transition-all"
+                style={{ height: `${Math.max(height, 2)}%` }}
+              />
             </div>
-          );
-        })}
-      </div>
+            <span className="text-xs text-gray-400">{item.month}</span>
+            <span className="text-xs text-gray-500">{formatValue(item.revenue)}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
