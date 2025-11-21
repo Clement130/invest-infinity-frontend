@@ -162,9 +162,9 @@ export default function AdminLayout({ children, activeSection = 'dashboard' }: A
         <main className="flex-1 bg-black p-6 overflow-auto">{children}</main>
       </div>
 
-        {/* Command Palette */}
-        <CommandPalette />
-      </div>
+      {/* Command Palette */}
+      <CommandPalette />
+    </div>
     </NotificationsProvider>
   );
 }
