@@ -166,4 +166,6 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
   };
 }
 
+// Alias pour compatibilité avec l'import existant
+export const getProgressSummary = getUserProgressSummary;
 
