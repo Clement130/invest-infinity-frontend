@@ -31,7 +31,7 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
   }, [allowedRoles, requiresRole, role, user]);
 
   // awaitingRole : on attend le rôle seulement si l'utilisateur existe mais le profil n'est pas encore chargé
-  // On limite à 5 secondes max pour éviter les boucles infinies
+  // On limite à 3 secondes max pour éviter les boucles infinies
   const [awaitingRoleStart] = useState(() => Date.now());
   const awaitingRole = useMemo(() => {
     // Si un rôle n'est pas requis, on n'attend pas
@@ -45,19 +45,25 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
     }
     
     // Si le rôle est déjà chargé (même si c'est null), on n'attend plus
-    if (role !== null || (profile === null && !loading)) {
+    if (role !== null) {
       return false;
     }
     
-    // Si on attend depuis plus de 5 secondes, on considère que c'est une erreur
+    // Si loading est false et profile est null, on n'attend plus (profil n'existe pas ou erreur)
+    if (!loading && profile === null) {
+      return false;
+    }
+    
+    // Si on attend depuis plus de 3 secondes, on considère que c'est une erreur
     const waitTime = Date.now() - awaitingRoleStart;
-    if (waitTime > 5000) {
-      console.warn('[useRoleGuard] Attente du rôle depuis plus de 5 secondes');
+    if (waitTime > 3000) {
+      console.warn('[useRoleGuard] Attente du rôle depuis plus de 3 secondes - arrêt de l\'attente');
       console.warn('[useRoleGuard] État - user:', !!user, 'role:', role, 'profile:', profile ? 'exists' : 'null', 'loading:', loading);
       return false;
     }
     
-    return true;
+    // On attend seulement si loading est true
+    return loading;
   }, [requiresRole, user, role, profile, loading, awaitingRoleStart]);
 
   return {
