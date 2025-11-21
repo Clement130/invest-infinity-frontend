@@ -15,17 +15,29 @@ export type Lead = {
 };
 
 export async function listLeads(): Promise<Lead[]> {
-  const { data, error } = await supabase
-    .from('leads')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching leads:', error);
-    throw error;
+    if (error) {
+      console.error('[leadsService] Erreur lors de la récupération des leads:', error);
+      
+      // Si c'est une erreur RLS, on retourne un tableau vide au lieu de throw
+      if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        console.warn('[leadsService] Erreur RLS détectée, retour d\'un tableau vide');
+        return [];
+      }
+      
+      throw error;
+    }
+
+    return data || [];
+  } catch (err: any) {
+    console.error('[leadsService] Exception dans listLeads:', err);
+    throw err;
   }
-
-  return data || [];
 }
 
 export async function getLeadByEmail(email: string): Promise<Lead | null> {

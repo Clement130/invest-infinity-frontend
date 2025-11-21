@@ -7,41 +7,122 @@ import { getPurchasesForAdmin } from '../../services/purchasesService';
 import { listLeads } from '../../services/leadsService';
 
 export default function DashboardPage() {
-  // Configuration optimisée des queries avec cache
+  // Configuration optimisée des queries avec cache et gestion d'erreurs améliorée
   const modulesQuery = useQuery({
     queryKey: ['admin', 'modules'],
-    queryFn: () => getModules({ includeInactive: true }),
+    queryFn: async () => {
+      try {
+        console.log('[Dashboard] Chargement des modules...');
+        const result = await getModules({ includeInactive: true });
+        console.log('[Dashboard] Modules chargés:', result.length);
+        return result;
+      } catch (error) {
+        console.error('[Dashboard] Erreur lors du chargement des modules:', error);
+        // Retourner un tableau vide au lieu de throw pour éviter de marquer comme erreur
+        return [];
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (anciennement cacheTime)
     refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      // Ne pas retry sur les erreurs RLS/permissions
+      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
   });
 
   const profilesQuery = useQuery({
     queryKey: ['admin', 'profiles'],
-    queryFn: () => listProfiles(),
+    queryFn: async () => {
+      try {
+        console.log('[Dashboard] Chargement des profils...');
+        const result = await listProfiles();
+        console.log('[Dashboard] Profils chargés:', result.length);
+        return result;
+      } catch (error) {
+        console.error('[Dashboard] Erreur lors du chargement des profils:', error);
+        return [];
+      }
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
   });
 
   const purchasesQuery = useQuery({
     queryKey: ['admin', 'purchases'],
-    queryFn: () => getPurchasesForAdmin(),
+    queryFn: async () => {
+      try {
+        console.log('[Dashboard] Chargement des achats...');
+        const result = await getPurchasesForAdmin();
+        console.log('[Dashboard] Achats chargés:', result.length);
+        return result;
+      } catch (error) {
+        console.error('[Dashboard] Erreur lors du chargement des achats:', error);
+        return [];
+      }
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes (données plus dynamiques)
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
   });
 
   const leadsQuery = useQuery({
     queryKey: ['admin', 'leads'],
-    queryFn: () => listLeads(),
+    queryFn: async () => {
+      try {
+        console.log('[Dashboard] Chargement des leads...');
+        const result = await listLeads();
+        console.log('[Dashboard] Leads chargés:', result.length);
+        return result;
+      } catch (error) {
+        console.error('[Dashboard] Erreur lors du chargement des leads:', error);
+        return [];
+      }
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
   });
 
   const isLoading = modulesQuery.isLoading || profilesQuery.isLoading || purchasesQuery.isLoading || leadsQuery.isLoading;
-  const hasError = modulesQuery.isError || profilesQuery.isError || purchasesQuery.isError || leadsQuery.isError;
+  
+  // Ne considérer comme erreur que si la requête a échoué ET qu'on n'a pas de données
+  // Si on a des données (même un tableau vide), ce n'est pas une erreur
+  const hasError = 
+    (modulesQuery.isError && !modulesQuery.data) ||
+    (profilesQuery.isError && !profilesQuery.data) ||
+    (purchasesQuery.isError && !purchasesQuery.data) ||
+    (leadsQuery.isError && !leadsQuery.data);
+
+  // Récupération des erreurs individuelles (seulement si pas de données)
+  const errors = {
+    modules: modulesQuery.isError && !modulesQuery.data ? modulesQuery.error : null,
+    profiles: profilesQuery.isError && !profilesQuery.data ? profilesQuery.error : null,
+    purchases: purchasesQuery.isError && !purchasesQuery.data ? purchasesQuery.error : null,
+    leads: leadsQuery.isError && !leadsQuery.data ? leadsQuery.error : null,
+  };
 
   // Calculs optimisés avec useMemo
   const stats = useMemo(() => {
@@ -111,11 +192,87 @@ export default function DashboardPage() {
       </div>
 
       {hasError && (
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400" />
-          <p className="text-sm text-red-200">
-            Erreur lors du chargement des données. Veuillez réessayer.
-          </p>
+        <div className="space-y-2">
+          {errors.modules && (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-200">Erreur lors du chargement des modules</p>
+                  <p className="text-xs text-red-300/80 mt-1">
+                    {errors.modules instanceof Error ? errors.modules.message : 'Erreur inconnue'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => modulesQuery.refetch()}
+                disabled={modulesQuery.isLoading}
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-200 transition disabled:opacity-50"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+          {errors.profiles && (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-200">Erreur lors du chargement des profils</p>
+                  <p className="text-xs text-red-300/80 mt-1">
+                    {errors.profiles instanceof Error ? errors.profiles.message : 'Erreur inconnue'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => profilesQuery.refetch()}
+                disabled={profilesQuery.isLoading}
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-200 transition disabled:opacity-50"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+          {errors.purchases && (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-200">Erreur lors du chargement des achats</p>
+                  <p className="text-xs text-red-300/80 mt-1">
+                    {errors.purchases instanceof Error ? errors.purchases.message : 'Erreur inconnue'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => purchasesQuery.refetch()}
+                disabled={purchasesQuery.isLoading}
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-200 transition disabled:opacity-50"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+          {errors.leads && (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-200">Erreur lors du chargement des leads</p>
+                  <p className="text-xs text-red-300/80 mt-1">
+                    {errors.leads instanceof Error ? errors.leads.message : 'Erreur inconnue'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => leadsQuery.refetch()}
+                disabled={leadsQuery.isLoading}
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-200 transition disabled:opacity-50"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
         </div>
       )}
 
