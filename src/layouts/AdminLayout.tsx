@@ -164,7 +164,7 @@ export default function AdminLayout({ children, activeSection = 'dashboard' }: A
 
       {/* Command Palette */}
       <CommandPalette />
-      </div>
+    </div>
     </NotificationsProvider>
   );
 }
