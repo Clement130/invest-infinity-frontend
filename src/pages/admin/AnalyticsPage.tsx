@@ -224,12 +224,12 @@ function KPICard({
 
 function MonthlyChart({
   data,
-  formatValue = (v) => `€ ${(v / 100).toFixed(2)}`,
+  formatValue = (v) => `€ ${((v || 0) / 100).toFixed(2)}`,
 }: {
   data: Array<{ month: string; revenue: number; count: number }>;
   formatValue?: (v: number) => string;
 }) {
-  const maxValue = Math.max(...data.map((d) => d.revenue), 1);
+  const maxValue = Math.max(...data.map((d) => d.revenue || 0), 1);
 
   return (
     <div className="flex items-end justify-between gap-2 h-48">
