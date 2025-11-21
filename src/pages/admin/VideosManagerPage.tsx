@@ -34,6 +34,7 @@ import {
   deleteLesson,
 } from '../../services/trainingService';
 import type { LessonWithModule } from '../../types/training';
+import VideoUploadModal from '../../components/admin/VideoUploadModal';
 
 type FeedbackState =
   | { type: 'success'; message: string }
@@ -67,6 +68,7 @@ export default function VideosManagerPage() {
     title: string;
     bunnyVideoId: string;
   } | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const lessonsQuery = useQuery<LessonWithModule[]>({
     queryKey: ['admin', 'lessons-with-modules'],
@@ -971,6 +973,14 @@ export default function VideosManagerPage() {
                     Copiez-collez l'ID depuis Bunny Stream ou sélectionnez une vidéo
                     existante dans la bibliothèque ci-dessous.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="mt-2 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-600 hover:to-pink-600 transition"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Uploader une nouvelle vidéo
+                  </button>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
@@ -1119,6 +1129,34 @@ export default function VideosManagerPage() {
           Impossible de charger les leçons. Vérifiez votre connexion et réessayez.
         </div>
       )}
+
+      {/* Modal d'upload de vidéo */}
+      <VideoUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadComplete={(videoId, title) => {
+          // Si une leçon est sélectionnée, mettre à jour automatiquement
+          if (selectedLessonId) {
+            setFormState((prev) => ({
+              ...prev,
+              bunnyVideoId: videoId,
+            }));
+            // Sauvegarder automatiquement
+            updateLessonMutation.mutate({
+              id: selectedLessonId,
+              bunnyVideoId: videoId,
+            });
+          } else {
+            // Sinon, juste mettre à jour le champ si une leçon est sélectionnée après
+            setFormState((prev) => ({
+              ...prev,
+              bunnyVideoId: videoId,
+            }));
+          }
+          setIsUploadModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['admin', 'lessons-with-modules'] });
+        }}
+      />
     </div>
   );
 }
