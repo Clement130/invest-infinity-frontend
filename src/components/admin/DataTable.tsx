@@ -3,7 +3,7 @@ import { Checkbox } from '../ui/checkbox';
 import TableSortHeader from './TableSortHeader';
 import TablePagination from './TablePagination';
 import { Download, Search, X } from 'lucide-react';
-import { useDataTable, type UseDataTableOptions } from '../../hooks/useDataTable';
+import { useDataTable } from '../../hooks/useDataTable';
 import { exportData, type ExportFormat } from '../../services/exportService';
 
 export type Column<T> = {
