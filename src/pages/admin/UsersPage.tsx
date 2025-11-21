@@ -1,22 +1,20 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Download, Eye, Mail, UserCheck, UserX, X } from 'lucide-react';
+import { Eye, X } from 'lucide-react';
 import { listProfiles } from '../../services/profilesService';
-import { getAccessList, grantAccess, revokeAccess } from '../../services/trainingService';
+import { getAccessList, revokeAccess } from '../../services/trainingService';
 import { getPurchasesForAdmin } from '../../services/purchasesService';
 import { getProgressSummary } from '../../services/progressService';
 import { getModules } from '../../services/trainingService';
 import type { Profile } from '../../services/profilesService';
-import type { TrainingAccess } from '../../types/training';
+import DataTable, { type Column } from '../../components/admin/DataTable';
 import toast from 'react-hot-toast';
 
 type FilterType = 'all' | 'client' | 'admin' | 'with-access' | 'without-access';
 
 export default function UsersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<FilterType>('all');
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['admin', 'profiles'],
@@ -30,16 +28,6 @@ export default function UsersPage() {
 
   const filteredProfiles = useMemo(() => {
     let filtered = profiles;
-
-    // Filtre par recherche
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.email?.toLowerCase().includes(query) ||
-          p.full_name?.toLowerCase().includes(query)
-      );
-    }
 
     // Filtre par rôle
     if (roleFilter === 'client') {
@@ -55,40 +43,74 @@ export default function UsersPage() {
     }
 
     return filtered;
-  }, [profiles, searchQuery, roleFilter, accessList]);
+  }, [profiles, roleFilter, accessList]);
 
-  const handleExportCSV = () => {
-    const headers = ['Email', 'Nom', 'Rôle', 'Date inscription', 'Accès formations'];
-    const rows = filteredProfiles.map((profile) => {
-      const userAccess = accessList.filter((a) => a.user_id === profile.id);
-      return [
-        profile.email || '',
-        profile.full_name || '',
-        profile.role || 'client',
-        profile.created_at
-          ? new Date(profile.created_at).toLocaleDateString('fr-FR')
-          : '',
-        userAccess.length.toString(),
-      ];
-    });
+  const columns: Column<Profile & { accessCount: number }>[] = [
+    {
+      key: 'email',
+      label: 'Email',
+      sortable: true,
+    },
+    {
+      key: 'full_name',
+      label: 'Nom',
+      sortable: true,
+      render: (value) => value || '-',
+    },
+    {
+      key: 'role',
+      label: 'Rôle',
+      sortable: true,
+      render: (value) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            value === 'admin'
+              ? 'bg-purple-500/20 text-purple-400'
+              : 'bg-blue-500/20 text-blue-400'
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+    {
+      key: 'created_at',
+      label: 'Date d\'inscription',
+      sortable: true,
+      render: (value) =>
+        value ? new Date(value).toLocaleDateString('fr-FR') : '-',
+    },
+    {
+      key: 'accessCount',
+      label: 'Accès',
+      sortable: true,
+      render: (value) => `${value} formation${Number(value) > 1 ? 's' : ''}`,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedUser(row);
+          }}
+          className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition text-sm"
+        >
+          <Eye className="w-4 h-4" />
+          Voir
+        </button>
+      ),
+    },
+  ];
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `utilisateurs-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast.success('Export CSV généré');
-  };
+  const tableData = filteredProfiles.map((profile) => {
+    const userAccess = accessList.filter((a) => a.user_id === profile.id);
+    return {
+      ...profile,
+      accessCount: userAccess.length,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -97,160 +119,48 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold text-white mb-2">Utilisateurs</h1>
           <p className="text-gray-400">Gérez les utilisateurs de votre plateforme</p>
         </div>
-        <div className="flex items-center gap-3">
+      </div>
+
+      {/* Filtres */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {[
+          { value: 'all', label: 'Tous' },
+          { value: 'client', label: 'Clients' },
+          { value: 'admin', label: 'Admins' },
+          { value: 'with-access', label: 'Avec accès' },
+          { value: 'without-access', label: 'Sans accès' },
+        ].map((filter) => (
           <button
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition"
+            key={filter.value}
+            onClick={() => setRoleFilter(filter.value as FilterType)}
+            className={`px-3 py-1 rounded-lg text-sm transition ${
+              roleFilter === filter.value
+                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            }`}
           >
-            <Download className="w-4 h-4" />
-            Export CSV
+            {filter.label}
           </button>
-        </div>
+        ))}
       </div>
-
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex-1 relative min-w-[300px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un utilisateur..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400/50 text-white"
-          />
-        </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition ${
-            showFilters || roleFilter !== 'all'
-              ? 'bg-purple-500/20 border-purple-500/30 text-purple-400'
-              : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-          }`}
-        >
-          <Filter className="w-4 h-4" />
-          Filtres
-        </button>
-      </div>
-
-      {showFilters && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-white">Filtrer par</h3>
-            <button
-              onClick={() => {
-                setRoleFilter('all');
-                setShowFilters(false);
-              }}
-              className="text-xs text-gray-400 hover:text-white"
-            >
-              Réinitialiser
-            </button>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {[
-              { value: 'all', label: 'Tous' },
-              { value: 'client', label: 'Clients' },
-              { value: 'admin', label: 'Admins' },
-              { value: 'with-access', label: 'Avec accès' },
-              { value: 'without-access', label: 'Sans accès' },
-            ].map((filter) => (
-              <button
-                key={filter.value}
-                onClick={() => setRoleFilter(filter.value as FilterType)}
-                className={`px-3 py-1 rounded-lg text-sm transition ${
-                  roleFilter === filter.value
-                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {isLoading ? (
         <p className="text-gray-400 text-center py-8">Chargement des utilisateurs...</p>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Nom
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Rôle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Date d'inscription
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Accès
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {filteredProfiles.map((profile) => {
-                  const userAccess = accessList.filter((a) => a.user_id === profile.id);
-                  return (
-                    <tr key={profile.id} className="hover:bg-white/5 transition">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {profile.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {profile.full_name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            profile.role === 'admin'
-                              ? 'bg-purple-500/20 text-purple-400'
-                              : 'bg-blue-500/20 text-blue-400'
-                          }`}
-                        >
-                          {profile.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {profile.created_at
-                          ? new Date(profile.created_at).toLocaleDateString('fr-FR')
-                          : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {userAccess.length} formation{userAccess.length > 1 ? 's' : ''}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => setSelectedUser(profile)}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition text-sm"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Voir
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {filteredProfiles.length === 0 && (
-            <div className="text-center py-8 text-gray-400">
-              {searchQuery || roleFilter !== 'all'
-                ? 'Aucun utilisateur trouvé'
-                : 'Aucun utilisateur'}
-            </div>
-          )}
-        </div>
+        <DataTable
+          data={tableData}
+          columns={columns}
+          getRowId={(row) => row.id}
+          searchable={true}
+          searchPlaceholder="Rechercher un utilisateur..."
+          exportable={true}
+          exportFilename="utilisateurs"
+          pageSize={25}
+          defaultSort={{ column: 'created_at', direction: 'desc' }}
+          persistState={true}
+          storageKey="users-table"
+          onRowClick={(row) => setSelectedUser(row)}
+        />
       )}
 
       {selectedUser && (

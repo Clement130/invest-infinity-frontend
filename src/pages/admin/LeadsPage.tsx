@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Mail, Phone, Euro, Calendar, User } from 'lucide-react';
+import { Mail, Phone, Euro, Calendar, User } from 'lucide-react';
 import { listLeads, updateLeadStatus } from '../../services/leadsService';
 import type { Lead } from '../../services/leadsService';
+import DataTable, { type Column } from '../../components/admin/DataTable';
 
 export default function LeadsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { data: leads = [], isLoading, refetch } = useQuery({
@@ -14,26 +14,9 @@ export default function LeadsPage() {
   });
 
   const filteredLeads = useMemo(() => {
-    let filtered = leads;
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (lead) =>
-          lead.email?.toLowerCase().includes(query) ||
-          lead.prenom?.toLowerCase().includes(query) ||
-          lead.telephone?.toLowerCase().includes(query),
-      );
-    }
-
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((lead) => lead.statut === statusFilter);
-    }
-
-    return filtered;
-  }, [leads, searchQuery, statusFilter]);
+    if (statusFilter === 'all') return leads;
+    return leads.filter((lead) => lead.statut === statusFilter);
+  }, [leads, statusFilter]);
 
   const handleStatusChange = async (email: string, newStatus: string) => {
     try {
@@ -59,6 +42,118 @@ export default function LeadsPage() {
   }, [leads]);
 
   const statusOptions = ['Lead', 'Client', 'Prospect', 'Inactif'];
+
+  const columns: Column<Lead>[] = [
+    {
+      key: 'prenom',
+      label: 'Prénom',
+      sortable: true,
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-gray-400" />
+          {value || '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      sortable: true,
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <Mail className="w-4 h-4 text-gray-400" />
+          {value}
+        </div>
+      ),
+    },
+    {
+      key: 'telephone',
+      label: 'Téléphone',
+      sortable: true,
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <Phone className="w-4 h-4 text-gray-400" />
+          {value || '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'capital',
+      label: 'Capital',
+      sortable: true,
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <Euro className="w-4 h-4 text-gray-400" />
+          {value ? `${Number(value).toLocaleString('fr-FR')} €` : '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'segment',
+      label: 'Segment',
+      render: (_, row) => {
+        const segment = (row.metadata as any)?.segment;
+        return (
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${
+              segment === 'high'
+                ? 'bg-green-500/20 text-green-400'
+                : segment === 'medium'
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-gray-500/20 text-gray-400'
+            }`}
+          >
+            {segment === 'high' ? 'Élevé' : segment === 'medium' ? 'Moyen' : 'Bas'}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'statut',
+      label: 'Statut',
+      sortable: true,
+      render: (value, row) => (
+        <select
+          value={value}
+          onChange={(e) => {
+            e.stopPropagation();
+            handleStatusChange(row.email, e.target.value);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className={`px-2 py-1 text-xs rounded border bg-slate-800 ${
+            value === 'Client'
+              ? 'text-green-400 border-green-500/30'
+              : value === 'Lead'
+                ? 'text-blue-400 border-blue-500/30'
+                : 'text-gray-400 border-gray-500/30'
+          }`}
+        >
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      key: 'created_at',
+      label: 'Date',
+      sortable: true,
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-gray-400" />
+          {new Date(value).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -94,17 +189,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un lead (email, prénom, téléphone)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400/50 text-white"
-          />
-        </div>
+      <div className="flex items-center gap-2 flex-wrap">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -123,122 +208,19 @@ export default function LeadsPage() {
       {isLoading ? (
         <p className="text-gray-400 text-center py-8">Chargement des leads...</p>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Prénom
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Téléphone
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Capital
-                  </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Segment
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Statut
-                    </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-white/5 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-400" />
-                        {lead.prenom || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        {lead.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        {lead.telephone || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                      <div className="flex items-center gap-2">
-                        <Euro className="w-4 h-4 text-gray-400" />
-                        {lead.capital ? `${lead.capital.toLocaleString('fr-FR')} €` : '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          (lead.metadata as any)?.segment === 'high'
-                            ? 'bg-green-500/20 text-green-400'
-                            : (lead.metadata as any)?.segment === 'medium'
-                              ? 'bg-yellow-500/20 text-yellow-400'
-                              : 'bg-gray-500/20 text-gray-400'
-                        }`}
-                      >
-                        {(lead.metadata as any)?.segment === 'high'
-                          ? 'Élevé'
-                          : (lead.metadata as any)?.segment === 'medium'
-                            ? 'Moyen'
-                            : 'Bas'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.statut}
-                        onChange={(e) => handleStatusChange(lead.email, e.target.value)}
-                        className={`px-2 py-1 text-xs rounded-full border-0 bg-transparent ${
-                          lead.statut === 'Client'
-                            ? 'text-green-400'
-                            : lead.statut === 'Lead'
-                              ? 'text-blue-400'
-                              : 'text-gray-400'
-                        }`}
-                      >
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(lead.created_at).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {filteredLeads.length === 0 && (
-            <div className="text-center py-8 text-gray-400">
-              {searchQuery || statusFilter !== 'all'
-                ? 'Aucun lead trouvé'
-                : 'Aucun lead'}
-            </div>
-          )}
-        </div>
+        <DataTable
+          data={filteredLeads}
+          columns={columns}
+          getRowId={(row) => row.id}
+          searchable={true}
+          searchPlaceholder="Rechercher un lead (email, prénom, téléphone)..."
+          exportable={true}
+          exportFilename="leads"
+          pageSize={25}
+          defaultSort={{ column: 'created_at', direction: 'desc' }}
+          persistState={true}
+          storageKey="leads-table"
+        />
       )}
     </div>
   );
