@@ -7,6 +7,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    chunkSizeWarningLimit: 1000, // Augmente la limite à 1000 KB pour éviter les warnings
+  },
   test: {
     globals: true,
     environment: 'jsdom',
