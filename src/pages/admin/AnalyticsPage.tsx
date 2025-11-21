@@ -129,9 +129,9 @@ export default function AnalyticsPage() {
                   <span className="text-sm text-gray-400">{stat.totalAccess} accès</span>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-400">
-                  <span>Taux de complétion: {stat.completionRate.toFixed(1)}%</span>
-                  <span>Vues: {stat.totalViews}</span>
-                  <span>Progression moyenne: {stat.averageProgress.toFixed(1)}%</span>
+                  <span>Taux de complétion: {(stat.completionRate ?? 0).toFixed(1)}%</span>
+                  <span>Vues: {stat.totalViews ?? 0}</span>
+                  <span>Progression moyenne: {(stat.averageProgress ?? 0).toFixed(1)}%</span>
                 </div>
               </div>
             ))}
@@ -181,11 +181,10 @@ function KPICard({
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
-  change: number;
+  change?: number;
   isLoading: boolean;
   color?: 'purple' | 'blue' | 'green' | 'pink';
 }) {
-  const isPositive = change >= 0;
   const colorClasses = {
     purple: 'text-purple-400',
     blue: 'text-blue-400',
@@ -193,18 +192,23 @@ function KPICard({
     pink: 'text-pink-400',
   };
 
+  const hasChange = change !== undefined && change !== null;
+  const isPositive = hasChange && change >= 0;
+
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-3">
       <div className="flex items-center justify-between">
         <Icon className={`w-6 h-6 ${colorClasses[color]}`} />
-        <span
-          className={`text-sm font-medium ${
-            isPositive ? 'text-green-400' : 'text-red-400'
-          }`}
-        >
-          {isPositive ? '+' : ''}
-          {change.toFixed(0)}%
-        </span>
+        {hasChange && (
+          <span
+            className={`text-sm font-medium ${
+              isPositive ? 'text-green-400' : 'text-red-400'
+            }`}
+          >
+            {isPositive ? '+' : ''}
+            {change.toFixed(0)}%
+          </span>
+        )}
       </div>
       <div>
         <p className="text-sm text-gray-400 mb-1">{label}</p>
