@@ -7,121 +7,64 @@ import { getPurchasesForAdmin } from '../../services/purchasesService';
 import { listLeads } from '../../services/leadsService';
 
 export default function DashboardPage() {
-  // Configuration optimisée des queries avec cache et gestion d'erreurs améliorée
+  // Configuration optimisée des queries avec cache
+  // Les services gèrent déjà les erreurs et retournent des tableaux vides
   const modulesQuery = useQuery({
     queryKey: ['admin', 'modules'],
-    queryFn: async () => {
-      try {
-        console.log('[Dashboard] Chargement des modules...');
-        const result = await getModules({ includeInactive: true });
-        console.log('[Dashboard] Modules chargés:', result.length);
-        return result;
-      } catch (error) {
-        console.error('[Dashboard] Erreur lors du chargement des modules:', error);
-        // Retourner un tableau vide au lieu de throw pour éviter de marquer comme erreur
-        return [];
-      }
+    queryFn: () => {
+      console.log('[Dashboard] Chargement des modules...');
+      return getModules({ includeInactive: true });
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (anciennement cacheTime)
     refetchOnWindowFocus: false,
-    retry: (failureCount, error: any) => {
-      // Ne pas retry sur les erreurs RLS/permissions
-      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
-        return false;
-      }
-      return failureCount < 1;
-    },
   });
 
   const profilesQuery = useQuery({
     queryKey: ['admin', 'profiles'],
-    queryFn: async () => {
-      try {
-        console.log('[Dashboard] Chargement des profils...');
-        const result = await listProfiles();
-        console.log('[Dashboard] Profils chargés:', result.length);
-        return result;
-      } catch (error) {
-        console.error('[Dashboard] Erreur lors du chargement des profils:', error);
-        return [];
-      }
+    queryFn: () => {
+      console.log('[Dashboard] Chargement des profils...');
+      return listProfiles();
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: (failureCount, error: any) => {
-      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
-        return false;
-      }
-      return failureCount < 1;
-    },
   });
 
   const purchasesQuery = useQuery({
     queryKey: ['admin', 'purchases'],
-    queryFn: async () => {
-      try {
-        console.log('[Dashboard] Chargement des achats...');
-        const result = await getPurchasesForAdmin();
-        console.log('[Dashboard] Achats chargés:', result.length);
-        return result;
-      } catch (error) {
-        console.error('[Dashboard] Erreur lors du chargement des achats:', error);
-        return [];
-      }
+    queryFn: () => {
+      console.log('[Dashboard] Chargement des achats...');
+      return getPurchasesForAdmin();
     },
     staleTime: 2 * 60 * 1000, // 2 minutes (données plus dynamiques)
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: (failureCount, error: any) => {
-      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
-        return false;
-      }
-      return failureCount < 1;
-    },
   });
 
   const leadsQuery = useQuery({
     queryKey: ['admin', 'leads'],
-    queryFn: async () => {
-      try {
-        console.log('[Dashboard] Chargement des leads...');
-        const result = await listLeads();
-        console.log('[Dashboard] Leads chargés:', result.length);
-        return result;
-      } catch (error) {
-        console.error('[Dashboard] Erreur lors du chargement des leads:', error);
-        return [];
-      }
+    queryFn: () => {
+      console.log('[Dashboard] Chargement des leads...');
+      return listLeads();
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: (failureCount, error: any) => {
-      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('RLS')) {
-        return false;
-      }
-      return failureCount < 1;
-    },
   });
 
   const isLoading = modulesQuery.isLoading || profilesQuery.isLoading || purchasesQuery.isLoading || leadsQuery.isLoading;
   
-  // Ne considérer comme erreur que si la requête a échoué ET qu'on n'a pas de données
-  // Si on a des données (même un tableau vide), ce n'est pas une erreur
-  const hasError = 
-    (modulesQuery.isError && !modulesQuery.data) ||
-    (profilesQuery.isError && !profilesQuery.data) ||
-    (purchasesQuery.isError && !purchasesQuery.data) ||
-    (leadsQuery.isError && !leadsQuery.data);
+  // Les services ne lancent plus d'erreurs, donc hasError devrait toujours être false
+  // On garde cette logique au cas où, mais normalement elle ne devrait jamais être vraie
+  const hasError = modulesQuery.isError || profilesQuery.isError || purchasesQuery.isError || leadsQuery.isError;
 
-  // Récupération des erreurs individuelles (seulement si pas de données)
+  // Récupération des erreurs individuelles (normalement toujours null maintenant)
   const errors = {
-    modules: modulesQuery.isError && !modulesQuery.data ? modulesQuery.error : null,
-    profiles: profilesQuery.isError && !profilesQuery.data ? profilesQuery.error : null,
-    purchases: purchasesQuery.isError && !purchasesQuery.data ? purchasesQuery.error : null,
-    leads: leadsQuery.isError && !leadsQuery.data ? leadsQuery.error : null,
+    modules: modulesQuery.error,
+    profiles: profilesQuery.error,
+    purchases: purchasesQuery.error,
+    leads: leadsQuery.error,
   };
 
   // Calculs optimisés avec useMemo
