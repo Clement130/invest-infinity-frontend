@@ -10,12 +10,28 @@ export interface BunnyVideoWithAssignment extends BunnyVideoMetadata {
 }
 
 export const useBunnyLibrary = () => {
+  const bunnyApiKey = import.meta.env.VITE_BUNNY_STREAM_API_KEY;
+  const bunnyLibraryId = import.meta.env.VITE_BUNNY_STREAM_LIBRARY_ID;
+  const isConfigured = Boolean(bunnyApiKey && bunnyLibraryId);
+
   const { data: bunnyVideos, isLoading: isLoadingBunny, error: bunnyError } = useQuery({
     queryKey: ['admin', 'bunny-library'],
     queryFn: async () => {
-      const { items } = await listBunnyVideos(1, 1000);
-      return items;
+      if (!isConfigured) {
+        // Retourner un tableau vide si les variables ne sont pas configurées
+        // plutôt que de lancer une erreur
+        return [];
+      }
+      try {
+        const { items } = await listBunnyVideos(1, 1000);
+        return items;
+      } catch (error: any) {
+        console.error('[useBunnyLibrary] Erreur lors du chargement des vidéos:', error);
+        // Retourner un tableau vide en cas d'erreur plutôt que de casser l'interface
+        return [];
+      }
     },
+    enabled: isConfigured, // Ne pas faire la requête si les variables ne sont pas configurées
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -68,6 +84,7 @@ export const useBunnyLibrary = () => {
     assignedVideos,
     isLoading: isLoadingBunny || isLoadingLessons,
     error: bunnyError,
+    isConfigured,
     refetch: async () => {
       // Refetch sera géré par react-query
     },

@@ -17,7 +17,7 @@ export function BunnyLibraryModal({
   onSelectVideo,
   onAssignVideo,
 }: BunnyLibraryModalProps) {
-  const { videos, orphanVideos, assignedVideos, isLoading } = useBunnyLibrary();
+  const { videos, orphanVideos, assignedVideos, isLoading, error, isConfigured } = useBunnyLibrary();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'assigned' | 'orphan'>('all');
 
@@ -108,13 +108,35 @@ export function BunnyLibraryModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {isLoading ? (
+          {!isConfigured ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="text-amber-400 text-lg mb-2">⚠️ Configuration requise</div>
+              <p className="text-gray-400 max-w-md mx-auto">
+                Les variables d'environnement Bunny Stream ne sont pas configurées.
+                <br />
+                Configurez <code className="bg-black/40 px-1 py-0.5 rounded text-xs">VITE_BUNNY_STREAM_API_KEY</code> et{' '}
+                <code className="bg-black/40 px-1 py-0.5 rounded text-xs">VITE_BUNNY_STREAM_LIBRARY_ID</code> pour accéder à la bibliothèque.
+              </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="text-red-400 text-lg mb-2">❌ Erreur de chargement</div>
+              <p className="text-gray-400">
+                Impossible de charger les vidéos depuis Bunny Stream.
+                <br />
+                Vérifiez vos clés API et votre connexion.
+              </p>
+            </div>
+          ) : isLoading ? (
             <div className="text-center py-12 text-gray-400">
               Chargement de la bibliothèque...
             </div>
           ) : filteredVideos.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <p>Aucune vidéo trouvée</p>
+              {searchQuery && (
+                <p className="text-sm mt-2">Essayez de modifier votre recherche</p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
