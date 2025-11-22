@@ -197,7 +197,7 @@ export default function PricingPage() {
                 <p className="text-gray-400 mb-6">Pour apprendre les bases</p>
                 
                 <div className="mb-8">
-                  <span className="text-4xl font-bold">47€</span>
+                  <span className="text-4xl font-bold">50€</span>
                   <span className="text-gray-400 ml-2">paiement unique</span>
                 </div>
 
@@ -252,7 +252,7 @@ export default function PricingPage() {
                 <p className="text-gray-400 mb-6">Pour la maîtrise complète</p>
                 
                 <div className="mb-8">
-                  <span className="text-4xl font-bold">197€</span>
+                  <span className="text-4xl font-bold">249.95€</span>
                   <span className="text-gray-400 ml-2">paiement unique</span>
                 </div>
 

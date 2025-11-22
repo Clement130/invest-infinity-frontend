@@ -161,7 +161,7 @@ export default function ConfirmationPage() {
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
               <h3 className="text-xl font-bold text-white mb-2">Formation Essentiel</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-white">47€</span>
+                <span className="text-4xl font-bold text-white">50€</span>
                 <span className="text-gray-400 ml-2">une fois</span>
               </div>
               <ul className="space-y-3 mb-6">
@@ -200,7 +200,7 @@ export default function ConfirmationPage() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Formation Premium</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-white">197€</span>
+                <span className="text-4xl font-bold text-white">249.95€</span>
                 <span className="text-gray-300 ml-2">une fois</span>
               </div>
               <ul className="space-y-3 mb-6">

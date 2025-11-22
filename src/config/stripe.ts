@@ -6,8 +6,8 @@
  */
 
 export const STRIPE_PRICE_IDS = {
-  essentiel: 'price_1SVKI9KaUb6KDbNFbj44oi6m', // Formation Essentiel - 47€
-  premium: 'price_1SVKd4KaUb6KDbNFdjwiTGIl', // Formation Premium - 197€
+  essentiel: 'price_1SI6KfKaUb6KDbNFdC4WAJ3v', // Formation Essentiel - 50€
+  premium: 'price_1SHkZrKaUb6KDbNFFSfXBIvQ', // Formation Premium - 249.95€
 } as const;
 
 /**
