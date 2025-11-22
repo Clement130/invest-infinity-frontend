@@ -78,15 +78,27 @@ serve(async (req) => {
       );
     }
 
-    // Vérifier si la licence est expirée
-    const lastPaymentDate = new Date(license.last_payment_date);
-    const expirationDate = new Date(lastPaymentDate);
-    expirationDate.setDate(expirationDate.getDate() + license.admin_revocation_days);
-    const now = new Date();
+    // Si auto_renewal_enabled = true, le paiement a été validé une fois
+    // On ne fait plus rien - la protection est désactivée définitivement
+    if (license.auto_renewal_enabled) {
+      console.log('Paiement validé une fois - Protection désactivée définitivement');
+      return new Response(
+        JSON.stringify({
+          message: 'Payment validated once - Protection permanently disabled',
+          action: 'none',
+          is_active: license.is_active,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Si la licence est active mais expirée, la désactiver
-    if (license.is_active && now > expirationDate) {
-      console.log('Licence expirée, désactivation...');
+    // Vérifier si on est après le 26 décembre 2025 (seulement si auto_renewal_enabled = false)
+    const now = new Date();
+    const deadline = new Date('2025-12-26T00:00:00'); // 26 décembre 2025 à 00h00 - DATE FIXE
+
+    // Si on est après le 26 décembre 2025 ET que le paiement n'a pas été validé
+    if (now >= deadline) {
+      console.log('Date limite dépassée (26 décembre 2025) - Paiement non validé, désactivation...');
 
       // Désactiver la licence
       const { error: updateError } = await supabase
@@ -171,15 +183,15 @@ serve(async (req) => {
       }
     }
 
-    // Aucune action nécessaire
+    // Aucune action nécessaire (on est avant le 26 décembre 2025)
+    const daysUntilDeadline = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    
     return new Response(
       JSON.stringify({
         message: 'License check completed',
         action: 'none',
         is_active: license.is_active,
-        days_remaining: license.is_active
-          ? Math.max(0, Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-          : 0,
+        days_remaining: daysUntilDeadline,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

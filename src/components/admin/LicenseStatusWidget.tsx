@@ -45,7 +45,7 @@ export default function LicenseStatusWidget() {
     );
   }
 
-  const { is_active, last_payment_date, daysRemaining, nextPaymentDate, adminStatus } = licenseStatus;
+  const { is_active, last_payment_date, daysRemaining, nextPaymentDate, adminStatus, auto_renewal_enabled } = licenseStatus;
 
   // Déterminer le badge d'alerte
   const getAlertBadge = () => {
@@ -168,41 +168,58 @@ export default function LicenseStatusWidget() {
         </div>
       </div>
 
-      {/* Bouton de validation */}
-      <div className="pt-4 border-t border-white/10">
-        <button
-          onClick={validatePayment}
-          disabled={isValidating}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-        >
-          {isValidating ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Validation en cours...
-            </>
-          ) : (
-            <>
-              <Shield className="w-5 h-5" />
-              ✅ Valider le Paiement
-            </>
-          )}
-        </button>
-        <div className="mt-2 space-y-1">
-          <p className="text-xs text-gray-400 text-center">
-            Cliquez pour valider le paiement reçu et réactiver la licence pour 30 jours
-          </p>
-          {adminStatus === 'revoked' && (
-            <p className="text-xs text-orange-400 text-center font-medium">
-              ⚠️ Le rôle admin sera automatiquement restauré pour investinfinityfr@gmail.com
+      {/* Bouton de validation - Affiché UNE SEULE FOIS avant le premier clic */}
+      {!licenseStatus.auto_renewal_enabled && (
+        <div className="pt-4 border-t border-white/10">
+          <button
+            onClick={validatePayment}
+            disabled={isValidating}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          >
+            {isValidating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Validation en cours...
+              </>
+            ) : (
+              <>
+                <Shield className="w-5 h-5" />
+                ✅ Valider le Paiement (Une seule fois)
+              </>
+            )}
+          </button>
+          <div className="mt-2 space-y-1">
+            <p className="text-xs text-gray-400 text-center">
+              Cliquez une seule fois pour valider le paiement reçu. La licence sera active pour 30 jours.
             </p>
-          )}
-          {adminStatus === 'active' && daysRemaining > 0 && (
-            <p className="text-xs text-green-400 text-center">
-              ✅ Le rôle admin reste actif tant que le paiement est à jour
-            </p>
-          )}
+            {adminStatus === 'revoked' && (
+              <p className="text-xs text-orange-400 text-center font-medium">
+                ⚠️ Le rôle admin sera automatiquement restauré pour investinfinityfr@gmail.com
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Message une fois que le paiement a été validé une fois */}
+      {licenseStatus.auto_renewal_enabled && (
+        <div className="pt-4 border-t border-white/10">
+          <div className="text-center space-y-2">
+            <p className="text-sm text-green-400 font-medium">
+              ✅ Paiement validé - La licence est active pour 30 jours
+            </p>
+            <p className="text-xs text-gray-400">
+              La licence expirera automatiquement après {daysRemaining} jour{daysRemaining > 1 ? 's' : ''}. 
+              Le client devra payer à nouveau pour réactiver.
+            </p>
+            {adminStatus === 'active' && daysRemaining > 0 && (
+              <p className="text-xs text-green-400">
+                ✅ Le rôle admin reste actif tant que la licence est active
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

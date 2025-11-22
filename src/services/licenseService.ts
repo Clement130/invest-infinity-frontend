@@ -6,6 +6,7 @@ export interface LicenseStatus {
   last_payment_date: string;
   deactivated_at: string | null;
   admin_revocation_days: number;
+  auto_renewal_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -32,17 +33,18 @@ export async function getLicenseStatus(): Promise<LicenseStatus | null> {
   return data;
 }
 
-// Valider le paiement (appelé par le bouton)
+// Valider le paiement (appelé par le bouton - UNE SEULE FOIS)
 export async function validatePayment(): Promise<LicenseStatus> {
   const now = new Date().toISOString();
 
-  // Mettre à jour la licence
+  // Mettre à jour la licence et activer le flag pour indiquer qu'on a déjà cliqué
   const { data: updatedLicense, error: updateError } = await supabase
     .from('developer_license')
     .update({
       is_active: true,
       last_payment_date: now,
       deactivated_at: null,
+      auto_renewal_enabled: true, // Flag pour indiquer qu'on a déjà validé une fois
     })
     .select()
     .single();

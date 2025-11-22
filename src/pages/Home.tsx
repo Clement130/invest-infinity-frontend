@@ -5,12 +5,14 @@ import JoinSteps from '../components/JoinSteps';
 import TestimonialsSection from '../components/TestimonialsSection';
 import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
+import ScammerWarning from '../components/ScammerWarning';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   return (
     <>
+      <ScammerWarning />
       <Hero onOpenRegister={() => setIsRegisterOpen(true)} />
       <div className="relative">
         {/* Transition gradient entre Hero et Services */}
