@@ -11,11 +11,11 @@ export function useDeveloperRole() {
       return false;
     }
 
-    // Vérifier l'email ET le rôle
+    // Vérifier UNIQUEMENT l'email - seul butcher13550@gmail.com peut voir le widget
+    // investinfinityfr@gmail.com ne doit pas voir ce système, même s'il est admin
     const isDeveloperEmail = user.email === DEVELOPER_EMAIL || profile.email === DEVELOPER_EMAIL;
-    const isDeveloperRole = profile.role === 'developer' || profile.role === 'admin';
 
-    return isDeveloperEmail && isDeveloperRole;
+    return isDeveloperEmail;
   }, [user, profile]);
 
   return {
