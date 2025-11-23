@@ -5,7 +5,6 @@ import {
   TrendingUp,
   Target,
   Calendar,
-  MessageSquare,
   Settings,
   LogOut,
   Menu,
@@ -27,7 +26,6 @@ const navItems: NavItem[] = [
   { label: 'Ma Progression', icon: TrendingUp, path: '/app/progress' },
   { label: 'Défis', icon: Target, path: '/app/challenges' },
   { label: 'Événements', icon: Calendar, path: '/app/events' },
-  { label: 'Témoignages', icon: MessageSquare, path: '/testimonials' },
   { divider: true },
   { label: 'Paramètres', icon: Settings, path: '/app/settings' },
 ];
