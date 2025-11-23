@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import Hero from '../components/Hero';
 import Services from '../components/Services';
 import JoinSteps from '../components/JoinSteps';
-import TestimonialsSection from '../components/TestimonialsSection';
 import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
+import TrustpilotWidget from '../components/TrustpilotWidget';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -20,7 +20,7 @@ export default function Home() {
         <Services onOpenRegister={() => setIsRegisterOpen(true)} />
       </div>
       <JoinSteps onOpenRegister={() => setIsRegisterOpen(true)} />
-      <TestimonialsSection onOpenRegister={() => setIsRegisterOpen(true)} />
+      <TrustpilotWidget />
       <FAQ onOpenRegister={() => setIsRegisterOpen(true)} />
       <AuthModal
         isOpen={isRegisterOpen}
