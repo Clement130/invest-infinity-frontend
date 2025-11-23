@@ -9,6 +9,7 @@ interface BunnyLibraryModalProps {
   onClose: () => void;
   onSelectVideo?: (videoId: string) => void;
   onAssignVideo?: (videoId: string) => void;
+  selectedLessonTitle?: string;
 }
 
 export function BunnyLibraryModal({
@@ -16,6 +17,7 @@ export function BunnyLibraryModal({
   onClose,
   onSelectVideo,
   onAssignVideo,
+  selectedLessonTitle,
 }: BunnyLibraryModalProps) {
   const { videos, orphanVideos, assignedVideos, isLoading, error, isConfigured } = useBunnyLibrary();
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,6 +53,11 @@ export function BunnyLibraryModal({
             <p className="text-sm text-gray-400">
               {videos.length} vidéo{videos.length > 1 ? 's' : ''} disponible{videos.length > 1 ? 's' : ''}
             </p>
+            {selectedLessonTitle && onSelectVideo && (
+              <div className="mt-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm">
+                📝 Assignation à : <span className="font-semibold">{selectedLessonTitle}</span>
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -114,8 +121,19 @@ export function BunnyLibraryModal({
               <p className="text-gray-400 max-w-md mx-auto">
                 Les variables d'environnement Bunny Stream ne sont pas configurées.
                 <br />
-                Configurez <code className="bg-black/40 px-1 py-0.5 rounded text-xs">VITE_BUNNY_STREAM_API_KEY</code> et{' '}
-                <code className="bg-black/40 px-1 py-0.5 rounded text-xs">VITE_BUNNY_STREAM_LIBRARY_ID</code> pour accéder à la bibliothèque.
+                <br />
+                <strong className="text-white">En production (Vercel) :</strong>
+                <br />
+                Configurez ces variables dans <strong>Vercel → Settings → Environment Variables</strong> :
+                <br />
+                <code className="bg-black/40 px-1 py-0.5 rounded text-xs">VITE_BUNNY_STREAM_LIBRARY_ID</code>
+                <br />
+                <code className="bg-black/40 px-1 py-0.5 rounded text-xs">VITE_BUNNY_EMBED_BASE_URL</code>
+                <br />
+                <br />
+                <strong className="text-white">En développement local :</strong>
+                <br />
+                Configurez-les dans votre fichier <code className="bg-black/40 px-1 py-0.5 rounded text-xs">.env.local</code>.
               </p>
             </div>
           ) : error ? (

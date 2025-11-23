@@ -76,7 +76,12 @@ Dans Vercel, allez dans **Settings > Environment Variables** et ajoutez :
 VITE_SUPABASE_URL=https://vveswlmcgmizmjsriezw.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2ZXN3bG1jZ21pem1qc3JpZXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MzM4NjcsImV4cCI6MjA3OTAwOTg2N30.G_9XfabnMXR23LzuvRTRLrpHMd1EFznXXrTNadOwdjY
 VITE_BUNNY_EMBED_BASE_URL=https://iframe.mediadelivery.net/embed/542258
+VITE_BUNNY_STREAM_LIBRARY_ID=votre_library_id
 ```
+
+**Note pour Bunny Stream :**
+- `VITE_BUNNY_STREAM_LIBRARY_ID` : L'ID de votre bibliothèque Bunny Stream (visible dans votre dashboard Bunny.net)
+- `VITE_BUNNY_EMBED_BASE_URL` : L'URL de base pour le lecteur vidéo (format: `https://iframe.mediadelivery.net/embed/{library_id}`)
 
 #### Variables OPTIONNELLES :
 
