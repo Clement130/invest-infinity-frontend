@@ -10,9 +10,33 @@ export interface BunnyVideoWithAssignment extends BunnyVideoMetadata {
 }
 
 export const useBunnyLibrary = () => {
-  const bunnyApiKey = import.meta.env.VITE_BUNNY_STREAM_API_KEY;
+  // ⚠️ SÉCURITÉ: Les clés API ne sont plus utilisées côté client
+  // Toutes les opérations passent par les Edge Functions
+  // Mais nous avons toujours besoin des variables d'environnement pour les URLs CDN et le lecteur vidéo
   const bunnyLibraryId = import.meta.env.VITE_BUNNY_STREAM_LIBRARY_ID;
-  const isConfigured = Boolean(bunnyApiKey && bunnyLibraryId);
+  const bunnyEmbedUrl = import.meta.env.VITE_BUNNY_EMBED_BASE_URL;
+  
+  // Debug: vérifier les valeurs réelles
+  if (typeof window !== 'undefined') {
+    console.log('[useBunnyLibrary] Debug configuration:', {
+      bunnyLibraryId,
+      bunnyEmbedUrl,
+      bunnyLibraryIdType: typeof bunnyLibraryId,
+      bunnyEmbedUrlType: typeof bunnyEmbedUrl,
+      bunnyLibraryIdTruthy: !!bunnyLibraryId,
+      bunnyEmbedUrlTruthy: !!bunnyEmbedUrl,
+      bunnyLibraryIdLength: bunnyLibraryId?.length,
+      bunnyEmbedUrlLength: bunnyEmbedUrl?.length,
+    });
+  }
+  
+  // Vérifier que les variables existent ET ne sont pas des chaînes vides
+  const isConfigured = Boolean(
+    bunnyLibraryId && 
+    bunnyEmbedUrl && 
+    bunnyLibraryId.trim() !== '' && 
+    bunnyEmbedUrl.trim() !== ''
+  );
 
   const { data: bunnyVideos, isLoading: isLoadingBunny, error: bunnyError } = useQuery({
     queryKey: ['admin', 'bunny-library'],
