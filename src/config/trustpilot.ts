@@ -11,14 +11,14 @@
 
 export const trustpilotConfig = {
   // Template ID - Trouvé dans le code TrustBox (attribut data-template-id)
-  templateId: process.env.VITE_TRUSTPILOT_TEMPLATE_ID || "TON_TEMPLATE_ID",
+  templateId: import.meta.env.VITE_TRUSTPILOT_TEMPLATE_ID || "TON_TEMPLATE_ID",
   
   // Business Unit ID - Trouvé dans le code TrustBox (attribut data-businessunit-id)
-  businessUnitId: process.env.VITE_TRUSTPILOT_BUSINESSUNIT_ID || "TON_BUSINESSUNIT_ID",
+  businessUnitId: import.meta.env.VITE_TRUSTPILOT_BUSINESSUNIT_ID || "TON_BUSINESSUNIT_ID",
   
   // Domaine - Votre domaine Trustpilot (ex: invest-infinity.com)
   // Trouvé dans l'URL du lien: https://fr.trustpilot.com/review/VOTRE_DOMAINE
-  domain: process.env.VITE_TRUSTPILOT_DOMAIN || "TON_DOMAINE",
+  domain: import.meta.env.VITE_TRUSTPILOT_DOMAIN || "TON_DOMAINE",
   
   // Locale
   locale: "fr-FR",
