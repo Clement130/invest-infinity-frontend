@@ -71,7 +71,7 @@ export default function Hero({ onOpenRegister }: HeroProps) {
 
           {/* Description avec effet de fade-in */}
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto opacity-0 animate-fade-in">
-            Rejoins-moi gratuitement et profite de mes analyses, d'une formation complète et d'un accompagnement pour te guider vers la réussite en trading.
+            Rejoins Invest Infinity et accède à nos analyses, à des stratégies structurées et à une formation complète, avec un accompagnement réel pour progresser chaque jour.
           </p>
 
           {/* Boutons avec effets néon */}
