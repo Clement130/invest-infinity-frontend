@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, ChevronDown, ChevronUp, MoreVertical } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getModuleWithLessons } from '../services/trainingService';
+import { ArrowLeft, Play, ChevronDown, ChevronUp, MoreVertical, Trash2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getModuleWithLessons, deleteModule } from '../services/trainingService';
+import { useSession } from '../hooks/useSession';
 import type { ModuleWithLessons } from '../types/training';
 
 // Structure hiérarchique basée sur les images
@@ -106,8 +107,18 @@ const slugify = (text: string) =>
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user, role } = useSession();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const isAdmin = role === 'admin' || role === 'developer';
+
+  // Debug: afficher le rôle dans la console
+  useEffect(() => {
+    console.log('[ModulePage] Rôle utilisateur:', role);
+    console.log('[ModulePage] isAdmin:', isAdmin);
+    console.log('[ModulePage] User:', user?.email);
+  }, [role, isAdmin, user]);
 
   const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
     queryKey: ['module-with-lessons', moduleId],
@@ -234,6 +245,26 @@ export default function ModulePage() {
     navigate(`/app/modules/${moduleId}/lessons/${lessonId}`);
   };
 
+  const handleDeleteModule = async () => {
+    if (!moduleId) return;
+    
+    if (!confirm('Supprimer définitivement ce module ?')) {
+      return;
+    }
+
+    try {
+      await deleteModule(moduleId);
+      // Invalider les caches pour rafraîchir les données
+      queryClient.invalidateQueries({ queryKey: ['modules'] });
+      queryClient.invalidateQueries({ queryKey: ['module-with-lessons'] });
+      // Rediriger vers /app
+      navigate('/app');
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
+      alert('Erreur lors de la suppression.');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white flex items-center justify-center">
@@ -281,6 +312,22 @@ export default function ModulePage() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4 flex-wrap">
               <h1 className="text-4xl font-bold">{module.title}</h1>
+              {/* Bouton de suppression - visible uniquement pour les admins */}
+              {isAdmin ? (
+                <button
+                  onClick={handleDeleteModule}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border border-red-500/30 text-sm font-medium transition"
+                  title="Supprimer le module"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer
+                </button>
+              ) : (
+                // Debug: afficher un message si pas admin
+                process.env.NODE_ENV === 'development' && (
+                  <span className="text-xs text-gray-500">(Admin uniquement)</span>
+                )
+              )}
               <button className="p-2 hover:bg-white/5 rounded-lg transition">
                 <MoreVertical className="w-5 h-5 text-gray-400" />
               </button>

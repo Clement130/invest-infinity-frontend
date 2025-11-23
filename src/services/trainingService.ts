@@ -240,11 +240,26 @@ export async function createOrUpdateModule(
 }
 
 export async function deleteModule(id: string): Promise<void> {
-  const { error } = await supabase.from('training_modules').delete().eq('id', id);
+  // Supprimer d'abord les leçons associées
+  const { error: lessonsError } = await supabase
+    .from('training_lessons')
+    .delete()
+    .eq('module_id', id);
 
-  if (error) {
-    console.error('Erreur lors de la suppression du module:', error);
-    throw error;
+  if (lessonsError) {
+    console.error('Erreur lors de la suppression des leçons:', lessonsError);
+    throw lessonsError;
+  }
+
+  // Ensuite supprimer le module
+  const { error: moduleError } = await supabase
+    .from('training_modules')
+    .delete()
+    .eq('id', id);
+
+  if (moduleError) {
+    console.error('Erreur lors de la suppression du module:', moduleError);
+    throw moduleError;
   }
 }
 
