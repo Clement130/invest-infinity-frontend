@@ -62,7 +62,15 @@ export const useBunnyLibrary = () => {
         const { items } = await listBunnyVideos(1, 1000);
         return items;
       } catch (error: any) {
-        console.error('[useBunnyLibrary] Erreur lors du chargement des vidéos:', error);
+        const errorMessage = error?.message || String(error);
+        // Ne pas logger les erreurs de configuration des secrets Supabase (c'est normal si non configurés)
+        const isConfigError = errorMessage.includes('BUNNY_STREAM_LIBRARY_ID') || 
+                             errorMessage.includes('BUNNY_STREAM_API_KEY') ||
+                             errorMessage.includes('doivent être configurés');
+        
+        if (!isConfigError) {
+          console.error('[useBunnyLibrary] Erreur lors du chargement des vidéos:', error);
+        }
         // Retourner un tableau vide en cas d'erreur plutôt que de casser l'interface
         return [];
       }
