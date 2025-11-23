@@ -5,11 +5,9 @@ import { useSession } from '../hooks/useSession';
 import {
   getUserStats,
   getActiveChallenges,
-  getActivityHeatmap,
   getUpcomingEvents,
 } from '../services/memberStatsService';
 import { getUserProgressSummary } from '../services/progressService';
-import ActivityHeatmap from '../components/member/ActivityHeatmap';
 import ProgressChecklist from '../components/member/ProgressChecklist';
 import EventsCalendar from '../components/member/EventsCalendar';
 import BadgesDisplay from '../components/member/BadgesDisplay';
@@ -45,12 +43,6 @@ export default function MemberDashboard() {
     enabled: !!user?.id,
   });
 
-  const heatmapQuery = useQuery({
-    queryKey: ['member-heatmap', user?.id],
-    queryFn: () => getActivityHeatmap(user?.id || ''),
-    enabled: !!user?.id,
-  });
-
   const eventsQuery = useQuery({
     queryKey: ['member-events', user?.id],
     queryFn: () => getUpcomingEvents(user?.id || ''),
@@ -70,7 +62,6 @@ export default function MemberDashboard() {
 
   const stats = statsQuery.data;
   const challenges = challengesQuery.data || [];
-  const heatmap = heatmapQuery.data || [];
   const events = eventsQuery.data || [];
   const modules = modulesQuery.data || [];
   const progressSummary = progressQuery.data;
@@ -143,7 +134,6 @@ export default function MemberDashboard() {
   const isLoading =
     statsQuery.isLoading ||
     challengesQuery.isLoading ||
-    heatmapQuery.isLoading ||
     eventsQuery.isLoading ||
     modulesQuery.isLoading ||
     progressQuery.isLoading;
@@ -330,7 +320,6 @@ export default function MemberDashboard() {
                   modules={modules}
                   moduleProgress={moduleProgressMap}
                 />
-                <ActivityHeatmap data={heatmap} />
                 <BadgesDisplay badges={stats?.badges || []} />
               </div>
 

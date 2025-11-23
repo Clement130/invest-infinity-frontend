@@ -23,6 +23,7 @@ const COMPLETED_THRESHOLD_PERCENTAGE = 90; // Marquer comme "complétée" à 90%
 
 /**
  * Marque une leçon comme "vue" si le seuil est atteint
+ * Met également à jour last_viewed pour actualiser la date d'activité
  */
 export async function markLessonAsViewed(
   userId: string,
@@ -40,17 +41,15 @@ export async function markLessonAsViewed(
     const now = new Date().toISOString();
 
     if (existing) {
-      // Mettre à jour last_viewed si pas déjà marqué comme vue
-      if (!existing.last_viewed) {
-        const { error } = await supabase
-          .from('training_progress')
-          .update({
-            last_viewed: now,
-          })
-          .eq('id', existing.id);
+      // Mettre à jour last_viewed pour actualiser la date d'activité (même si déjà vue)
+      const { error } = await supabase
+        .from('training_progress')
+        .update({
+          last_viewed: now,
+        })
+        .eq('id', existing.id);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
     } else {
       // Créer une nouvelle entrée
       const { error } = await supabase.from('training_progress').insert({
@@ -127,7 +126,9 @@ export class VideoProgressTracker {
   private hasBeenViewed: boolean = false;
   private hasBeenCompleted: boolean = false;
   private lastUpdateTime: number = 0;
+  private lastViewedUpdateTime: number = 0;
   private updateThrottle: number = 5000; // Mettre à jour max toutes les 5 secondes
+  private lastViewedUpdateInterval: number = 30000; // Mettre à jour last_viewed toutes les 30 secondes
 
   constructor(userId: string, lessonId: string) {
     this.userId = userId;
@@ -158,6 +159,19 @@ export class VideoProgressTracker {
       this.hasBeenCompleted = true;
       await markLessonAsCompleted(this.userId, this.lessonId);
     }
+
+    // Mettre à jour last_viewed périodiquement pendant la lecture
+    if (now - this.lastViewedUpdateTime >= this.lastViewedUpdateInterval) {
+      this.lastViewedUpdateTime = now;
+      await markLessonAsViewed(this.userId, this.lessonId);
+    }
+  }
+
+  /**
+   * Met à jour last_viewed manuellement (pour les mises à jour périodiques)
+   */
+  async updateLastViewed(): Promise<void> {
+    await markLessonAsViewed(this.userId, this.lessonId);
   }
 
   /**
@@ -167,6 +181,7 @@ export class VideoProgressTracker {
     this.hasBeenViewed = false;
     this.hasBeenCompleted = false;
     this.lastUpdateTime = 0;
+    this.lastViewedUpdateTime = 0;
   }
 }
 

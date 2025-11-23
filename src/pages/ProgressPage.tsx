@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '../hooks/useSession';
-import { getUserStats, getActivityHeatmap } from '../services/memberStatsService';
+import { getUserStats } from '../services/memberStatsService';
 import { getUserProgressSummary } from '../services/progressService';
-import ActivityHeatmap from '../components/member/ActivityHeatmap';
 import ProgressChecklist from '../components/member/ProgressChecklist';
 import EmptyState from '../components/common/EmptyState';
 import { StatCardSkeleton } from '../components/common/Skeleton';
@@ -19,12 +18,6 @@ export default function ProgressPage() {
     enabled: !!user?.id,
   });
 
-  const heatmapQuery = useQuery({
-    queryKey: ['member-heatmap', user?.id],
-    queryFn: () => getActivityHeatmap(user?.id || ''),
-    enabled: !!user?.id,
-  });
-
   const modulesQuery = useQuery({
     queryKey: ['modules', 'client'],
     queryFn: () => getModules(),
@@ -37,7 +30,6 @@ export default function ProgressPage() {
   });
 
   const stats = statsQuery.data;
-  const heatmap = heatmapQuery.data || [];
   const modules = modulesQuery.data || [];
   const moduleProgressMap = useMemo(() => {
     const summary = progressSummaryQuery.data;
@@ -141,9 +133,8 @@ export default function ProgressPage() {
           </div>
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <ProgressChecklist modules={modules} moduleProgress={moduleProgressMap} />
-            <ActivityHeatmap data={heatmap} />
           </div>
         </>
       )}
