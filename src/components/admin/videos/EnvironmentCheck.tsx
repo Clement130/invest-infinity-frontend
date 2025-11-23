@@ -3,12 +3,24 @@ import { AlertCircle, CheckCircle2, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function EnvironmentCheck() {
+  // ⚠️ SÉCURITÉ: VITE_BUNNY_STREAM_API_KEY n'est plus nécessaire côté client
+  // Les clés API sont gérées par les Edge Functions
   const bunnyLibraryId = import.meta.env.VITE_BUNNY_STREAM_LIBRARY_ID;
-  const bunnyApiKey = import.meta.env.VITE_BUNNY_STREAM_API_KEY;
   const bunnyEmbedUrl = import.meta.env.VITE_BUNNY_EMBED_BASE_URL;
   const [copied, setCopied] = useState<string | null>(null);
 
-  const isConfigured = Boolean(bunnyLibraryId && bunnyApiKey && bunnyEmbedUrl);
+  // VITE_BUNNY_STREAM_LIBRARY_ID est toujours nécessaire pour les URLs CDN (non sensible)
+  // VITE_BUNNY_EMBED_BASE_URL est nécessaire pour le lecteur vidéo
+  const isConfigured = Boolean(bunnyLibraryId && bunnyEmbedUrl);
+
+  // Debug: log dans la console
+  if (typeof window !== 'undefined' && !isConfigured) {
+    console.warn('[EnvironmentCheck] Variables manquantes:', {
+      VITE_BUNNY_STREAM_LIBRARY_ID: bunnyLibraryId || 'NON DÉFINI',
+      VITE_BUNNY_EMBED_BASE_URL: bunnyEmbedUrl || 'NON DÉFINI',
+      allViteEnv: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
+    });
+  }
 
   if (isConfigured) {
     return null; // Ne rien afficher si tout est configuré
@@ -16,7 +28,6 @@ export function EnvironmentCheck() {
 
   const missingVars = [
     !bunnyLibraryId && 'VITE_BUNNY_STREAM_LIBRARY_ID',
-    !bunnyApiKey && 'VITE_BUNNY_STREAM_API_KEY',
     !bunnyEmbedUrl && 'VITE_BUNNY_EMBED_BASE_URL',
   ].filter(Boolean) as string[];
 
@@ -69,24 +80,6 @@ export function EnvironmentCheck() {
                     title="Copier"
                   >
                     {copied === 'VITE_BUNNY_STREAM_LIBRARY_ID=' ? (
-                      <Check className="w-3 h-3 text-green-400" />
-                    ) : (
-                      <Copy className="w-3 h-3 text-amber-300" />
-                    )}
-                  </button>
-                </li>
-              )}
-              {!bunnyApiKey && (
-                <li className="flex items-center gap-2">
-                  <code className="bg-black/40 px-2 py-1 rounded flex-1 font-mono text-xs">
-                    VITE_BUNNY_STREAM_API_KEY
-                  </code>
-                  <button
-                    onClick={() => copyToClipboard('VITE_BUNNY_STREAM_API_KEY=')}
-                    className="p-1 rounded hover:bg-amber-500/20 transition"
-                    title="Copier"
-                  >
-                    {copied === 'VITE_BUNNY_STREAM_API_KEY=' ? (
                       <Check className="w-3 h-3 text-green-400" />
                     ) : (
                       <Copy className="w-3 h-3 text-amber-300" />
