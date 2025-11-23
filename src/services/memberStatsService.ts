@@ -8,8 +8,6 @@ export interface UserStats {
   totalLessons: number;
   completedLessons: number;
   totalTimeSpent: number; // en minutes
-  currentStreak: number; // jours consécutifs
-  longestStreak: number;
   badges: Badge[];
   level: number;
   xp: number;
@@ -99,17 +97,6 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     }
   }
 
-  // Calculer le streak (simplifié)
-  const { data: recentProgress } = await supabase
-    .from('training_progress')
-    .select('last_viewed')
-    .eq('user_id', userId)
-    .order('last_viewed', { ascending: false })
-    .limit(30);
-
-  const currentStreak = calculateStreak(recentProgress || []);
-  const longestStreak = currentStreak; // À améliorer avec historique
-
   // Calculer XP et niveau
   const xp = completedLessons * 10 + completedModules * 50;
   const level = Math.floor(xp / 100) + 1;
@@ -119,7 +106,6 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   const badges = await getUserBadges(userId, {
     completedLessons,
     completedModules,
-    currentStreak,
     xp,
   });
 
@@ -129,42 +115,11 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     totalLessons,
     completedLessons,
     totalTimeSpent: completedLessons * 15, // Estimation : 15 min par leçon
-    currentStreak,
-    longestStreak,
     badges,
     level,
     xp: xp % 100,
     nextLevelXp: 100,
   };
-}
-
-// Calculer le streak de jours consécutifs
-function calculateStreak(progress: Array<{ last_viewed: string | null }>): number {
-  if (!progress || progress.length === 0) return 0;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let streak = 0;
-  let currentDate = new Date(today);
-
-  for (const item of progress) {
-    if (!item.last_viewed) continue;
-
-    const viewedDate = new Date(item.last_viewed);
-    viewedDate.setHours(0, 0, 0, 0);
-
-    const daysDiff = Math.floor((currentDate.getTime() - viewedDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysDiff === streak) {
-      streak++;
-      currentDate = new Date(viewedDate);
-    } else if (daysDiff > streak) {
-      break;
-    }
-  }
-
-  return streak;
 }
 
 // Récupérer les badges de l'utilisateur
@@ -173,7 +128,6 @@ async function getUserBadges(
   stats: {
     completedLessons: number;
     completedModules: number;
-    currentStreak: number;
     xp: number;
   }
 ): Promise<Badge[]> {
@@ -212,18 +166,6 @@ async function getUserBadges(
       icon: '🏆',
       unlockedAt: new Date().toISOString(),
       rarity: 'epic',
-    });
-  }
-
-  // Badge streak 7 jours
-  if (stats.currentStreak >= 7) {
-    badges.push({
-      id: '7-day-streak',
-      name: 'Streak Warrior',
-      description: '7 jours consécutifs d\'activité',
-      icon: '🔥',
-      unlockedAt: new Date().toISOString(),
-      rarity: 'rare',
     });
   }
 

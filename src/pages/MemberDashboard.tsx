@@ -18,7 +18,6 @@ import {
   TrendingUp,
   BookOpen,
   Clock,
-  Flame,
   Award,
   Target,
   Calendar,
@@ -179,12 +178,6 @@ export default function MemberDashboard() {
                 label="Temps total"
                 value={`${Math.floor((stats?.totalTimeSpent || 0) / 60)}h ${(stats?.totalTimeSpent || 0) % 60}min`}
                 color="green"
-              />
-              <StatCard
-                icon={Flame}
-                label="Streak actuel"
-                value={`${stats?.currentStreak || 0} jours`}
-                color="orange"
               />
             </div>
 

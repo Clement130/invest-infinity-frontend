@@ -7,7 +7,7 @@ import ProgressChecklist from '../components/member/ProgressChecklist';
 import EmptyState from '../components/common/EmptyState';
 import { StatCardSkeleton } from '../components/common/Skeleton';
 import { getModules } from '../services/trainingService';
-import { TrendingUp, Award, Calendar, Target, BookOpen } from 'lucide-react';
+import { TrendingUp, Award, Target, BookOpen } from 'lucide-react';
 
 export default function ProgressPage() {
   const { user } = useSession();
@@ -52,8 +52,8 @@ export default function ProgressPage() {
 
       {statsQuery.isLoading || progressSummaryQuery.isLoading ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
               <StatCardSkeleton key={i} />
             ))}
           </div>
@@ -87,7 +87,7 @@ export default function ProgressPage() {
       ) : (
         <>
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-2">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-400" />
@@ -118,16 +118,6 @@ export default function ProgressPage() {
               </div>
               <p className="text-2xl font-bold text-purple-400">
                 {stats?.completedModules || 0} / {stats?.totalModules || 0}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-2">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-pink-400" />
-                <h3 className="text-sm font-medium text-gray-400">Streak</h3>
-              </div>
-              <p className="text-2xl font-bold text-pink-400">
-                {stats?.currentStreak || 0} jours
               </p>
             </div>
           </div>
