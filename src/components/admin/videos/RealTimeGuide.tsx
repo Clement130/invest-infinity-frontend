@@ -38,25 +38,45 @@ export function RealTimeGuide({ state, context = {} }: RealTimeGuideProps) {
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-purple-400">
-              <HelpCircle className="w-5 h-5" />
-              <h3 className="font-semibold">Que souhaitez-vous faire ?</h3>
+              <Sparkles className="w-5 h-5" />
+              <h3 className="font-semibold">Guide rapide</h3>
             </div>
             <p className="text-sm text-gray-400">
-              Gérez vos formations vidéo en toute simplicité.
+              Comment assigner une vidéo à une leçon :
             </p>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-gray-300">
-                <span>•</span>
-                <span>Créer une nouvelle formation</span>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/10">
+                <div className="flex items-start gap-2 mb-1">
+                  <span className="text-green-400 font-bold">1.</span>
+                  <span className="text-gray-300 flex-1">
+                    Trouvez une leçon avec le bouton vert <strong>"Assigner vidéo"</strong>
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-300">
-                <span>•</span>
-                <span>Uploader des vidéos</span>
+              <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/10">
+                <div className="flex items-start gap-2 mb-1">
+                  <span className="text-green-400 font-bold">2.</span>
+                  <span className="text-gray-300 flex-1">
+                    Cliquez sur <strong>"Assigner vidéo"</strong> → La bibliothèque s'ouvre
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-300">
-                <span>•</span>
-                <span>Assigner des vidéos aux leçons</span>
+              <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/10">
+                <div className="flex items-start gap-2 mb-1">
+                  <span className="text-green-400 font-bold">3.</span>
+                  <span className="text-gray-300 flex-1">
+                    Sélectionnez une vidéo → <strong>C'est fait ! ✅</strong>
+                  </span>
+                </div>
               </div>
+            </div>
+            <div className="pt-2 border-t border-white/10">
+              <p className="text-xs text-gray-500 mb-2">
+                💡 Astuce : Vous pouvez aussi uploader une vidéo puis l'assigner via le wizard automatique
+              </p>
+              <p className="text-xs text-gray-500">
+                Sélectionnez une leçon pour l'éditer ou voir plus d'options
+              </p>
             </div>
           </div>
         );

@@ -11,6 +11,8 @@ import { BunnyLibraryModal } from '../../components/admin/videos/BunnyLibraryMod
 import { ModuleModal } from '../../components/admin/videos/ModuleModal';
 import { LessonModal } from '../../components/admin/videos/LessonModal';
 import { EnvironmentCheck } from '../../components/admin/videos/EnvironmentCheck';
+import { EnvDebug } from '../../components/admin/videos/EnvDebug';
+import { VideoTutorial } from '../../components/admin/videos/VideoTutorial';
 import { useFormationsHierarchy } from '../../hooks/admin/useFormationsHierarchy';
 import { useBunnyLibrary } from '../../hooks/admin/useBunnyLibrary';
 import { createOrUpdateLesson, deleteLesson, createOrUpdateModule, deleteModule } from '../../services/trainingService';
@@ -34,18 +36,21 @@ export default function VideosManagement() {
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [showModuleModal, setShowModuleModal] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [editingModule, setEditingModule] = useState<TrainingModule | null>(null);
   const [editingLesson, setEditingLesson] = useState<TrainingLesson | null>(null);
   const [lessonModalModuleId, setLessonModalModuleId] = useState<string | null>(null);
   const [assignmentVideoId, setAssignmentVideoId] = useState<string | null>(null);
   const [assignmentVideoTitle, setAssignmentVideoTitle] = useState<string | null>(null);
 
-  // Auto-expand all modules by default
+  // Auto-expand all modules by default (une seule fois au chargement initial)
+  const [hasInitialized, setHasInitialized] = useState(false);
   useMemo(() => {
-    if (hierarchy.modules.length > 0 && expandedModules.size === 0) {
+    if (hierarchy.modules.length > 0 && expandedModules.size === 0 && !hasInitialized) {
       setExpandedModules(new Set(hierarchy.modules.map((m) => m.id)));
+      setHasInitialized(true);
     }
-  }, [hierarchy.modules, expandedModules.size]);
+  }, [hierarchy.modules, expandedModules.size, hasInitialized]);
 
   const selectedLesson = useMemo(() => {
     if (!selectedLessonId) return null;
@@ -338,6 +343,7 @@ export default function VideosManagement() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Vérification environnement */}
         <EnvironmentCheck />
+        <EnvDebug />
 
         {/* Dashboard */}
         <VideosDashboard
@@ -353,6 +359,7 @@ export default function VideosManagement() {
             setShowLibraryModal(true);
             setGuideContext({ filterOrphans: true });
           }}
+          onShowTutorial={() => setShowTutorial(true)}
         />
 
         {/* Main content */}
@@ -458,6 +465,7 @@ export default function VideosManagement() {
               handleAssignVideo(selectedLessonId);
             }
           }}
+          selectedLessonTitle={selectedLesson?.title}
         />
 
         {/* Module Modal */}
@@ -487,6 +495,11 @@ export default function VideosManagement() {
           onSave={handleCreateLessonSave}
           isSaving={createLessonMutation.isPending}
         />
+
+        {/* Tutorial Modal */}
+        {showTutorial && (
+          <VideoTutorial onClose={() => setShowTutorial(false)} />
+        )}
       </div>
     </div>
   );

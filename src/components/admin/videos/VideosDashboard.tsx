@@ -1,4 +1,4 @@
-import { BookOpen, Folder, Video, CheckCircle2, AlertCircle, XCircle, Plus, Upload, Target } from 'lucide-react';
+import { BookOpen, Folder, Video, CheckCircle2, AlertCircle, XCircle, Plus, Upload, Target, HelpCircle } from 'lucide-react';
 import { HealthScore } from './StatusIndicators';
 import type { FormationHierarchy } from '../../hooks/admin/useFormationsHierarchy';
 
@@ -9,6 +9,7 @@ interface VideosDashboardProps {
   onNewFormation?: () => void;
   onUpload?: () => void;
   onAssignOrphans?: () => void;
+  onShowTutorial?: () => void;
 }
 
 function StatCardSkeleton() {
@@ -33,6 +34,7 @@ export function VideosDashboard({
   onNewFormation,
   onUpload,
   onAssignOrphans,
+  onShowTutorial,
 }: VideosDashboardProps) {
   const { modules, totalLessons, totalVideos, completionRate } = hierarchy;
   const missingVideos = totalLessons - totalVideos;
@@ -47,6 +49,16 @@ export function VideosDashboard({
           </h1>
           <HealthScore score={completionRate} />
         </div>
+        {onShowTutorial && (
+          <button
+            onClick={onShowTutorial}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 transition text-sm font-medium"
+            title="Voir le tutoriel d'assignation de vidéos"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Tutoriel
+          </button>
+        )}
       </div>
 
       {/* Statistiques principales */}
