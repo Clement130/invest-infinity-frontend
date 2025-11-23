@@ -31,12 +31,24 @@ export const useBunnyLibrary = () => {
   }
   
   // Vérifier que les variables existent ET ne sont pas des chaînes vides
+  // Convertir en chaîne pour gérer les cas où les variables sont des nombres
+  const bunnyLibraryIdStr = String(bunnyLibraryId || '').trim();
+  const bunnyEmbedUrlStr = String(bunnyEmbedUrl || '').trim();
+  
   const isConfigured = Boolean(
-    bunnyLibraryId && 
-    bunnyEmbedUrl && 
-    bunnyLibraryId.trim() !== '' && 
-    bunnyEmbedUrl.trim() !== ''
+    bunnyLibraryIdStr && 
+    bunnyEmbedUrlStr
   );
+  
+  // Debug: ajouter isConfigured au log
+  if (typeof window !== 'undefined') {
+    console.log('[useBunnyLibrary] isConfigured:', isConfigured, {
+      bunnyLibraryIdStr,
+      bunnyEmbedUrlStr,
+      bunnyLibraryIdStrLength: bunnyLibraryIdStr.length,
+      bunnyEmbedUrlStrLength: bunnyEmbedUrlStr.length,
+    });
+  }
 
   const { data: bunnyVideos, isLoading: isLoadingBunny, error: bunnyError } = useQuery({
     queryKey: ['admin', 'bunny-library'],
