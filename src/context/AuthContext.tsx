@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   ReactNode,
 } from 'react';
 import type { User } from '@supabase/supabase-js';
@@ -29,6 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // Référence pour conserver le profil pendant le rafraîchissement
+  const profileRef = useRef<ProfileRow | null>(null);
 
   const loadProfile = useCallback(async (userId: string) => {
     try {
@@ -112,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('[AuthContext] Profil chargé:', { id: data.id, email: data.email, role: data.role });
       setProfile(data);
+      profileRef.current = data; // Conserver dans la ref aussi
     } catch (err: any) {
       console.error('[AuthContext] Exception lors du chargement du profil:', err);
       if (err.message?.includes('Timeout')) {
@@ -147,15 +152,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     bootstrapSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
+      async (event, session) => {
         const sessionUser = session?.user ?? null;
-        setUser(sessionUser);
-
-        if (sessionUser) {
-          await loadProfile(sessionUser.id);
-        } else {
-          setProfile(null);
-        }
+        
+        // Utiliser une fonction de callback pour accéder à la valeur actuelle de user
+        setUser((previousUser) => {
+          // Si c'est un rafraîchissement de token (TOKEN_REFRESHED) et que l'utilisateur est le même,
+          // on ne réinitialise pas le profil pour éviter les redirections
+          if (event === 'TOKEN_REFRESHED' && sessionUser?.id === previousUser?.id) {
+            console.log('[AuthContext] TOKEN_REFRESHED détecté - conservation du profil existant');
+            setIsRefreshing(true);
+            // On garde le profil existant pendant le rafraîchissement
+            // Si on a un profil en mémoire, on le conserve dans l'état
+            const currentProfile = profileRef.current;
+            if (currentProfile) {
+              console.log('[AuthContext] Profil conservé pendant le rafraîchissement:', currentProfile.role);
+              // Le profil reste dans l'état pour éviter les redirections
+              setProfile(currentProfile);
+            }
+            // On recharge le profil en arrière-plan sans bloquer
+            loadProfile(sessionUser.id).finally(() => {
+              setIsRefreshing(false);
+            });
+            return sessionUser;
+          }
+          
+          // Pour les autres événements (SIGNED_IN, SIGNED_OUT, etc.), on met à jour normalement
+          // MAIS on conserve le profil existant si l'utilisateur est le même pour éviter les redirections
+          // lors des changements d'onglet ou autres vérifications de session
+          if (sessionUser) {
+            // Si l'utilisateur est le même et qu'on a déjà un profil, on le conserve
+            // pendant le rechargement pour éviter les redirections
+            if (sessionUser.id === previousUser?.id && profileRef.current) {
+              console.log('[AuthContext] Vérification de session - conservation du profil existant');
+              // Conserver le profil pendant le rechargement
+              setProfile(profileRef.current);
+              // Recharger en arrière-plan
+              loadProfile(sessionUser.id);
+            } else {
+              // Nouvel utilisateur ou pas de profil en mémoire, charger normalement
+              loadProfile(sessionUser.id);
+            }
+          } else {
+            setProfile(null);
+            profileRef.current = null;
+          }
+          
+          return sessionUser;
+        });
       }
     );
 
