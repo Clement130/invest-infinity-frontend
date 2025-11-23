@@ -131,45 +131,133 @@ async function getUserBadges(
     xp: number;
   }
 ): Promise<Badge[]> {
-  const badges: Badge[] = [];
+  const allBadges: Badge[] = [];
 
-  // Badge première leçon
-  if (stats.completedLessons >= 1) {
-    badges.push({
+  // 1. Récupérer tous les badges disponibles depuis la base de données
+  const { data: dbBadges, error: badgesError } = await supabase
+    .from('badges')
+    .select('*')
+    .order('rarity', { ascending: false })
+    .order('name', { ascending: true });
+
+  if (badgesError) {
+    console.error('[getUserBadges] Erreur lors de la récupération des badges:', badgesError);
+  }
+
+  // 2. Récupérer les badges débloqués par l'utilisateur
+  const { data: userBadges, error: userBadgesError } = await supabase
+    .from('user_badges')
+    .select('badge_id, unlocked_at')
+    .eq('user_id', userId);
+
+  if (userBadgesError) {
+    console.error('[getUserBadges] Erreur lors de la récupération des badges utilisateur:', userBadgesError);
+  }
+
+  // Créer une map des badges débloqués pour un accès rapide
+  const unlockedBadgesMap = new Map<string, string>();
+  userBadges?.forEach((ub) => {
+    unlockedBadgesMap.set(ub.badge_id, ub.unlocked_at);
+  });
+
+  // 3. Convertir les badges de la base de données au format Badge
+  dbBadges?.forEach((dbBadge) => {
+    const unlockedAt = unlockedBadgesMap.get(dbBadge.id);
+    allBadges.push({
+      id: dbBadge.id,
+      name: dbBadge.name,
+      description: dbBadge.description || '',
+      icon: dbBadge.icon || '🏅',
+      unlockedAt: unlockedAt || null,
+      rarity: (dbBadge.rarity as 'common' | 'rare' | 'epic' | 'legendary') || 'common',
+    });
+  });
+
+  // 4. Gérer les badges calculés dynamiquement (accomplissements)
+  const dynamicBadges: Array<{ id: string; name: string; description: string; icon: string; rarity: 'common' | 'rare' | 'epic' | 'legendary'; condition: boolean }> = [
+    {
       id: 'first-lesson',
       name: 'Premier Pas',
       description: 'A complété sa première leçon',
       icon: '🎯',
-      unlockedAt: new Date().toISOString(),
       rarity: 'common',
-    });
-  }
-
-  // Badge 10 leçons
-  if (stats.completedLessons >= 10) {
-    badges.push({
+      condition: stats.completedLessons >= 1,
+    },
+    {
       id: '10-lessons',
       name: 'Étudiant Assidu',
       description: 'A complété 10 leçons',
       icon: '📚',
-      unlockedAt: new Date().toISOString(),
       rarity: 'rare',
-    });
-  }
-
-  // Badge premier module
-  if (stats.completedModules >= 1) {
-    badges.push({
+      condition: stats.completedLessons >= 10,
+    },
+    {
       id: 'first-module',
       name: 'Module Master',
       description: 'A complété un module entier',
       icon: '🏆',
-      unlockedAt: new Date().toISOString(),
       rarity: 'epic',
-    });
+      condition: stats.completedModules >= 1,
+    },
+  ];
+
+  // Synchroniser les badges d'accomplissement dans la base de données
+  for (const dynamicBadge of dynamicBadges) {
+    const existingBadge = allBadges.find((b) => b.id === dynamicBadge.id);
+    
+    if (dynamicBadge.condition) {
+      // L'utilisateur remplit la condition
+      if (!existingBadge) {
+        // Badge n'existe pas en base, l'ajouter à la liste (sera créé en base si nécessaire)
+        allBadges.push({
+          id: dynamicBadge.id,
+          name: dynamicBadge.name,
+          description: dynamicBadge.description,
+          icon: dynamicBadge.icon,
+          unlockedAt: new Date().toISOString(),
+          rarity: dynamicBadge.rarity,
+        });
+      } else if (!existingBadge.unlockedAt) {
+        // Badge existe en base mais n'est pas débloqué, le débloquer
+        existingBadge.unlockedAt = new Date().toISOString();
+        
+        // Synchroniser dans la base de données (en arrière-plan, ne pas bloquer)
+        supabase
+          .from('user_badges')
+          .insert({
+            user_id: userId,
+            badge_id: dynamicBadge.id,
+            source: 'achievement',
+          })
+          .catch((error) => {
+            // Ignorer les erreurs de doublon (23505)
+            if (error.code !== '23505') {
+              console.error(`[getUserBadges] Erreur lors de la synchronisation du badge ${dynamicBadge.id}:`, error);
+            }
+          });
+      }
+    } else if (existingBadge && !existingBadge.unlockedAt) {
+      // Badge existe mais condition non remplie, garder comme verrouillé
+      // (ne rien faire, le badge reste dans la liste mais verrouillé)
+    }
   }
 
-  return badges;
+  // 5. Trier les badges : débloqués en premier, puis par rareté
+  allBadges.sort((a, b) => {
+    // Débloqués en premier
+    if (a.unlockedAt && !b.unlockedAt) return -1;
+    if (!a.unlockedAt && b.unlockedAt) return 1;
+    
+    // Puis par rareté (legendary > epic > rare > common)
+    const rarityOrder = { legendary: 4, epic: 3, rare: 2, common: 1 };
+    const rarityDiff = rarityOrder[b.rarity] - rarityOrder[a.rarity];
+    if (rarityDiff !== 0) return rarityDiff;
+    
+    // Enfin par nom
+    return a.name.localeCompare(b.name);
+  });
+
+  return allBadges;
 }
 
 // Récupérer les défis actifs
