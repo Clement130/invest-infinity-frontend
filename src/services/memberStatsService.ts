@@ -142,6 +142,8 @@ async function getUserBadges(
 
   if (badgesError) {
     console.error('[getUserBadges] Erreur lors de la récupération des badges:', badgesError);
+  } else {
+    console.log(`[getUserBadges] ${dbBadges?.length || 0} badges récupérés depuis la base de données`);
   }
 
   // 2. Récupérer les badges débloqués par l'utilisateur
@@ -152,6 +154,8 @@ async function getUserBadges(
 
   if (userBadgesError) {
     console.error('[getUserBadges] Erreur lors de la récupération des badges utilisateur:', userBadgesError);
+  } else {
+    console.log(`[getUserBadges] ${userBadges?.length || 0} badges débloqués par l'utilisateur`);
   }
 
   // Créer une map des badges débloqués pour un accès rapide
@@ -257,6 +261,7 @@ async function getUserBadges(
     return a.name.localeCompare(b.name);
   });
 
+  console.log(`[getUserBadges] Total de ${allBadges.length} badges retournés (${allBadges.filter(b => b.unlockedAt).length} débloqués)`);
   return allBadges;
 }
 
