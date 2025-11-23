@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { trustpilotConfig } from "../config/trustpilot";
 
 export default function TrustpilotWidget() {
   useEffect(() => {
@@ -11,6 +12,12 @@ export default function TrustpilotWidget() {
     script.async = true;
     document.body.appendChild(script);
   }, []);
+
+  // Vérifier si la configuration est complète
+  const isConfigured = 
+    trustpilotConfig.templateId !== "TON_TEMPLATE_ID" &&
+    trustpilotConfig.businessUnitId !== "TON_BUSINESSUNIT_ID" &&
+    trustpilotConfig.domain !== "TON_DOMAINE";
 
   return (
     <section className="py-24 px-4 bg-[#0f0f13]">
@@ -25,20 +32,37 @@ export default function TrustpilotWidget() {
         </div>
 
         <div className="max-w-5xl mx-auto bg-neutral-900/60 rounded-2xl p-6 border border-neutral-800">
-          {/* ✅ COLLE ICI TON TRUSTBOX OFFICIEL */}
-          <div
-            className="trustpilot-widget"
-            data-locale="fr-FR"
-            data-template-id="TON_TEMPLATE_ID"
-            data-businessunit-id="TON_BUSINESSUNIT_ID"
-            data-style-height="400px"
-            data-style-width="100%"
-            data-theme="dark"
-          >
-            <a href="https://fr.trustpilot.com/review/TON_DOMAINE" target="_blank" rel="noopener noreferrer">
-              Trustpilot
-            </a>
-          </div>
+          {!isConfigured ? (
+            <div className="text-center py-8">
+              <p className="text-yellow-400 mb-4">
+                ⚠️ Configuration Trustpilot requise
+              </p>
+              <p className="text-gray-400 text-sm mb-4">
+                Veuillez remplir les informations dans <code className="bg-black/40 px-2 py-1 rounded">src/config/trustpilot.ts</code>
+              </p>
+              <p className="text-gray-500 text-xs">
+                Récupérez ces informations depuis votre dashboard Trustpilot
+              </p>
+            </div>
+          ) : (
+            <div
+              className="trustpilot-widget"
+              data-locale={trustpilotConfig.locale}
+              data-template-id={trustpilotConfig.templateId}
+              data-businessunit-id={trustpilotConfig.businessUnitId}
+              data-style-height={trustpilotConfig.height}
+              data-style-width={trustpilotConfig.width}
+              data-theme={trustpilotConfig.theme}
+            >
+              <a 
+                href={`https://fr.trustpilot.com/review/${trustpilotConfig.domain}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                Trustpilot
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </section>
