@@ -6,7 +6,6 @@ import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
 import TrustpilotWidget from '../components/TrustpilotWidget';
-import TestimonialCarousel from '../components/TestimonialCarousel';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -15,7 +14,6 @@ export default function Home() {
     <>
       <ScammerWarning />
       <Hero onOpenRegister={() => setIsRegisterOpen(true)} />
-      <TestimonialCarousel />
       <div className="relative">
         {/* Transition gradient entre Hero et Services */}
         <div className="absolute -top-32 left-0 right-0 h-32 bg-gradient-to-b from-[rgb(15,15,19,0)] to-[rgb(15,15,19,1)] z-10" />
