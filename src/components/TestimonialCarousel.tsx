@@ -32,8 +32,8 @@ const TestimonialCarousel = () => {
   }, []);
 
   const isTrustpilotConfigured =
-    !!trustpilotConfig.templateId &&
-    trustpilotConfig.templateId !== 'TON_TEMPLATE_ID' &&
+    !!trustpilotConfig.microTemplateId &&
+    trustpilotConfig.microTemplateId !== 'TON_TEMPLATE_ID' &&
     !!trustpilotConfig.businessUnitId &&
     trustpilotConfig.businessUnitId !== 'TON_BUSINESSUNIT_ID' &&
     !!trustpilotConfig.domain &&
@@ -59,7 +59,7 @@ const TestimonialCarousel = () => {
           <div
             className="trustpilot-widget mx-auto mb-12 max-w-sm"
             data-locale={trustpilotConfig.locale}
-            data-template-id={trustpilotConfig.templateId}
+            data-template-id={trustpilotConfig.microTemplateId}
             data-businessunit-id={trustpilotConfig.businessUnitId}
             data-style-height="24px"
             data-style-width="100%"

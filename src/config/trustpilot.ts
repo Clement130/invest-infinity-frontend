@@ -13,6 +13,10 @@ export const trustpilotConfig = {
   // Template ID - Trouvé dans le code TrustBox (attribut data-template-id)
   templateId: import.meta.env.VITE_TRUSTPILOT_TEMPLATE_ID || "54197383fd9dceac42a68694",
   
+  // Template ID du widget micro (compteur d'avis Trustpilot)
+  microTemplateId:
+    import.meta.env.VITE_TRUSTPILOT_MICRO_TEMPLATE_ID || "5419b6a8b0d04a076446a9ad",
+
   // Business Unit ID - Trouvé dans le code TrustBox (attribut data-businessunit-id)
   businessUnitId: import.meta.env.VITE_TRUSTPILOT_BUSINESSUNIT_ID || "68ba93e234cd8124d1d2cdb4",
   
