@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Sparkles, Users, TrendingUp, ArrowRight, Gift, Shield } from 'lucide-react';
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { useAuth } from '../context/AuthContext';
-import TestimonialsSection from '../components/TestimonialsSection';
+import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../hooks/useToast';
 
 export default function ConfirmationPage() {
@@ -30,11 +30,25 @@ export default function ConfirmationPage() {
 
     setLoading(true);
     try {
+      // Récupérer le token d'authentification de la session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast.error('Vous devez être connecté pour effectuer un achat.', {
+          action: {
+            label: 'Se connecter',
+            onClick: () => navigate('/login'),
+          },
+        });
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(SUPABASE_CHECKOUT_FUNCTION_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           priceId: STRIPE_PRICE_IDS[plan],
@@ -132,11 +146,6 @@ export default function ConfirmationPage() {
               <p className="text-gray-400 text-sm">Support disponible</p>
             </div>
           </div>
-        </div>
-
-        {/* Témoignages pour inciter à l'upgrade */}
-        <div className="mb-12">
-          <TestimonialsSection showCTA={false} maxItems={3} />
         </div>
 
         {/* Offre Premium - Présentation transparente */}

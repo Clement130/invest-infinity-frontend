@@ -11,14 +11,14 @@
 
 export const trustpilotConfig = {
   // Template ID - Trouvé dans le code TrustBox (attribut data-template-id)
-  templateId: import.meta.env.VITE_TRUSTPILOT_TEMPLATE_ID || "TON_TEMPLATE_ID",
+  templateId: import.meta.env.VITE_TRUSTPILOT_TEMPLATE_ID || "54197383fd9dceac42a68694",
   
   // Business Unit ID - Trouvé dans le code TrustBox (attribut data-businessunit-id)
-  businessUnitId: import.meta.env.VITE_TRUSTPILOT_BUSINESSUNIT_ID || "TON_BUSINESSUNIT_ID",
+  businessUnitId: import.meta.env.VITE_TRUSTPILOT_BUSINESSUNIT_ID || "68ba93e234cd8124d1d2cdb4",
   
   // Domaine - Votre domaine Trustpilot (ex: invest-infinity.com)
   // Trouvé dans l'URL du lien: https://fr.trustpilot.com/review/VOTRE_DOMAINE
-  domain: import.meta.env.VITE_TRUSTPILOT_DOMAIN || "TON_DOMAINE",
+  domain: import.meta.env.VITE_TRUSTPILOT_DOMAIN || "investinfinity.fr",
   
   // Locale
   locale: "fr-FR",
@@ -27,7 +27,7 @@ export const trustpilotConfig = {
   theme: "dark" as "dark" | "light",
   
   // Dimensions
-  height: "400px",
+  height: "100%",
   width: "100%",
 };
 
