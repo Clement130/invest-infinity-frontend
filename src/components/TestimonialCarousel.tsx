@@ -32,9 +32,12 @@ const TestimonialCarousel = () => {
   }, []);
 
   const isTrustpilotConfigured =
-    trustpilotConfig.templateId !== '54197383fd9dceac42a68694' ||
-    trustpilotConfig.businessUnitId !== '68ba93e234cd8124d1d2cdb4' ||
-    trustpilotConfig.domain !== 'investinfinity.fr';
+    !!trustpilotConfig.templateId &&
+    trustpilotConfig.templateId !== 'TON_TEMPLATE_ID' &&
+    !!trustpilotConfig.businessUnitId &&
+    trustpilotConfig.businessUnitId !== 'TON_BUSINESSUNIT_ID' &&
+    !!trustpilotConfig.domain &&
+    trustpilotConfig.domain !== 'TON_DOMAINE';
 
   return (
     <section className="py-16 bg-gray-50">
