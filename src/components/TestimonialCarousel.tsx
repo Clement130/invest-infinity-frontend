@@ -22,6 +22,8 @@ const testimonials = [
 const StarIcon = () => <span className="text-yellow-400 text-lg">★</span>;
 
 const TestimonialCarousel = () => {
+  const trustpilotUrl = `https://fr.trustpilot.com/review/${trustpilotConfig.domain}`;
+
   useEffect(() => {
     if (document.getElementById('trustpilot-script-micro')) return;
     const script = document.createElement('script');
@@ -40,24 +42,45 @@ const TestimonialCarousel = () => {
     trustpilotConfig.domain !== 'TON_DOMAINE';
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <p className="text-sm font-semibold text-green-600 uppercase tracking-wide">
-            Vérifié par Trustpilot
-          </p>
-          <h2 className="text-3xl font-extrabold text-gray-900 mt-2 mb-3">
-            18 avis 5 étoiles – Note moyenne 4.5/5
+    <section className="py-20 bg-[#05070d] relative overflow-hidden">
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="w-96 h-96 bg-emerald-500 blur-[180px] absolute -top-20 -left-10" />
+        <div className="w-96 h-96 bg-cyan-500 blur-[220px] absolute bottom-0 right-0" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 text-emerald-300 text-sm font-semibold uppercase tracking-wide">
+            <span>Vérifié par</span>
+            <span className="flex items-center gap-1">
+              <span className="text-lg">★</span> Trustpilot
+            </span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white">
+            Ils nous notent <span className="text-emerald-300">4,5★</span> sur Trustpilot
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
-            Ils valident notre accompagnement : voici les derniers avis authentiques issus de
-            Trustpilot.
+          <p className="text-gray-300 max-w-3xl mx-auto">
+            Avis authentiques issus de notre profil public. Aucun filtre, juste les retours de la communauté InvestInfinity.
           </p>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
+            <a
+              href={trustpilotUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
+            >
+              Voir les 18 avis complets
+              <span aria-hidden>↗</span>
+            </a>
+            <p className="text-gray-400 text-sm">
+              Mis à jour automatiquement par Trustpilot
+            </p>
+          </div>
         </div>
 
         {isTrustpilotConfigured && (
           <div
-            className="trustpilot-widget mx-auto mb-12 max-w-sm"
+            className="trustpilot-widget mx-auto mb-12 max-w-sm bg-white rounded-full shadow-lg shadow-emerald-500/20"
             data-locale={trustpilotConfig.locale}
             data-template-id={trustpilotConfig.microTemplateId}
             data-businessunit-id={trustpilotConfig.businessUnitId}
@@ -79,19 +102,19 @@ const TestimonialCarousel = () => {
           {testimonials.map((review, index) => (
             <article
               key={review.author}
-              className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 min-w-[280px] snap-center"
+              className="bg-[#0d111c] p-6 rounded-2xl border border-white/10 min-w-[280px] snap-center shadow-[0_15px_40px_rgba(6,10,20,0.6)] transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="flex mb-3" aria-label="Note cliente">
+              <div className="flex mb-3 text-emerald-300" aria-label="Note cliente">
                 {[...Array(5)].map((_, i) => (
                   <StarIcon key={`${index}-star-${i}`} />
                 ))}
               </div>
-              <p className="text-gray-700 italic leading-relaxed line-clamp-6">"{review.text}"</p>
-              <div className="mt-6 pt-4 border-t border-gray-100">
-                <p className="font-semibold text-gray-900">{review.author}</p>
-                <p className="text-sm text-gray-500">{review.date}</p>
-                <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1">
-                  ✅ Vérifié par Trustpilot
+              <p className="text-gray-200 italic leading-relaxed line-clamp-6">"{review.text}"</p>
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <p className="font-semibold text-white">{review.author}</p>
+                <p className="text-sm text-gray-400">{review.date}</p>
+                <p className="text-xs text-emerald-300 font-medium mt-2 flex items-center gap-1">
+                  ✅ Avis publié sur Trustpilot
                 </p>
               </div>
             </article>
