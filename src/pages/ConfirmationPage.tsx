@@ -108,16 +108,7 @@ export default function ConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-900/10 via-black to-black pt-20 pb-20">
-      {/* Banner countdown en haut */}
-      <div className="fixed top-16 left-0 right-0 z-40">
-        <CountdownTimer 
-          durationMinutes={15} 
-          label="🔥 Offre de bienvenue expire dans" 
-          variant="banner" 
-        />
-      </div>
-      
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header de confirmation */}
         <div className="text-center mb-8 animate-fade-up">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500/20 rounded-full mb-4">
@@ -126,9 +117,18 @@ export default function ConfirmationPage() {
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
             Félicitations {userPrenom || (userEmail ? userEmail.split('@')[0] : '')} ! 🎉
           </h1>
-          <p className="text-lg text-gray-300">
+          <p className="text-lg text-gray-300 mb-4">
             Ton inscription est confirmée
           </p>
+          
+          {/* Timer compact inline */}
+          <div className="inline-block">
+            <CountdownTimer 
+              durationMinutes={15} 
+              label="🔥 Offre expire dans" 
+              variant="compact" 
+            />
+          </div>
         </div>
 
         {/* 1. PLANS / PRIX EN PREMIER */}
