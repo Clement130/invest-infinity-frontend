@@ -6,7 +6,7 @@ import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
 import TestimonialCarousel from '../components/TestimonialCarousel';
-import TrustpilotSection from '../components/TrustpilotSection';
+import FinalCTA from '../components/FinalCTA';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -14,16 +14,27 @@ export default function Home() {
   return (
     <>
       <ScammerWarning />
+      {/* 1. Hero avec mini badge Trustpilot */}
       <Hero onOpenRegister={() => setIsRegisterOpen(true)} />
-      <TestimonialCarousel />
+      
+      {/* 2. Services / Bénéfices */}
       <div className="relative">
-        {/* Transition gradient entre Hero et Services */}
         <div className="absolute -top-32 left-0 right-0 h-32 bg-gradient-to-b from-[rgb(15,15,19,0)] to-[rgb(15,15,19,1)] z-10" />
         <Services onOpenRegister={() => setIsRegisterOpen(true)} />
       </div>
+      
+      {/* 3. Comment ça marche */}
       <JoinSteps onOpenRegister={() => setIsRegisterOpen(true)} />
-      <TrustpilotSection />
+      
+      {/* 4. FAQ */}
       <FAQ onOpenRegister={() => setIsRegisterOpen(true)} />
+      
+      {/* 5. Trustpilot - Dernier argument avant conversion */}
+      <TestimonialCarousel />
+      
+      {/* 6. CTA Final */}
+      <FinalCTA onOpenRegister={() => setIsRegisterOpen(true)} />
+      
       <AuthModal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
