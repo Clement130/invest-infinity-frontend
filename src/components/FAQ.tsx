@@ -1,61 +1,134 @@
 import React, { useState } from 'react';
-import { ChevronDown, ArrowRight, Sparkles } from 'lucide-react';
+import { ChevronDown, Sparkles, HelpCircle, CreditCard, Shield, Users, MessageCircle, Zap } from 'lucide-react';
 import AnimatedSection from './AnimatedSection';
 
 interface FAQProps {
   onOpenRegister?: () => void;
 }
 
-export default function FAQ({ onOpenRegister }: FAQProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+// Catégories de FAQ avec icônes
+const faqCategories = [
+  {
+    icon: HelpCircle,
+    title: "Général",
+    questions: [
+      {
+        question: "Qu'est-ce qu'Invest Infinity ?",
+        answer: "Invest Infinity est une communauté premium dédiée aux traders qui veulent progresser sérieusement. Tu accèdes à des analyses quotidiennes de Mickaël, des formations complètes, des lives hebdomadaires et une communauté Discord active de +1000 membres motivés. Notre mission : t'accompagner pour devenir un trader autonome et rentable."
+      },
+      {
+        question: "À qui s'adresse Invest Infinity ?",
+        answer: "Que tu sois débutant complet ou trader intermédiaire, Invest Infinity est fait pour toi. Nos formations partent des bases jusqu'aux stratégies avancées. Le seul prérequis : avoir 18 ans minimum et la motivation de progresser."
+      }
+    ]
+  },
+  {
+    icon: Zap,
+    title: "Accès & Inscription",
+    questions: [
+      {
+        question: "Comment rejoindre Invest Infinity ?",
+        answer: "C'est simple et rapide :\n\n1️⃣ Crée ton compte sur notre site\n2️⃣ Ouvre un compte chez notre broker partenaire RaiseFX\n3️⃣ Accède immédiatement au Discord VIP\n\nTout le processus prend moins de 10 minutes !"
+      },
+      {
+        question: "L'accès est-il vraiment gratuit ?",
+        answer: "Oui, 100% gratuit ! Pas d'abonnement, pas de frais cachés. Tu accèdes à l'intégralité du contenu : formations, alertes, lives, communauté. Notre modèle est simple : on est rémunéré par nos partenaires brokers, ce qui nous permet de t'offrir tout gratuitement."
+      },
+      {
+        question: "Je suis déjà chez RaiseFX avec un autre affilié, comment faire ?",
+        answer: "Pas de souci ! Tu peux transférer ton affiliation vers Invest Infinity. Il suffit d'envoyer un email à RaiseFX (le modèle est disponible sur notre Discord). Le transfert est généralement traité sous 24-48h, et tu gardes ton compte et ton historique."
+      }
+    ]
+  },
+  {
+    icon: CreditCard,
+    title: "Trading & Alertes",
+    questions: [
+      {
+        question: "Que contient le Discord exactement ?",
+        answer: "Le Discord Invest Infinity, c'est :\n\n📊 Alertes trading quotidiennes de Mickaël\n📚 Formations vidéo complètes (débutant → avancé)\n🎥 Lives hebdomadaires avec analyse de marché\n💬 Salons d'entraide entre membres\n📈 Reviews détaillées de chaque position\n🏆 Challenges et événements exclusifs"
+      },
+      {
+        question: "Donnez-vous des signaux de trading ?",
+        answer: "Non, et c'est volontaire ! On ne donne pas de \"signaux\" à copier bêtement. Mickaël partage ses positions avec une analyse complète : point d'entrée, stop-loss, take profit, et surtout le POURQUOI derrière chaque trade. L'objectif est de te rendre autonome, pas dépendant."
+      },
+      {
+        question: "Quels sont les résultats de Mickaël ?",
+        answer: "Mickaël partage ses résultats en toute transparence sur le Discord. Tu peux consulter son track record complet avec les gains ET les pertes. En moyenne, il vise un Risk/Reward de 3:1 avec 2-3 positions par jour. Les lives permettent de voir son analyse en temps réel."
+      }
+    ]
+  },
+  {
+    icon: Shield,
+    title: "Sécurité & Brokers",
+    questions: [
+      {
+        question: "RaiseFX est-il un broker fiable ?",
+        answer: "Oui ! RaiseFX est un broker régulé que nous avons sélectionné après des mois de tests. Il offre des spreads compétitifs, une exécution rapide et un support client réactif. On ne recommande que des partenaires en qui on a confiance à 100%."
+      },
+      {
+        question: "Puis-je utiliser un autre broker ?",
+        answer: "Pour accéder au contenu VIP (alertes, formations, lives), il faut avoir un compte actif chez RaiseFX. C'est ce partenariat qui nous permet de t'offrir tout gratuitement. Tu peux bien sûr garder d'autres comptes ailleurs pour ton trading perso."
+      },
+      {
+        question: "Mes données sont-elles sécurisées ?",
+        answer: "Absolument ! Tes données personnelles sont protégées et jamais partagées avec des tiers. On utilise un chiffrement SSL et on respecte le RGPD. Tu peux supprimer ton compte à tout moment."
+      }
+    ]
+  },
+  {
+    icon: Users,
+    title: "Communauté & Support",
+    questions: [
+      {
+        question: "Comment contacter le support ?",
+        answer: "Plusieurs options :\n\n💬 Sur Discord : mentionne @investinfinity\n📧 Par email : via le formulaire de contact\n🎥 En live : pose tes questions directement à Mickaël\n\nOn répond généralement sous 24h, souvent beaucoup plus vite !"
+      },
+      {
+        question: "Y a-t-il des lives réguliers ?",
+        answer: "Oui ! Mickaël anime des lives hebdomadaires où il analyse les marchés en temps réel, répond à vos questions et partage ses setups. C'est le moment idéal pour apprendre et interagir directement avec lui."
+      }
+    ]
+  },
+  {
+    icon: MessageCircle,
+    title: "Autres questions",
+    questions: [
+      {
+        question: "Comment Invest Infinity gagne-t-il de l'argent ?",
+        answer: "Transparence totale : on est rémunéré par nos brokers partenaires via un système d'affiliation. Quand tu trades, une partie du spread nous revient. C'est gagnant-gagnant : tu accèdes à tout gratuitement, et on peut continuer à développer du contenu de qualité."
+      },
+      {
+        question: "Je suis débutant total, est-ce pour moi ?",
+        answer: "Carrément ! Nos formations commencent vraiment de zéro : qu'est-ce qu'un pip, comment lire un graphique, les bases du money management... Tu seras guidé pas à pas. Et la communauté est là pour t'aider si tu bloques."
+      }
+    ]
+  }
+];
 
-  const faqs = [
-    {
-      question: "Qu’est-ce qu’Invest Infinity ?",
-      answer: "Invest Infinity est une communauté dédiée au trading, où des traders souhaitent devenir sérieux, indépendants et professionnels. Nous partageons des analyses, des stratégies et des opportunités exclusives pour aider nos membres à évoluer dans leur parcours de trader."
-    },
-    {
-      question: "Comment rejoindre Invest Infinity ?",
-      answer: "Pour accéder à notre communauté, il suffit de :\n- Être âgé de 18 ans ou plus.\n- Posséder un compte de trading actif ouvert via l’un de nos partenaires."
-    },
-    {
-      question: "Est-ce que l’accès au serveur est gratuit ?",
-      answer: "Oui, l’accès à notre serveur est 100% gratuit, mais certaines sections et avantages exclusifs sont réservés aux membres ayant un compte actif chez nos partenaires."
-    },
-    {
-      question: "Que vais-je trouver sur le Discord ?",
-      answer: "En rejoignant notre serveur, tu auras accès à :\n- Analyses et stratégies de trading.\n- Lives et discussions avec des traders expérimentés.\n- Alertes et opportunités de marché.\n- Échange avec une communauté active et bienveillante."
-    },
-    {
-      question: "Donnez-vous des signaux de trading ?",
-      answer: "Non, nous ne fournissons aucun signal de trading. Nous ne sommes pas conseillers financiers. En revanche, Mickaël, notre trader, partage ses positions. Notre objectif est de rester axé sur l’éducation et d’aider nos membres à développer leur propre analyse."
-    },
-    {
-      question: "Puis-je trader avec n’importe quel broker ?",
-      answer: "Non, pour profiter de nos ressources et accès exclusifs, il est nécessaire d’avoir un compte actif chez l’un de nos partenaires."
-    },
-    {
-      question: "Comment contacter un modérateur en cas de problème ?",
-      answer: "Si tu rencontres un souci, tu peux taguer @investinfinity et nous te répondrons dans les plus brefs délais."
-    },
-    {
-      question: "J’ai une question qui ne figure pas dans la FAQ, que faire ?",
-      answer: "N’hésite pas à poser ta question sur le serveur dans la section #discussion ou à contacter un @investinfinity."
-    },
-    {
-      question: "Les brokers partenaires sont-ils sûrs et régulés ?",
-      answer: "Nous sélectionnons uniquement des brokers fiables et reconnus, mais nous te conseillons toujours de faire tes propres recherches avant d’ouvrir un compte."
-    },
-    {
-      question: "Comment Invest Infinity se finance-t-il ?",
-      answer: "Notre communauté est financée via des partenariats avec des brokers. Cela nous permet de proposer un accès gratuit tout en garantissant des avantages exclusifs à nos membres."
-    },
-    {
-      question: "Je suis déjà inscrit chez RaiseFX via un autre affilié, comment puis-je rejoindre Invest Infinity ?",
-      answer: "Si tu es déjà chez RaiseFX mais affilié à quelqu’un d’autre, tu peux demander à être rattaché à Invest Infinity en suivant une procédure simple.\nIl te suffit d’envoyer un e-mail à RaiseFX en demandant le transfert de ton compte vers notre affiliation.\nL’e-mail à envoyer est déjà disponible sur le Discord dans la section dédiée.\nUne fois ta demande envoyée, RaiseFX s’occupera du reste."
-    }
-  ];
-  
+export default function FAQ({ onOpenRegister }: FAQProps) {
+  const [openIndex, setOpenIndex] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<number>(0);
+
+  // Flatten all questions with unique IDs
+  const allQuestions = faqCategories.flatMap((cat, catIndex) => 
+    cat.questions.map((q, qIndex) => ({
+      ...q,
+      id: `${catIndex}-${qIndex}`,
+      category: cat.title,
+      icon: cat.icon
+    }))
+  );
+
+  // Get questions for active category or all
+  const displayedQuestions = activeCategory === -1 
+    ? allQuestions 
+    : faqCategories[activeCategory]?.questions.map((q, qIndex) => ({
+        ...q,
+        id: `${activeCategory}-${qIndex}`,
+        category: faqCategories[activeCategory].title,
+        icon: faqCategories[activeCategory].icon
+      })) || [];
 
   return (
     <section id="faq" className="relative bg-[#0f0f13] py-32 overflow-hidden">
@@ -66,42 +139,84 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse delay-500" />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <AnimatedSection>
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 backdrop-blur-sm border border-pink-500/10 mb-8">
               <Sparkles className="w-5 h-5 text-pink-400" />
               <span className="text-pink-200 font-medium">Questions Fréquentes</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              Tout ce que vous devez
+              Tout ce que tu dois
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-500 mt-2">
-                savoir pour commencer
+                savoir avant de commencer
               </span>
             </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Tu as des questions ? On a les réponses. Si tu ne trouves pas ce que tu cherches, contacte-nous sur Discord !
+            </p>
           </div>
         </AnimatedSection>
 
-        <div className="grid gap-6 mb-16">
-          {faqs.map((faq, index) => (
-            <AnimatedSection key={index}>
+        {/* Category tabs */}
+        <AnimatedSection>
+          <div className="flex flex-wrap justify-center gap-2 mb-12">
+            <button
+              onClick={() => setActiveCategory(-1)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                activeCategory === -1
+                  ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
+                  : 'bg-[#1f1f23] text-gray-400 hover:text-white hover:bg-[#2a2a30]'
+              }`}
+            >
+              Toutes ({allQuestions.length})
+            </button>
+            {faqCategories.map((cat, index) => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={index}
+                  onClick={() => setActiveCategory(index)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                    activeCategory === index
+                      ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
+                      : 'bg-[#1f1f23] text-gray-400 hover:text-white hover:bg-[#2a2a30]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {cat.title}
+                </button>
+              );
+            })}
+          </div>
+        </AnimatedSection>
+
+        {/* FAQ Items */}
+        <div className="grid gap-4">
+          {displayedQuestions.map((faq) => (
+            <AnimatedSection key={faq.id}>
               <div className="relative group">
                 {/* Neon glow effect */}
                 <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500" />
                 
                 <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500">
                   <button
-                    className="w-full px-8 py-6 text-left flex justify-between items-center group/button"
-                    onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                    className="w-full px-6 sm:px-8 py-5 text-left flex justify-between items-start gap-4 group/button"
+                    onClick={() => setOpenIndex(openIndex === faq.id ? null : faq.id)}
                   >
-                    <span className="text-lg font-medium text-white group-hover:text-pink-400 transition-colors">
-                      {faq.question}
-                    </span>
+                    <div className="flex-1">
+                      <span className="text-base sm:text-lg font-medium text-white group-hover:text-pink-400 transition-colors block">
+                        {faq.question}
+                      </span>
+                      {activeCategory === -1 && (
+                        <span className="text-xs text-pink-400/60 mt-1 block">{faq.category}</span>
+                      )}
+                    </div>
                     <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center
+                      w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
                       bg-pink-500/10 group-hover:bg-pink-500/20
                       transition-all duration-300
-                      ${openIndex === index ? 'rotate-180' : ''}
+                      ${openIndex === faq.id ? 'rotate-180 bg-pink-500/30' : ''}
                     `}>
                       <ChevronDown className="w-5 h-5 text-pink-400" />
                     </div>
@@ -109,11 +224,11 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
                   
                   <div
                     className={`
-                      overflow-hidden transition-all duration-500
-                      ${openIndex === index ? 'max-h-96' : 'max-h-0'}
+                      overflow-hidden transition-all duration-500 ease-in-out
+                      ${openIndex === faq.id ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}
                     `}
                   >
-                    <div className="px-8 pb-6 text-gray-400">
+                    <div className="px-6 sm:px-8 pb-6 text-gray-300 leading-relaxed whitespace-pre-line">
                       {faq.answer}
                     </div>
                   </div>
@@ -123,25 +238,21 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
           ))}
         </div>
 
-        {/* Final CTA */}
+        {/* Contact CTA */}
         <AnimatedSection>
-          <div className="text-center">
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-8">
-              Prêt à commencer votre voyage vers la réussite ?
-            </h3>
-            <button 
-              onClick={onOpenRegister}
-              className="group relative inline-flex items-center"
+          <div className="mt-12 text-center">
+            <p className="text-gray-400 mb-4">
+              Tu n'as pas trouvé ta réponse ?
+            </p>
+            <a 
+              href="https://discord.gg/investinfinity" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 font-medium transition-colors"
             >
-              <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-pink-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
-              
-              <div className="relative px-8 py-4 bg-[#1f1f23] rounded-full flex items-center space-x-2 transform hover:scale-105 transition-all duration-500 border border-pink-500/20">
-                <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-500">
-                  Commencer Maintenant
-                </span>
-                <ArrowRight className="w-5 h-5 text-pink-500 transform group-hover:translate-x-1 transition-transform duration-300" />
-              </div>
-            </button>
+              <MessageCircle className="w-5 h-5" />
+              Pose ta question sur Discord
+            </a>
           </div>
         </AnimatedSection>
       </div>
