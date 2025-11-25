@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Users, Clock, ArrowRight, Shield, Loader2, Star } from 'lucide-react';
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
@@ -28,12 +28,13 @@ const reviews = [
 
 export default function ConfirmationPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signIn } = useAuth();
   const toast = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPrenom, setUserPrenom] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [waitingForAuth, setWaitingForAuth] = useState(true);
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail');
@@ -43,26 +44,77 @@ export default function ConfirmationPage() {
     window.scrollTo(0, 0);
   }, []);
 
+  // Tentative de connexion automatique si l'utilisateur vient de s'inscrire
+  const attemptAutoLogin = useCallback(async () => {
+    if (autoLoginAttempted || user) return;
+    
+    const email = localStorage.getItem('userEmail');
+    const tempPassword = localStorage.getItem('tempPassword');
+    
+    if (email && tempPassword) {
+      console.log('[ConfirmationPage] Tentative de connexion automatique...');
+      setAutoLoginAttempted(true);
+      
+      try {
+        await signIn(email, tempPassword);
+        console.log('[ConfirmationPage] Connexion automatique réussie !');
+      } catch (error) {
+        console.log('[ConfirmationPage] Connexion automatique échouée:', error);
+        // On ne montre pas d'erreur, l'utilisateur peut toujours se connecter manuellement
+      }
+    }
+  }, [autoLoginAttempted, user, signIn]);
+
   useEffect(() => {
     if (!authLoading) {
       setWaitingForAuth(false);
+      // Tenter la connexion automatique une fois l'auth chargé
+      if (!user) {
+        attemptAutoLogin();
+      }
       return;
     }
     const timeout = setTimeout(() => {
       setWaitingForAuth(false);
+      if (!user) {
+        attemptAutoLogin();
+      }
     }, 3000);
     return () => clearTimeout(timeout);
-  }, [authLoading]);
+  }, [authLoading, user, attemptAutoLogin]);
 
   const handlePurchase = async (plan: 'essentiel' | 'premium') => {
     setLoading(true);
     
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      // Si pas de session, tenter une dernière connexion automatique
+      if (!session) {
+        const email = localStorage.getItem('userEmail');
+        const tempPassword = localStorage.getItem('tempPassword');
+        
+        if (email && tempPassword) {
+          console.log('[ConfirmationPage] Tentative de connexion avant paiement...');
+          try {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password: tempPassword,
+            });
+            
+            if (!signInError && signInData.session) {
+              session = signInData.session;
+              console.log('[ConfirmationPage] Connexion réussie !');
+            }
+          } catch (e) {
+            console.log('[ConfirmationPage] Connexion échouée:', e);
+          }
+        }
+      }
       
       if (sessionError || !session) {
         toast.error('Connecte-toi pour finaliser ton achat', {
-          duration: 4000,
+          duration: 5000,
           action: {
             label: 'Se connecter',
             onClick: () => navigate('/login'),
