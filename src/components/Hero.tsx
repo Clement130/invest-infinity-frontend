@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { TrustpilotBadge } from "./TrustpilotSection";
 
 interface HeroProps {
   onOpenRegister?: () => void;
@@ -42,9 +41,6 @@ export default function Hero({ onOpenRegister }: HeroProps) {
       {/* Contenu principal */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 mt-20">
         <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <TrustpilotBadge />
-          </div>
 {/* Titre avec animation de glitch */}
 <div className="mb-6 relative text-center">
   <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight">

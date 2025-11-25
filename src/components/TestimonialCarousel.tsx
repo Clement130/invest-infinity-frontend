@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { trustpilotConfig } from '../config/trustpilot';
 
 const testimonials = [
@@ -23,23 +22,6 @@ const StarIcon = () => <span className="text-yellow-400 text-lg">★</span>;
 
 const TestimonialCarousel = () => {
   const trustpilotUrl = `https://fr.trustpilot.com/review/${trustpilotConfig.domain}`;
-
-  useEffect(() => {
-    if (document.getElementById('trustpilot-script-micro')) return;
-    const script = document.createElement('script');
-    script.id = 'trustpilot-script-micro';
-    script.src = 'https://widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js';
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
-
-  const isTrustpilotConfigured =
-    !!trustpilotConfig.microTemplateId &&
-    trustpilotConfig.microTemplateId !== 'TON_TEMPLATE_ID' &&
-    !!trustpilotConfig.businessUnitId &&
-    trustpilotConfig.businessUnitId !== 'TON_BUSINESSUNIT_ID' &&
-    !!trustpilotConfig.domain &&
-    trustpilotConfig.domain !== 'TON_DOMAINE';
 
   return (
     <section className="py-20 bg-[#05070d] relative overflow-hidden">
@@ -77,26 +59,6 @@ const TestimonialCarousel = () => {
             </p>
           </div>
         </div>
-
-        {isTrustpilotConfigured && (
-          <div
-            className="trustpilot-widget mx-auto mb-12 max-w-sm bg-white rounded-full shadow-lg shadow-emerald-500/20"
-            data-locale={trustpilotConfig.locale}
-            data-template-id={trustpilotConfig.microTemplateId}
-            data-businessunit-id={trustpilotConfig.businessUnitId}
-            data-style-height="24px"
-            data-style-width="100%"
-            data-theme="light"
-          >
-            <a
-              href={`https://fr.trustpilot.com/review/${trustpilotConfig.domain}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Trustpilot
-            </a>
-          </div>
-        )}
 
         <div className="grid gap-6 md:grid-cols-3 overflow-x-auto md:overflow-visible snap-x md:snap-none">
           {testimonials.map((review, index) => (
