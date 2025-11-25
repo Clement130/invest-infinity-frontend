@@ -8,6 +8,16 @@ import { supabase } from '../lib/supabaseClient';
 import { leadApi } from '../services/leadApi';
 import { useToast } from '../hooks/useToast';
 
+// Génère un mot de passe sécurisé temporaire
+function generateTemporaryPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -173,6 +183,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
 
     setIsLoading(true);
     try {
+      // 1. Enregistrer le lead dans le CRM
       await leadApi.registerLead({
         boardId: 9406097805,
         prenom: formData.prenom,
@@ -183,15 +194,66 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
         newsLetter: true,
       });
 
+      // 2. Créer un compte Supabase avec mot de passe temporaire
+      const tempPassword = generateTemporaryPassword();
+      
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: tempPassword,
+        options: {
+          data: {
+            prenom: formData.prenom,
+            phone: formData.phone,
+            capital: parseInt(formData.budget, 10),
+          },
+        },
+      });
+
+      if (signUpError) {
+        // Si l'utilisateur existe déjà, on continue quand même vers la confirmation
+        if (signUpError.message?.includes('already registered') || signUpError.message?.includes('already exists')) {
+          console.log('[AuthModal] Utilisateur déjà existant, redirection vers confirmation');
+          localStorage.setItem('userEmail', formData.email);
+          localStorage.setItem('userPrenom', formData.prenom);
+          toast.info('Tu as déjà un compte ! Connecte-toi pour acheter.', { duration: 4000 });
+          onClose();
+          navigate('/confirmation');
+          return;
+        }
+        throw signUpError;
+      }
+
+      // 3. Stocker les infos pour la page de confirmation
       localStorage.setItem('userEmail', formData.email);
+      localStorage.setItem('userPrenom', formData.prenom);
+      localStorage.setItem('tempPassword', tempPassword); // Pour l'email de bienvenue
+
+      // 4. Connecter automatiquement l'utilisateur si le compte est créé
+      if (signUpData.user && signUpData.session) {
+        // L'utilisateur est déjà connecté via signUp
+        console.log('[AuthModal] Compte créé et utilisateur connecté automatiquement');
+        toast.success('Compte créé avec succès ! 🎉', { duration: 2000 });
+      } else if (signUpData.user && !signUpData.session) {
+        // Email de confirmation requis - on essaie de se connecter directement
+        // (si le projet Supabase n'a pas la confirmation email obligatoire)
+        try {
+          await signIn(formData.email, tempPassword);
+          console.log('[AuthModal] Connexion automatique réussie');
+          toast.success('Compte créé avec succès ! 🎉', { duration: 2000 });
+        } catch (loginError) {
+          // Si la connexion échoue (email non confirmé), on continue quand même
+          console.log('[AuthModal] Connexion auto impossible, confirmation email requise');
+          toast.info('Compte créé ! Vérifie tes emails pour te connecter.', { duration: 4000 });
+        }
+      }
+
       onClose();
       navigate('/confirmation');
-    } catch (error) {
-      console.error('Erreur lors de la requête :', error);
+    } catch (error: any) {
+      console.error('Erreur lors de l\'inscription :', error);
       setErrors((prev) => ({
         ...prev,
-        budget:
-          'Impossible de finaliser votre inscription pour le moment. Merci de réessayer plus tard.',
+        budget: error?.message || 'Impossible de finaliser votre inscription pour le moment. Merci de réessayer plus tard.',
       }));
     } finally {
       setIsLoading(false);

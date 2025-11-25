@@ -1,40 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Sparkles, Users, TrendingUp, ArrowRight, Gift, Shield } from 'lucide-react';
+import { CheckCircle, Sparkles, Users, TrendingUp, ArrowRight, Gift, Shield, Loader2, BadgeCheck } from 'lucide-react';
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../hooks/useToast';
+import CountdownTimer from '../components/CountdownTimer';
+import SocialProofBanner from '../components/SocialProofBanner';
 
 export default function ConfirmationPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const toast = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userPrenom, setUserPrenom] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [waitingForAuth, setWaitingForAuth] = useState(true);
 
   useEffect(() => {
-    // Récupérer l'email depuis localStorage
+    // Récupérer les infos depuis localStorage
     const email = localStorage.getItem('userEmail');
+    const prenom = localStorage.getItem('userPrenom');
     setUserEmail(email);
+    setUserPrenom(prenom);
     
     // Scroll en haut de la page
     window.scrollTo(0, 0);
   }, []);
 
-  const handlePurchase = async (plan: 'essentiel' | 'premium') => {
-    if (!user) {
-      navigate('/login');
+  // Attendre que l'authentification soit chargée (max 3 secondes)
+  useEffect(() => {
+    if (!authLoading) {
+      setWaitingForAuth(false);
       return;
     }
+    
+    const timeout = setTimeout(() => {
+      setWaitingForAuth(false);
+    }, 3000);
+    
+    return () => clearTimeout(timeout);
+  }, [authLoading]);
 
+  const handlePurchase = async (plan: 'essentiel' | 'premium') => {
     setLoading(true);
+    
     try {
       // Récupérer le token d'authentification de la session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
-        toast.error('Vous devez être connecté pour effectuer un achat.', {
+        // Si pas de session, proposer de se connecter avec message explicite
+        toast.error('Connecte-toi pour finaliser ton achat', {
+          duration: 4000,
           action: {
             label: 'Se connecter',
             onClick: () => navigate('/login'),
@@ -52,25 +70,29 @@ export default function ConfirmationPage() {
         },
         body: JSON.stringify({
           priceId: STRIPE_PRICE_IDS[plan],
+          userId: session.user.id,
+          userEmail: session.user.email || userEmail || '',
           successUrl: getStripeSuccessUrl(),
           cancelUrl: getStripeCancelUrl(),
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la création de la session');
+        const errorText = await response.text();
+        console.error('Erreur checkout:', errorText);
+        throw new Error('Erreur lors de la création de la session de paiement');
       }
 
       const { url } = await response.json();
       if (url) {
-        toast.success('Redirection vers le paiement...', { duration: 2000 });
+        toast.success('Redirection vers le paiement sécurisé...', { duration: 2000 });
         window.location.href = url;
       } else {
         toast.error('Erreur : URL de checkout non reçue.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur:', error);
-      toast.error('Une erreur est survenue. Veuillez réessayer.', {
+      toast.error(error?.message || 'Une erreur est survenue. Veuillez réessayer.', {
         action: {
           label: 'Réessayer',
           onClick: () => handlePurchase(plan),
@@ -83,14 +105,23 @@ export default function ConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-900/10 via-black to-black pt-20 pb-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Banner countdown en haut */}
+      <div className="fixed top-16 left-0 right-0 z-40">
+        <CountdownTimer 
+          durationMinutes={15} 
+          label="🔥 Offre de bienvenue expire dans" 
+          variant="banner" 
+        />
+      </div>
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
         {/* Header de confirmation */}
         <div className="text-center mb-12 animate-fade-up">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500/20 rounded-full mb-6">
             <CheckCircle className="w-12 h-12 text-green-400" />
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">
-            Félicitations {userEmail ? userEmail.split('@')[0] : ''} ! 🎉
+            Félicitations {userPrenom || (userEmail ? userEmail.split('@')[0] : '')} ! 🎉
           </h1>
           <p className="text-xl text-gray-300 mb-2">
             Ton inscription est confirmée
@@ -127,23 +158,37 @@ export default function ConfirmationPage() {
           </div>
         </div>
 
-        {/* Social Proof */}
+        {/* Social Proof amélioré */}
         <div className="bg-white/5 rounded-xl p-6 mb-12 border border-white/10">
-          <div className="flex items-center justify-center gap-8 text-center">
-            <div>
-              <div className="flex items-center gap-2 justify-center mb-2">
-                <Users className="w-6 h-6 text-pink-400" />
-                <span className="text-3xl font-bold text-white">1000+</span>
+          <div className="flex flex-col items-center gap-4">
+            {/* Live social proof rotatif */}
+            <SocialProofBanner variant="minimal" />
+            
+            {/* Stats */}
+            <div className="flex items-center justify-center gap-8 text-center pt-4 border-t border-white/10 w-full">
+              <div>
+                <div className="flex items-center gap-2 justify-center mb-2">
+                  <Users className="w-6 h-6 text-pink-400" />
+                  <span className="text-3xl font-bold text-white">1000+</span>
+                </div>
+                <p className="text-gray-400 text-sm">Membres actifs</p>
               </div>
-              <p className="text-gray-400 text-sm">Membres actifs</p>
-            </div>
-            <div className="h-12 w-px bg-white/10" />
-            <div>
-              <div className="flex items-center gap-2 justify-center mb-2">
-                <TrendingUp className="w-6 h-6 text-green-400" />
-                <span className="text-3xl font-bold text-white">24/7</span>
+              <div className="h-12 w-px bg-white/10" />
+              <div>
+                <div className="flex items-center gap-2 justify-center mb-2">
+                  <TrendingUp className="w-6 h-6 text-green-400" />
+                  <span className="text-3xl font-bold text-white">24/7</span>
+                </div>
+                <p className="text-gray-400 text-sm">Support disponible</p>
               </div>
-              <p className="text-gray-400 text-sm">Support disponible</p>
+              <div className="h-12 w-px bg-white/10" />
+              <div>
+                <div className="flex items-center gap-2 justify-center mb-2">
+                  <BadgeCheck className="w-6 h-6 text-blue-400" />
+                  <span className="text-3xl font-bold text-white">4.8/5</span>
+                </div>
+                <p className="text-gray-400 text-sm">Note moyenne</p>
+              </div>
             </div>
           </div>
         </div>
@@ -170,8 +215,12 @@ export default function ConfirmationPage() {
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
               <h3 className="text-xl font-bold text-white mb-2">Formation Essentiel</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-white">50€</span>
-                <span className="text-gray-400 ml-2">une fois</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg text-gray-500 line-through">79€</span>
+                  <span className="text-4xl font-bold text-white">50€</span>
+                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-37%</span>
+                </div>
+                <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
               </div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2">
@@ -193,10 +242,22 @@ export default function ConfirmationPage() {
               </ul>
               <button
                 onClick={() => handlePurchase('essentiel')}
-                disabled={loading || !user}
-                className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || waitingForAuth}
+                className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? 'Chargement...' : 'Choisir Essentiel'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Redirection...
+                  </>
+                ) : waitingForAuth ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Chargement...
+                  </>
+                ) : (
+                  'Choisir Essentiel — 50€'
+                )}
               </button>
             </div>
 
@@ -209,8 +270,12 @@ export default function ConfirmationPage() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Formation Premium</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-white">249.95€</span>
-                <span className="text-gray-300 ml-2">une fois</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg text-gray-500 line-through">399€</span>
+                  <span className="text-4xl font-bold text-white">249.95€</span>
+                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-37%</span>
+                </div>
+                <span className="text-gray-300 text-sm">paiement unique • accès à vie</span>
               </div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2">
@@ -232,10 +297,22 @@ export default function ConfirmationPage() {
               </ul>
               <button
                 onClick={() => handlePurchase('premium')}
-                disabled={loading || !user}
-                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || waitingForAuth}
+                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? 'Chargement...' : 'Choisir Premium'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Redirection...
+                  </>
+                ) : waitingForAuth ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Chargement...
+                  </>
+                ) : (
+                  'Choisir Premium — 249.95€'
+                )}
               </button>
             </div>
           </div>

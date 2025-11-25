@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Shield, Users, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { supabase } from '../lib/supabaseClient';
 import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { useToast } from '../hooks/useToast';
+import SocialProofBanner from '../components/SocialProofBanner';
 
 export default function PricingPage() {
   const navigate = useNavigate();
@@ -124,14 +125,35 @@ export default function PricingPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
+            {/* Social proof */}
+            <div className="flex justify-center mb-6">
+              <SocialProofBanner variant="inline" />
+            </div>
+            
             <h1 className="text-5xl sm:text-6xl font-bold mb-6">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-violet-500">
                 Nos Offres
               </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-6">
               Choisissez le plan qui correspond à vos objectifs de trading
             </p>
+            
+            {/* Trust badges */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-green-400" />
+                <span>Garantie 30 jours</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-pink-400" />
+                <span>+1000 membres</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-400" />
+                <span>4.8/5 de satisfaction</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -197,8 +219,12 @@ export default function PricingPage() {
                 <p className="text-gray-400 mb-6">Pour apprendre les bases</p>
                 
                 <div className="mb-8">
-                  <span className="text-4xl font-bold">50€</span>
-                  <span className="text-gray-400 ml-2">paiement unique</span>
+                  <div className="flex items-baseline gap-2 justify-center">
+                    <span className="text-lg text-gray-500 line-through">79€</span>
+                    <span className="text-4xl font-bold">50€</span>
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-37%</span>
+                  </div>
+                  <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
                 </div>
 
                 <ul className="space-y-4 mb-8">
@@ -252,8 +278,12 @@ export default function PricingPage() {
                 <p className="text-gray-400 mb-6">Pour la maîtrise complète</p>
                 
                 <div className="mb-8">
-                  <span className="text-4xl font-bold">249.95€</span>
-                  <span className="text-gray-400 ml-2">paiement unique</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg text-gray-500 line-through">399€</span>
+                    <span className="text-4xl font-bold">249.95€</span>
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-37%</span>
+                  </div>
+                  <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
                 </div>
 
                 <ul className="space-y-4 mb-8">
