@@ -77,6 +77,21 @@ export function LessonRow({
         </div>
       </div>
 
+      {/* Bouton d'assignation toujours visible pour les leçons sans vidéo */}
+      {!hasVideo && onAssignVideo && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAssignVideo(lesson.id);
+          }}
+          className="px-3 py-1.5 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 hover:bg-green-500/30 transition text-xs font-medium flex items-center gap-1.5"
+          title="Assigner une vidéo"
+        >
+          <VideoIcon className="w-3.5 h-3.5" />
+          Assigner vidéo
+        </button>
+      )}
+
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
         {onEdit && (
           <button
@@ -100,18 +115,6 @@ export function LessonRow({
             title="Remplacer la vidéo"
           >
             <VideoIcon className="w-4 h-4 text-purple-400" />
-          </button>
-        )}
-        {!hasVideo && onAssignVideo && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAssignVideo(lesson.id);
-            }}
-            className="p-1.5 rounded hover:bg-white/10 transition"
-            title="Assigner une vidéo"
-          >
-            <VideoIcon className="w-4 h-4 text-green-400" />
           </button>
         )}
         {hasVideo && (

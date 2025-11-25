@@ -197,41 +197,100 @@ export async function getModuleStats(): Promise<ModuleStats[]> {
   const modules = await getModules({ includeInactive: true });
   const accessList = await getAccessList();
 
+  // Récupérer les leçons avec leur module_id
+  const { data: lessonsData } = await supabase
+    .from('training_lessons')
+    .select('id, module_id');
+
   // Récupérer les progressions
   const { data: progressData } = await supabase
     .from('training_progress')
     .select('*');
 
+  // Créer un map lesson_id -> module_id pour faciliter les recherches
+  const lessonToModule = new Map<string, string>();
+  lessonsData?.forEach((lesson) => {
+    lessonToModule.set(lesson.id, lesson.module_id);
+  });
+
+  // Créer un map module_id -> liste de leçons
+  const lessonsByModule = new Map<string, string[]>();
+  lessonsData?.forEach((lesson) => {
+    const list = lessonsByModule.get(lesson.module_id) || [];
+    list.push(lesson.id);
+    lessonsByModule.set(lesson.module_id, list);
+  });
+
   const stats: ModuleStats[] = [];
 
   for (const module of modules) {
+    // Utilisateurs ayant accès à ce module
     const moduleAccess = accessList.filter((a) => a.module_id === module.id);
-    const moduleProgress = progressData?.filter(
-      (p) => p.module_id === module.id
-    ) || [];
+    const usersWithAccess = new Set(moduleAccess.map((a) => a.user_id));
 
-    // Compter les complétions (progress à 100%)
-    const completions = moduleProgress.filter((p) => p.progress_percentage >= 100);
+    // Filtrer les progressions pour ce module (via les leçons)
+    const moduleLessons = lessonsByModule.get(module.id) || [];
+    const moduleProgress = progressData?.filter((p) => {
+      const lessonModuleId = lessonToModule.get(p.lesson_id);
+      return lessonModuleId === module.id;
+    }) || [];
 
-    // Calculer la progression moyenne
-    const totalProgress =
-      moduleProgress.reduce((sum, p) => sum + (p.progress_percentage || 0), 0) /
-      (moduleProgress.length || 1);
+    // Grouper les progressions par utilisateur pour calculer la progression du module
+    const progressByUser = new Map<string, { completed: number; viewed: number }>();
+    moduleProgress.forEach((p) => {
+      const userId = p.user_id;
+      const existing = progressByUser.get(userId) || { completed: 0, viewed: 0 };
+      
+      if (p.done) {
+        existing.completed++;
+      }
+      if (p.last_viewed) {
+        existing.viewed++;
+      }
+      progressByUser.set(userId, existing);
+    });
 
-    // Compter les vues (progress > 0)
-    const views = moduleProgress.filter((p) => (p.progress_percentage || 0) > 0).length;
+    // Compter les utilisateurs ayant complété le module (toutes les leçons complétées)
+    const totalLessonsInModule = moduleLessons.length;
+    let usersCompleted = 0;
+    let totalProgressSum = 0;
+    let usersWithViews = 0;
+
+    usersWithAccess.forEach((userId) => {
+      const userProgress = progressByUser.get(userId) || { completed: 0, viewed: 0 };
+      const progressPercentage = totalLessonsInModule > 0
+        ? (userProgress.completed / totalLessonsInModule) * 100
+        : 0;
+      
+      totalProgressSum += progressPercentage;
+      
+      if (userProgress.completed === totalLessonsInModule && totalLessonsInModule > 0) {
+        usersCompleted++;
+      }
+      
+      if (userProgress.viewed > 0) {
+        usersWithViews++;
+      }
+    });
+
+    // Taux de complétion : % d'utilisateurs ayant complété toutes les leçons
+    const completionRate = usersWithAccess.size > 0
+      ? (usersCompleted / usersWithAccess.size) * 100
+      : 0;
+
+    // Progression moyenne : moyenne des % de complétion par utilisateur
+    const averageProgress = usersWithAccess.size > 0
+      ? totalProgressSum / usersWithAccess.size
+      : 0;
 
     stats.push({
       moduleId: module.id,
       moduleTitle: module.title,
       totalAccess: moduleAccess.length,
-      totalCompletions: completions.length,
-      completionRate:
-        moduleAccess.length > 0
-          ? (completions.length / moduleAccess.length) * 100
-          : 0,
-      averageProgress: totalProgress,
-      totalViews: views,
+      totalCompletions: usersCompleted,
+      completionRate,
+      averageProgress,
+      totalViews: usersWithViews,
     });
   }
 
@@ -259,25 +318,23 @@ export async function getLessonStats(): Promise<LessonStats[]> {
       (p) => p.lesson_id === lesson.id
     ) || [];
 
-    // Compter les complétions (completed = true)
-    const completions = lessonProgress.filter((p) => p.completed === true);
+    // Compter les complétions (done = true)
+    const completions = lessonProgress.filter((p) => p.done === true);
+
+    // Compter les vues (last_viewed existe = la leçon a été vue)
+    const views = lessonProgress.filter((p) => p.last_viewed !== null).length;
 
     // Calculer le temps de visionnage moyen
-    // Note: On utilise une estimation basée sur la progression
+    // Note: On utilise une estimation basée sur la complétion
     // Pour un suivi précis, il faudrait stocker le temps réel de visionnage
+    const estimatedDuration = 600; // 10 minutes par défaut (600 secondes)
     const averageWatchTime = lessonProgress.length > 0
       ? lessonProgress.reduce((sum, p) => {
-          // Estimation: si progress à 100%, on considère la vidéo complète (ex: 10 min = 600s)
-          // Sinon, on estime proportionnellement
-          const estimatedDuration = 600; // 10 minutes par défaut
-          return sum + ((p.progress_percentage || 0) / 100) * estimatedDuration;
+          // Si complété (done = true), on considère la vidéo complète
+          // Sinon, on estime à 50% de la durée (vue mais pas complétée)
+          return sum + (p.done ? estimatedDuration : estimatedDuration * 0.5);
         }, 0) / lessonProgress.length
       : 0;
-
-    // Compter les vues (progress > 0 ou completed = true)
-    const views = lessonProgress.filter(
-      (p) => (p.progress_percentage || 0) > 0 || p.completed === true
-    ).length;
 
     stats.push({
       lessonId: lesson.id,

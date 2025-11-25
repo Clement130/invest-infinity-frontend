@@ -1,11 +1,37 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.42.5';
 
-const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-};
+// Helper CORS sécurisé
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5174',
+    'https://invest-infinity-frontend.vercel.app',
+    'https://invest-infinity-frontend-*.vercel.app',
+  ];
+  
+  // Vérifier si l'origine est autorisée
+  let allowedOrigin = ALLOWED_ORIGINS[0]; // Par défaut, localhost
+  
+  if (origin) {
+    // Vérifier les correspondances exactes
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      allowedOrigin = origin;
+    } 
+    // Vérifier les patterns Vercel (wildcard)
+    else if (origin.includes('vercel.app') && ALLOWED_ORIGINS.some(pattern => pattern.includes('vercel.app'))) {
+      allowedOrigin = origin;
+    }
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 // Récupérer les secrets depuis Supabase
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -22,6 +48,9 @@ interface UploadRequest {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -46,16 +75,16 @@ serve(async (req) => {
     );
   }
 
-  // Vérifier le rôle admin
+  // Vérifier le rôle admin ou developer
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'developer')) {
     return new Response(
-      JSON.stringify({ error: 'Unauthorized: Admin access required' }),
+      JSON.stringify({ error: 'Unauthorized: Admin or Developer access required' }),
       { status: 403, headers: corsHeaders },
     );
   }

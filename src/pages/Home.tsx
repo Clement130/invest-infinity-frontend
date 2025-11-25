@@ -5,8 +5,8 @@ import JoinSteps from '../components/JoinSteps';
 import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
-import TrustpilotWidget from '../components/TrustpilotWidget';
 import TestimonialCarousel from '../components/TestimonialCarousel';
+import TrustpilotSection from '../components/TrustpilotSection';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function Home() {
         <Services onOpenRegister={() => setIsRegisterOpen(true)} />
       </div>
       <JoinSteps onOpenRegister={() => setIsRegisterOpen(true)} />
-      <TrustpilotWidget />
+      <TrustpilotSection />
       <FAQ onOpenRegister={() => setIsRegisterOpen(true)} />
       <AuthModal
         isOpen={isRegisterOpen}

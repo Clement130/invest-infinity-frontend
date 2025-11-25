@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-11-23T17:43:55.485Z",
+  "checks": [
+    {
+      "file": "trainingService.ts",
+      "function": "deleteModule",
+      "status": "❌ FAILED",
+      "details": {
+        "hasFunction": true,
+        "deletesLessonsFirst": false,
+        "deletesModuleAfter": false,
+        "hasErrorHandling": true,
+        "orderIsCorrect": false
+      }
+    },
+    {
+      "file": "ModulePage.tsx",
+      "component": "ModulePage",
+      "status": "✅ SUCCESS",
+      "details": {
+        "importsDeleteModule": true,
+        "importsTrash2": true,
+        "importsUseSession": true,
+        "importsUseQueryClient": true,
+        "hasAdminCheck": true,
+        "hasDeleteHandler": true,
+        "hasConfirm": true,
+        "hasNavigate": true,
+        "hasButton": true
+      }
+    },
+    {
+      "type": "Git Status",
+      "status": "✅ MODIFIED",
+      "modifiedFiles": [
+        "src/pages/ModulePage.tsx",
+        "src/services/trainingService.ts"
+      ]
+    }
+  ],
+  "codeSnippets": {
+    "deleteModule": "export async function deleteModule(id: string): Promise<void> {\n  // Supprimer d'abord les leçons associées\n  const { error: lessonsError }",
+    "handleDeleteModule": "handleDeleteModule = async () => {\r\n    if (!moduleId) return;\r\n    \r\n    if (!confirm('Supprimer définitivement ce module ?')) {\r\n      return;\r\n    }\r\n\r\n    try {\r\n      await deleteModule(moduleId);\r\n      // Invalider les caches pour rafraîchir les données\r\n      queryClient.invalidateQueries({ queryKey: ['modules'] });\r\n      queryClient.invalidateQueries({ queryKey: ['module-with-lessons'] });\r\n      // Rediriger vers /app\r\n      navigate('/app');\r\n    } catch (err) {\r\n      console.error('Erreur lors de la suppression:', err);\r\n      alert('Erreur lors de la suppression.');\r\n    }\r\n  };",
+    "deleteButton": "isAdmin && (\r\n                <button\r\n                  onClick={handleDeleteModule}\r\n                  className=\"inline-flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-500/10 text-sm transition\"\r\n                  title=\"Supprimer le module\"\r\n                >\r\n                  <Trash2 className=\"w-4 h-4\" />\r\n                  Supprimer\r\n                </button>"
+  },
+  "summary": {
+    "totalChecks": 3,
+    "success": 2,
+    "failed": 1,
+    "successRate": "67%"
+  }
+}

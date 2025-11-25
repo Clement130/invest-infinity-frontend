@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Plus, Edit2, GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, GripVertical, Trash2 } from 'lucide-react';
 import { LessonRow } from './LessonRow';
 import { StatusBadge } from './StatusIndicators';
 import { SortableLessonList } from './SortableLessonList';
@@ -11,6 +11,7 @@ interface ModuleSectionProps {
   onToggleExpand?: () => void;
   onAddLesson?: (moduleId: string) => void;
   onEditModule?: (module: TrainingModule) => void;
+  onDeleteModule?: (moduleId: string) => void;
   onEditLesson?: (lesson: TrainingLesson) => void;
   onDeleteLesson?: (lessonId: string) => void;
   onReplaceVideo?: (lessonId: string) => void;
@@ -28,6 +29,7 @@ export function ModuleSection({
   onToggleExpand,
   onAddLesson,
   onEditModule,
+  onDeleteModule,
   onEditLesson,
   onDeleteLesson,
   onReplaceVideo,
@@ -61,8 +63,13 @@ export function ModuleSection({
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4">
         <div className="flex items-center gap-3 flex-1">
           <button
-            onClick={onToggleExpand}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onToggleExpand?.();
+            }}
             className="p-1 hover:bg-white/10 rounded transition"
+            type="button"
           >
             {isExpanded ? (
               <ChevronDown className="w-5 h-5 text-gray-400" />
@@ -98,6 +105,18 @@ export function ModuleSection({
               title="Éditer le module"
             >
               <Edit2 className="w-4 h-4 text-blue-400" />
+            </button>
+          )}
+          {onDeleteModule && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteModule(module.id);
+              }}
+              className="p-2 rounded hover:bg-white/10 transition"
+              title="Supprimer le module"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
             </button>
           )}
         </div>

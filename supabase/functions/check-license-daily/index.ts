@@ -1,16 +1,35 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Helper CORS sécurisé
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5174',
+    // Ajoutez vos domaines de production ici
+  ];
+  
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 
+    ? origin 
+    : ALLOWED_ORIGINS[0];
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 const DEVELOPER_EMAIL = 'butcher13550@gmail.com';
 const CLIENT_EMAIL = 'investinfinityfr@gmail.com';
 const SECRET_KEY = Deno.env.get('LICENSE_CHECK_SECRET_KEY') || '';
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   // Gérer les requêtes OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });

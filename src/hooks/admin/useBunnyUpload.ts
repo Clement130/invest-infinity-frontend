@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { createBunnyVideo, uploadToBunny } from '../../utils/admin/bunnyStreamAPI';
+import { uploadBunnyVideo } from '../../services/bunnyStreamService';
 import toast from 'react-hot-toast';
 
 export interface UploadProgress {
@@ -33,15 +33,13 @@ export const useBunnyUpload = () => {
       ]);
 
       try {
-        // Créer la vidéo dans Bunny
+        // Démarrer l'upload via l'Edge Function
         setUploads((prev) =>
           prev.map((u) => (u.id === id ? { ...u, status: 'uploading' } : u))
         );
 
-        const { guid } = await createBunnyVideo(fileName);
-
-        // Upload le fichier
-        await uploadToBunny(guid, file, (progress) => {
+        // Utiliser la fonction d'upload qui passe par l'Edge Function
+        const result = await uploadBunnyVideo(fileName, file, (progress) => {
           setUploads((prev) =>
             prev.map((u) => (u.id === id ? { ...u, progress } : u))
           );
@@ -51,31 +49,39 @@ export const useBunnyUpload = () => {
         setUploads((prev) =>
           prev.map((u) =>
             u.id === id
-              ? { ...u, status: 'ready', progress: 100, videoId: guid }
+              ? { ...u, status: 'ready', progress: 100, videoId: result.guid }
               : u
           )
         );
 
         toast.success(`Vidéo "${fileName}" uploadée avec succès`);
-        onComplete?.(guid);
+        onComplete?.(result.guid);
 
         // Retirer de la liste après 3 secondes
         setTimeout(() => {
           setUploads((prev) => prev.filter((u) => u.id !== id));
         }, 3000);
       } catch (error: any) {
+        // Vérifier si l'erreur concerne les secrets manquants
+        const errorMessage = error.message || 'Erreur lors de l\'upload';
+        const isConfigError = errorMessage.includes('BUNNY_STREAM_LIBRARY_ID') || 
+                             errorMessage.includes('BUNNY_STREAM_API_KEY') ||
+                             errorMessage.includes('doivent être configurés');
+        
         setUploads((prev) =>
           prev.map((u) =>
             u.id === id
               ? {
                   ...u,
                   status: 'error',
-                  error: error.message || 'Erreur lors de l\'upload',
+                  error: isConfigError 
+                    ? 'BUNNY_STREAM_LIBRARY_ID et BUNNY_STREAM_API_KEY doivent être configurés'
+                    : errorMessage,
                 }
               : u
           )
         );
-        toast.error(`Erreur upload "${fileName}": ${error.message}`);
+        toast.error(`Erreur upload "${fileName}": ${errorMessage}`);
       }
     },
     []

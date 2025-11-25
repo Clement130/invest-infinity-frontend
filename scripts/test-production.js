@@ -18,6 +18,14 @@ const WAIT_FOR_DEPLOY = 300000; // 5 minutes pour attendre le déploiement
 
 const tests = [
   {
+    name: 'Test Page Accueil',
+    url: `${PRODUCTION_URL}/`,
+    checks: [
+      { type: 'load-time', maxTime: 10000 },
+      { type: 'no-error', message: 'Aucune erreur JavaScript' },
+    ],
+  },
+  {
     name: 'Test Dashboard Admin',
     url: `${PRODUCTION_URL}/admin/dashboard`,
     checks: [
@@ -27,11 +35,12 @@ const tests = [
     ],
   },
   {
-    name: 'Test Page Accueil',
-    url: `${PRODUCTION_URL}/`,
+    name: 'Test Page Vidéos Admin (Bunny Stream)',
+    url: `${PRODUCTION_URL}/admin/videos`,
     checks: [
-      { type: 'load-time', maxTime: 10000 },
       { type: 'no-error', message: 'Aucune erreur JavaScript' },
+      { type: 'load-time', maxTime: 15000 },
+      { type: 'text', selector: 'body', text: 'Bunny', required: false },
     ],
   },
 ];

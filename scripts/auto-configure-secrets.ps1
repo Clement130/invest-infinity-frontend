@@ -1,9 +1,31 @@
 # Script automatique pour configurer les secrets Bunny Stream
 # Essaie plusieurs méthodes pour configurer les secrets
 
-$PROJECT_REF = "vveswlmcgmizmjsriezw"
-$BUNNY_LIBRARY_ID = "542258"
-$BUNNY_API_KEY = "be9a7d66-a76f-4314-88af7279bb1e-d7d8-42ca"
+# ⚠️ SÉCURITÉ: Ne jamais hardcoder les clés API dans le code source
+# Utilisez des variables d'environnement ou un fichier .env.local
+$PROJECT_REF = $env:SUPABASE_PROJECT_REF
+$BUNNY_LIBRARY_ID = $env:BUNNY_STREAM_LIBRARY_ID
+$BUNNY_API_KEY = $env:BUNNY_STREAM_API_KEY
+
+# Vérifier que les variables sont définies
+if ([string]::IsNullOrWhiteSpace($PROJECT_REF)) {
+    Write-Host "❌ Erreur: SUPABASE_PROJECT_REF doit être défini dans les variables d'environnement" -ForegroundColor Red
+    Write-Host "   Définissez: `$env:SUPABASE_PROJECT_REF = 'votre_project_ref'" -ForegroundColor Yellow
+    exit 1
+}
+
+if ([string]::IsNullOrWhiteSpace($BUNNY_LIBRARY_ID)) {
+    Write-Host "❌ Erreur: BUNNY_STREAM_LIBRARY_ID doit être défini dans les variables d'environnement" -ForegroundColor Red
+    Write-Host "   Définissez: `$env:BUNNY_STREAM_LIBRARY_ID = 'votre_library_id'" -ForegroundColor Yellow
+    exit 1
+}
+
+if ([string]::IsNullOrWhiteSpace($BUNNY_API_KEY)) {
+    Write-Host "❌ Erreur: BUNNY_STREAM_API_KEY doit être défini dans les variables d'environnement" -ForegroundColor Red
+    Write-Host "   Définissez: `$env:BUNNY_STREAM_API_KEY = 'votre_api_key'" -ForegroundColor Yellow
+    Write-Host "   ⚠️  Ne partagez JAMAIS cette clé publiquement!" -ForegroundColor Red
+    exit 1
+}
 
 Write-Host "🔐 Configuration automatique des secrets Bunny Stream" -ForegroundColor Cyan
 Write-Host ""

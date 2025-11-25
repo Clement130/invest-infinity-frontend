@@ -17,6 +17,7 @@ interface FormationTreeViewProps {
   onAddModule?: () => void;
   onAddLesson?: (moduleId: string) => void;
   onEditModule?: (module: ModuleWithLessons) => void;
+  onDeleteModule?: (moduleId: string) => void;
   onReorderLessons?: (lessons: TrainingLesson[]) => void;
 }
 
@@ -34,6 +35,7 @@ export function FormationTreeView({
   onAddModule,
   onAddLesson,
   onEditModule,
+  onDeleteModule,
   onReorderLessons,
 }: FormationTreeViewProps) {
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
@@ -86,9 +88,12 @@ export function FormationTreeView({
               module={module}
               lessons={module.lessons}
               isExpanded={expandedModules.has(module.id)}
-              onToggleExpand={() => onToggleModule?.(module.id)}
+              onToggleExpand={() => {
+                onToggleModule?.(module.id);
+              }}
               onAddLesson={onAddLesson}
               onEditModule={onEditModule}
+              onDeleteModule={onDeleteModule}
               onEditLesson={onEditLesson}
               onDeleteLesson={onDeleteLesson}
               onReplaceVideo={onReplaceVideo}

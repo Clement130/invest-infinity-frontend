@@ -116,12 +116,21 @@ export default function FormationsPage() {
   const deleteModuleMutation = useMutation({
     mutationFn: deleteModule,
     onSuccess: () => {
+      // Invalider les queries pour rafraîchir la liste
       queryClient.invalidateQueries({ queryKey: ['admin', 'modules'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
+      
+      // Nettoyer l'état local
       if (selectedModule) setSelectedModule(null);
-      toast.success('Module supprimé');
+      if (editingModule) setEditingModule(null);
+      if (moduleModalOpen) setModuleModalOpen(false);
+      
+      // Afficher un message de succès
+      toast.success('Module supprimé avec succès');
     },
-    onError: () => {
-      toast.error('Erreur lors de la suppression');
+    onError: (error: any) => {
+      console.error('Erreur lors de la suppression du module:', error);
+      toast.error(`Erreur lors de la suppression: ${error?.message || 'Une erreur est survenue'}`);
     },
   });
 
@@ -193,9 +202,15 @@ export default function FormationsPage() {
                     setEditingModule(module);
                     setModuleModalOpen(true);
                   }}
-                  onDelete={() => {
-                    if (confirm(`Êtes-vous sûr de vouloir supprimer "${module.title}" ?`)) {
-                      deleteModuleMutation.mutate(module.id);
+                  onDelete={(e) => {
+                    if (e) e.stopPropagation();
+                    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le module "${module.title}" ?\n\nCette action est irréversible.`)) {
+                      deleteModuleMutation.mutate(module.id, {
+                        onError: (error) => {
+                          // S'assurer qu'on reste sur la page même en cas d'erreur
+                          console.error('Erreur suppression module:', error);
+                        }
+                      });
                     }
                   }}
                   previewMode={previewMode}
@@ -239,7 +254,7 @@ function SortableModuleCard({
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (e?: React.MouseEvent) => void;
   previewMode: boolean;
 }) {
   const {
@@ -328,11 +343,14 @@ function SortableModuleCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete();
+              e.preventDefault();
+              onDelete(e);
             }}
             className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition text-sm"
+            type="button"
           >
             <Trash2 className="w-4 h-4" />
+            Supprimer
           </button>
         </div>
       )}

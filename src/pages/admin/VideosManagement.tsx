@@ -10,6 +10,7 @@ import { LessonEditPanel } from '../../components/admin/videos/LessonEditPanel';
 import { BunnyLibraryModal } from '../../components/admin/videos/BunnyLibraryModal';
 import { ModuleModal } from '../../components/admin/videos/ModuleModal';
 import { LessonModal } from '../../components/admin/videos/LessonModal';
+import { ConfirmDeleteModal } from '../../components/admin/videos/ConfirmDeleteModal';
 import { EnvironmentCheck } from '../../components/admin/videos/EnvironmentCheck';
 import { EnvDebug } from '../../components/admin/videos/EnvDebug';
 import { VideoTutorial } from '../../components/admin/videos/VideoTutorial';
@@ -42,6 +43,7 @@ export default function VideosManagement() {
   const [lessonModalModuleId, setLessonModalModuleId] = useState<string | null>(null);
   const [assignmentVideoId, setAssignmentVideoId] = useState<string | null>(null);
   const [assignmentVideoTitle, setAssignmentVideoTitle] = useState<string | null>(null);
+  const [deleteModuleConfirm, setDeleteModuleConfirm] = useState<{ moduleId: string; moduleTitle: string; lessonsCount: number } | null>(null);
 
   // Auto-expand all modules by default (une seule fois au chargement initial)
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -297,10 +299,25 @@ export default function VideosManagement() {
   }, [createModuleMutation, updateModuleMutation]);
 
   const handleDeleteModule = useCallback((moduleId: string) => {
-    if (confirm('Supprimer ce module et toutes ses leçons ?')) {
-      deleteModuleMutation.mutate(moduleId);
+    const module = hierarchy.modules.find((m) => m.id === moduleId);
+    if (module) {
+      setDeleteModuleConfirm({ 
+        moduleId, 
+        moduleTitle: module.title,
+        lessonsCount: module.lessons.length
+      });
     }
-  }, [deleteModuleMutation]);
+  }, [hierarchy.modules]);
+
+  const handleConfirmDeleteModule = useCallback(() => {
+    if (deleteModuleConfirm) {
+      deleteModuleMutation.mutate(deleteModuleConfirm.moduleId, {
+        onSuccess: () => {
+          setDeleteModuleConfirm(null);
+        },
+      });
+    }
+  }, [deleteModuleConfirm, deleteModuleMutation]);
 
   const handleCreateLesson = useCallback((moduleId: string) => {
     setEditingLesson(null);
@@ -424,6 +441,7 @@ export default function VideosManagement() {
               onAddModule={handleCreateModule}
               onAddLesson={handleCreateLesson}
               onEditModule={handleEditModule}
+              onDeleteModule={handleDeleteModule}
               onReorderLessons={handleReorderLessons}
             />
           </div>
@@ -500,6 +518,21 @@ export default function VideosManagement() {
         {showTutorial && (
           <VideoTutorial onClose={() => setShowTutorial(false)} />
         )}
+
+        {/* Confirm Delete Module Modal */}
+        <ConfirmDeleteModal
+          isOpen={!!deleteModuleConfirm}
+          onClose={() => setDeleteModuleConfirm(null)}
+          onConfirm={handleConfirmDeleteModule}
+          title="Supprimer le module"
+          message={
+            deleteModuleConfirm?.lessonsCount && deleteModuleConfirm.lessonsCount > 0
+              ? `Êtes-vous sûr de vouloir supprimer ce module ? Les ${deleteModuleConfirm.lessonsCount} leçon${deleteModuleConfirm.lessonsCount > 1 ? 's' : ''} associée${deleteModuleConfirm.lessonsCount > 1 ? 's' : ''} seront également supprimée${deleteModuleConfirm.lessonsCount > 1 ? 's' : ''}.`
+              : 'Êtes-vous sûr de vouloir supprimer ce module ?'
+          }
+          itemName={deleteModuleConfirm?.moduleTitle}
+          isDeleting={deleteModuleMutation.isPending}
+        />
       </div>
     </div>
   );

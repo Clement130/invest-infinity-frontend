@@ -2,6 +2,34 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { VideoProgressTracker, type VideoProgressEvent } from '../../services/progressTrackingService';
 
+// Déclaration du type Player.js pour TypeScript
+declare global {
+  interface Window {
+    playerjs?: {
+      Player: new (iframe: HTMLIFrameElement) => PlayerJS;
+    };
+  }
+}
+
+interface PlayerJS {
+  on(event: string, callback: (data?: any) => void): void;
+  get(callback: (data: any) => void): void;
+  play(): void;
+  pause(): void;
+  getPaused(callback: (paused: boolean) => void): void;
+  mute(): void;
+  unmute(): void;
+  getMuted(callback: (muted: boolean) => void): void;
+  setVolume(volume: number): void;
+  getVolume(callback: (volume: number) => void): void;
+  getDuration(callback: (duration: number) => void): void;
+  setCurrentTime(seconds: number): void;
+  getCurrentTime(callback: (seconds: number) => void): void;
+  setLoop(loop: boolean): void;
+  getLoop(callback: (loop: boolean) => void): void;
+  removeEventListener(event: string, callback: (data?: any) => void): void;
+}
+
 interface BunnyPlayerProps {
   videoId: string;
   userId?: string;
@@ -14,7 +42,10 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const trackerRef = useRef<VideoProgressTracker | null>(null);
+  const playerRef = useRef<PlayerJS | null>(null);
   const progressCheckIntervalRef = useRef<number | null>(null);
+  const lastViewedUpdateIntervalRef = useRef<number | null>(null);
+  const isPageVisibleRef = useRef<boolean>(true);
   const baseUrl = import.meta.env.VITE_BUNNY_EMBED_BASE_URL;
 
   // Initialiser le tracker si userId et lessonId sont fournis

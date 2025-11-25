@@ -1,11 +1,11 @@
 /**
  * Utilitaires pour l'API Bunny Stream
- * Gestion des vidéos : création, upload, récupération
+ * ⚠️ SÉCURITÉ: Toutes les opérations doivent passer par les Edge Functions
+ * Les clés API ne sont jamais exposées côté client
  */
 
-const BUNNY_API_KEY = import.meta.env.VITE_BUNNY_STREAM_API_KEY;
-const BUNNY_LIBRARY_ID = import.meta.env.VITE_BUNNY_STREAM_LIBRARY_ID;
-const BUNNY_BASE_URL = 'https://video.bunnycdn.com';
+// ⚠️ Ces constantes ne sont plus utilisées - les clés API sont côté serveur uniquement
+// Toutes les opérations doivent passer par les Edge Functions Supabase
 
 export interface BunnyVideoMetadata {
   guid: string;
@@ -33,133 +33,63 @@ export interface CreateVideoResponse {
 
 /**
  * Crée une vidéo dans Bunny Stream (prépare l'upload)
+ * ⚠️ SÉCURITÉ: Cette fonction est gérée par l'Edge Function upload-bunny-video
  */
 export const createBunnyVideo = async (title: string): Promise<CreateVideoResponse> => {
-  if (!BUNNY_LIBRARY_ID || !BUNNY_API_KEY) {
-    throw new Error('BUNNY_STREAM_LIBRARY_ID et BUNNY_STREAM_API_KEY doivent être configurés');
-  }
-
-  const res = await fetch(
-    `${BUNNY_BASE_URL}/library/${BUNNY_LIBRARY_ID}/videos`,
-    {
-      method: 'POST',
-      headers: {
-        'AccessKey': BUNNY_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title }),
-    }
+  throw new Error(
+    'Cette fonction est gérée par l\'Edge Function upload-bunny-video. ' +
+    'Les clés API ne doivent pas être exposées côté client.'
   );
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Erreur création vidéo Bunny (${res.status}): ${errorText}`);
-  }
-
-  return await res.json();
 };
 
 /**
  * Upload une vidéo vers Bunny Stream avec suivi de progression
+ * ⚠️ SÉCURITÉ: Cette fonction est gérée par l'Edge Function upload-bunny-video
  */
 export const uploadToBunny = async (
   videoId: string,
   file: File,
   onProgress: (progress: number) => void
 ): Promise<void> => {
-  if (!BUNNY_LIBRARY_ID || !BUNNY_API_KEY) {
-    throw new Error('BUNNY_STREAM_LIBRARY_ID et BUNNY_STREAM_API_KEY doivent être configurés');
-  }
-
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const url = `${BUNNY_BASE_URL}/library/${BUNNY_LIBRARY_ID}/videos/${videoId}`;
-
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    });
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200 || xhr.status === 201) {
-        resolve();
-      } else {
-        reject(new Error(`Upload échoué: ${xhr.statusText}`));
-      }
-    });
-
-    xhr.addEventListener('error', () => {
-      reject(new Error('Erreur réseau lors de l\'upload'));
-    });
-
-    xhr.open('PUT', url);
-    xhr.setRequestHeader('AccessKey', BUNNY_API_KEY);
-    xhr.send(file);
-  });
+  throw new Error(
+    'Cette fonction est gérée par l\'Edge Function upload-bunny-video. ' +
+    'Les clés API ne doivent pas être exposées côté client.'
+  );
 };
 
 /**
  * Récupère les métadonnées d'une vidéo
+ * ⚠️ SÉCURITÉ: Cette fonction doit être implémentée via une Edge Function
  */
 export const getBunnyVideo = async (videoId: string): Promise<BunnyVideoMetadata> => {
-  if (!BUNNY_LIBRARY_ID || !BUNNY_API_KEY) {
-    throw new Error('BUNNY_STREAM_LIBRARY_ID et BUNNY_STREAM_API_KEY doivent être configurés');
-  }
-
-  const res = await fetch(
-    `${BUNNY_BASE_URL}/library/${BUNNY_LIBRARY_ID}/videos/${videoId}`,
-    {
-      headers: {
-        'AccessKey': BUNNY_API_KEY,
-      },
-    }
+  throw new Error(
+    'Cette fonction doit être implémentée via une Edge Function. ' +
+    'Les clés API ne doivent pas être exposées côté client.'
   );
-
-  if (!res.ok) {
-    throw new Error(`Vidéo non trouvée (${res.status})`);
-  }
-
-  return await res.json();
 };
 
 /**
  * Liste toutes les vidéos de la bibliothèque
+ * ⚠️ SÉCURITÉ: Utilise l'Edge Function list-bunny-videos
  */
 export const listBunnyVideos = async (
   page: number = 1,
   itemsPerPage: number = 100
 ): Promise<{ items: BunnyVideoMetadata[]; totalItems: number }> => {
-  if (!BUNNY_LIBRARY_ID || !BUNNY_API_KEY) {
-    throw new Error('BUNNY_STREAM_LIBRARY_ID et BUNNY_STREAM_API_KEY doivent être configurés');
-  }
-
-  const res = await fetch(
-    `${BUNNY_BASE_URL}/library/${BUNNY_LIBRARY_ID}/videos?page=${page}&itemsPerPage=${itemsPerPage}&orderBy=date`,
-    {
-      headers: {
-        'AccessKey': BUNNY_API_KEY,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error(`Erreur liste vidéos (${res.status})`);
-  }
-
-  const data = await res.json();
-  return {
-    items: data.items || [],
-    totalItems: data.totalItems || 0,
-  };
+  // Utiliser le service bunnyStreamService qui passe par l'Edge Function
+  const { listBunnyVideos: listVideos } = await import('../../services/bunnyStreamService');
+  return await listVideos(page, itemsPerPage);
 };
 
 /**
  * Génère l'URL de la miniature
+ * ⚠️ Note: Cette fonction nécessite VITE_BUNNY_STREAM_LIBRARY_ID pour l'URL CDN
+ * Mais cette variable peut rester publique car elle ne contient pas de clé secrète
  */
 export const getBunnyThumbnail = (videoId: string): string => {
-  if (!BUNNY_LIBRARY_ID) return '';
-  return `https://vz-${BUNNY_LIBRARY_ID}.b-cdn.net/${videoId}/thumbnail.jpg`;
+  const bunnyLibraryId = import.meta.env.VITE_BUNNY_STREAM_LIBRARY_ID;
+  if (!bunnyLibraryId) return '';
+  return `https://vz-${bunnyLibraryId}.b-cdn.net/${videoId}/thumbnail.jpg`;
 };
 
 /**
