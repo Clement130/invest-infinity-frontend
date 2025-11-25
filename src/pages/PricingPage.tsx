@@ -147,7 +147,7 @@ export default function PricingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-pink-400" />
-                <span>+1000 membres</span>
+                <span>+100 membres</span>
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-400" />

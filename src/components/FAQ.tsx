@@ -14,7 +14,7 @@ const faqCategories = [
     questions: [
       {
         question: "Qu'est-ce qu'Invest Infinity ?",
-        answer: "Invest Infinity est une communauté premium dédiée aux traders qui veulent progresser sérieusement. Tu accèdes à des analyses quotidiennes de Mickaël, des formations complètes, des lives hebdomadaires et une communauté Discord active de +1000 membres motivés. Notre mission : t'accompagner pour devenir un trader autonome et rentable."
+        answer: "Invest Infinity est une communauté premium dédiée aux traders qui veulent progresser sérieusement. Tu accèdes à des analyses quotidiennes de Mickaël, des formations complètes, des lives hebdomadaires et une communauté Discord active de +100 membres motivés. Notre mission : t'accompagner pour devenir un trader autonome et rentable."
       },
       {
         question: "À qui s'adresse Invest Infinity ?",

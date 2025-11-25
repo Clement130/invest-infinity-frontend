@@ -54,7 +54,7 @@ const services = [
     description: "Une communauté unie où l'on progresse et encaisse ensemble.",
     image: 'https://i.postimg.cc/jdQRMgjK/Screenshot-2025-02-16-155649.png',
     stats: [
-      { value: '1000+', label: 'membres' },
+      { value: '100+', label: 'membres' },
       { value: '24/7', label: 'support' },
       { value: 'VIP', label: 'coaching' },
     ],

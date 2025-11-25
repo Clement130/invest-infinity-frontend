@@ -169,7 +169,7 @@ export default function ConfirmationPage() {
               <div>
                 <div className="flex items-center gap-2 justify-center mb-2">
                   <Users className="w-6 h-6 text-pink-400" />
-                  <span className="text-3xl font-bold text-white">1000+</span>
+                  <span className="text-3xl font-bold text-white">100+</span>
                 </div>
                 <p className="text-gray-400 text-sm">Membres actifs</p>
               </div>
