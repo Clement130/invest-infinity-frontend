@@ -87,7 +87,7 @@ export default function ConfirmationPage() {
     setLoading(true);
     
     try {
-      let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      let { data: { session } } = await supabase.auth.getSession();
       
       // Si pas de session, tenter une dernière connexion automatique
       if (!session) {
@@ -112,7 +112,12 @@ export default function ConfirmationPage() {
         }
       }
       
-      if (sessionError || !session) {
+      // Récupérer l'email depuis localStorage si pas de session
+      const storedEmail = localStorage.getItem('userEmail');
+      const finalEmail = session?.user?.email || storedEmail || userEmail;
+      
+      // Vérifier qu'on a au moins un email pour le checkout
+      if (!finalEmail) {
         toast.error('Connecte-toi pour finaliser ton achat', {
           duration: 5000,
           action: {
@@ -124,16 +129,28 @@ export default function ConfirmationPage() {
         return;
       }
 
+      // Préparer les headers - utiliser le token si disponible, sinon l'anon key
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      } else {
+        // Utiliser l'anon key pour les utilisateurs non connectés
+        headers['apikey'] = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        headers['Authorization'] = `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`;
+      }
+
+      console.log('[ConfirmationPage] Création session checkout pour:', finalEmail, session ? '(avec session)' : '(sans session)');
+
       const response = await fetch(SUPABASE_CHECKOUT_FUNCTION_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers,
         body: JSON.stringify({
           priceId: STRIPE_PRICE_IDS[plan],
-          userId: session.user.id,
-          userEmail: session.user.email || userEmail || '',
+          userId: session?.user?.id || 'pending',
+          userEmail: finalEmail,
           successUrl: getStripeSuccessUrl(),
           cancelUrl: getStripeCancelUrl(),
         }),
