@@ -369,12 +369,6 @@ export default function ConfirmationPage() {
             </div>
             
             {renderButton('elite', '497€', 'gold')}
-            
-            {/* Valeur totale */}
-            <div className="mt-4 text-center">
-              <p className="text-gray-400 text-xs">Valeur totale : <span className="line-through">997€</span></p>
-              <p className="text-yellow-400 text-sm font-semibold">Tu économises 500€ (50%)</p>
-            </div>
           </div>
         </div>
 
