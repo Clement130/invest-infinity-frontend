@@ -28,6 +28,7 @@ import SettingsPage from '../pages/SettingsPage';
 import PricingPage from '../pages/PricingPage';
 import SuccessPage from '../pages/SuccessPage';
 import ConfirmationPage from '../pages/ConfirmationPage';
+import CreatePasswordPage from '../pages/CreatePasswordPage';
 import UpgradeOffer from '../components/UpgradeOffer';
 import { LandingForm } from '../components/LandingForm/LandingForm';
 import AdminLayout from '../layouts/AdminLayout';
@@ -91,6 +92,11 @@ export const marketingRoutes: MarketingRouteConfig[] = [
     path: '/confirmation',
     element: <ConfirmationPage />,
     layout: { header: false, footer: true, leadbooster: false },
+  },
+  {
+    path: '/create-password',
+    element: <CreatePasswordPage />,
+    layout: { header: false, footer: false, leadbooster: false },
   },
 ];
 

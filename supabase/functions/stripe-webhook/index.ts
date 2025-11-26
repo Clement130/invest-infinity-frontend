@@ -55,6 +55,7 @@ serve(async (req) => {
       const existingUser = existingUsers?.users?.find(u => u.email === customerEmail);
 
       let userId: string;
+      let passwordToken: string | null = null;
 
       if (existingUser) {
         // Utilisateur existe déjà
@@ -78,33 +79,31 @@ serve(async (req) => {
         userId = newUser.user.id;
         console.log('[stripe-webhook] New user created:', userId);
 
-        // Envoyer un email de reset password pour que l'utilisateur définisse son mot de passe
-        const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+        // Générer un lien de reset password (sans envoyer d'email)
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
           type: 'recovery',
           email: customerEmail,
-          options: {
-            redirectTo: `${Deno.env.get('SITE_URL') || 'https://www.investinfinity.fr'}/reset-password`
-          }
         });
 
-        if (resetError) {
-          console.error('[stripe-webhook] Error sending reset email:', resetError);
+        if (linkError) {
+          console.error('[stripe-webhook] Error generating link:', linkError);
+        } else if (linkData?.properties?.hashed_token) {
+          passwordToken = linkData.properties.hashed_token;
+          console.log('[stripe-webhook] Password token generated');
         }
       }
 
       // Attribuer la licence
       const license = PRICE_TO_LICENSE[priceId || ''] || 'starter';
       
+      // Mettre à jour le profil
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .upsert({
           id: userId,
           email: customerEmail,
-          license: license,
-          license_valid_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 an
-          stripe_customer_id: session.customer as string || null,
-          stripe_session_id: session.id,
-          updated_at: new Date().toISOString()
+          role: 'client',
+          created_at: new Date().toISOString()
         }, {
           onConflict: 'id'
         });
@@ -113,25 +112,67 @@ serve(async (req) => {
         console.error('[stripe-webhook] Error updating profile:', profileError);
       }
 
-      // Enregistrer le paiement
-      const { error: paymentError } = await supabaseAdmin
-        .from('payments')
+      // Donner accès à tous les modules de formation
+      const { data: modules } = await supabaseAdmin
+        .from('training_modules')
+        .select('id');
+      
+      if (modules && modules.length > 0) {
+        const accessRecords = modules.map(m => ({
+          user_id: userId,
+          module_id: m.id,
+          access_type: 'full',
+          granted_at: new Date().toISOString()
+        }));
+
+        const { error: accessError } = await supabaseAdmin
+          .from('training_access')
+          .upsert(accessRecords, {
+            onConflict: 'user_id,module_id'
+          });
+
+        if (accessError) {
+          console.error('[stripe-webhook] Error granting access:', accessError);
+        }
+      }
+
+      // Enregistrer l'achat avec le token
+      const { error: purchaseError } = await supabaseAdmin
+        .from('purchases')
         .insert({
           user_id: userId,
           stripe_session_id: session.id,
-          stripe_payment_intent: session.payment_intent as string,
-          amount: session.amount_total,
-          currency: session.currency,
-          status: 'completed',
-          license_type: license,
-          created_at: new Date().toISOString()
+          status: 'completed'
         });
 
-      if (paymentError) {
-        console.error('[stripe-webhook] Error recording payment:', paymentError);
+      if (purchaseError) {
+        console.error('[stripe-webhook] Error recording purchase:', purchaseError);
       }
 
-      console.log('[stripe-webhook] Successfully processed payment for:', customerEmail, 'License:', license);
+      // Stocker le token temporairement pour la redirection
+      // On utilise la table purchases pour stocker le token
+      if (passwordToken) {
+        await supabaseAdmin
+          .from('purchases')
+          .update({ 
+            status: 'pending_password',
+          })
+          .eq('stripe_session_id', session.id);
+      }
+
+      console.log('[stripe-webhook] Successfully processed payment for:', customerEmail, 'License:', license, 'Token:', passwordToken ? 'generated' : 'none');
+
+      // Retourner le token dans les metadata pour que le frontend puisse le récupérer
+      return new Response(JSON.stringify({ 
+        received: true,
+        userId,
+        email: customerEmail,
+        token: passwordToken,
+        isNewUser: !existingUser
+      }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200
+      });
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -144,4 +185,3 @@ serve(async (req) => {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 });
-
