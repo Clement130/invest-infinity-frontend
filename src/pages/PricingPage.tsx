@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import AuthModal from '../components/AuthModal';
-import { supabase } from '../lib/supabaseClient';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
 import { useToast } from '../hooks/useToast';
 import SocialProofBanner from '../components/SocialProofBanner';
@@ -12,46 +8,22 @@ import SocialProofBanner from '../components/SocialProofBanner';
 const CHECKOUT_PUBLIC_URL = 'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
 
 export default function PricingPage() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const toast = useToast();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
 
+  // Paiement direct sans inscription - Stripe collecte l'email
   const handlePurchase = async (plan: PlanType) => {
-    if (!user) {
-      setAuthMode('register');
-      setShowAuthModal(true);
-      return;
-    }
-
     setLoading(plan);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      let authHeader: string;
-      let userEmail = user.email || '';
-      
-      if (session) {
-        authHeader = `Bearer ${session.access_token}`;
-        userEmail = session.user.email || userEmail;
-      } else {
-        authHeader = `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`;
-      }
-
       const response = await fetch(CHECKOUT_PUBLIC_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': authHeader,
         },
         body: JSON.stringify({
           priceId: STRIPE_PRICE_IDS[plan],
-          userId: user.id,
-          userEmail: userEmail,
           successUrl: getStripeSuccessUrl(),
           cancelUrl: getStripeCancelUrl(),
         }),
@@ -187,7 +159,7 @@ export default function PricingPage() {
                   {loading === 'starter' ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Chargement...
+                      Redirection...
                     </>
                   ) : (
                     'Choisir Starter — 97€'
@@ -237,7 +209,7 @@ export default function PricingPage() {
                   {loading === 'pro' ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Chargement...
+                      Redirection...
                     </>
                   ) : (
                     'Choisir Pro — 347€'
@@ -312,7 +284,7 @@ export default function PricingPage() {
                   {loading === 'elite' ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Chargement...
+                      Redirection...
                     </>
                   ) : (
                     <>
@@ -383,16 +355,6 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-
-      {/* AuthModal */}
-      {showAuthModal && (
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          type={authMode}
-          redirectTo="client"
-        />
-      )}
     </div>
   );
 }
