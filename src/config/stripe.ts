@@ -14,9 +14,10 @@ export type PlanType = keyof typeof STRIPE_PRICE_IDS;
 
 /**
  * URL de l'Edge Function Supabase pour créer une session Checkout
+ * Utilise la variable d'environnement VITE_SUPABASE_URL pour éviter les URLs hardcodées
  */
-export const SUPABASE_CHECKOUT_FUNCTION_URL = 
-  'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
+export const getCheckoutFunctionUrl = () => 
+  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
 
 /**
  * URL de redirection après succès du paiement

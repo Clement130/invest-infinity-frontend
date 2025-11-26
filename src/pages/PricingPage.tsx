@@ -5,7 +5,7 @@ import { useToast } from '../hooks/useToast';
 import SocialProofBanner from '../components/SocialProofBanner';
 
 // URL de la fonction checkout publique (sans vérification JWT)
-const CHECKOUT_PUBLIC_URL = 'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
+const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
 
 export default function PricingPage() {
   const toast = useToast();

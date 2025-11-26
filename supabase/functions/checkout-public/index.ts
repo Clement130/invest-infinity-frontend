@@ -73,7 +73,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { priceId, successUrl, cancelUrl } = body;
+    const { priceId, successUrl, cancelUrl, userEmail } = body;
     
     // ==================== VALIDATION RENFORCÉE ====================
     
@@ -84,6 +84,12 @@ serve(async (req) => {
         { status: 400, headers: addSecurityHeaders(corsHeaders) }
       );
     }
+
+    // Valider l'email si fourni
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validatedEmail = userEmail && typeof userEmail === 'string' && emailRegex.test(userEmail) 
+      ? userEmail.toLowerCase().trim() 
+      : null;
 
     // Vérifier que le priceId est dans la liste autorisée
     if (!ALLOWED_PRICE_IDS.includes(priceId)) {
@@ -123,10 +129,10 @@ serve(async (req) => {
     const finalSuccessUrl = successUrl || `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
     const finalCancelUrl = cancelUrl || `${siteUrl}/pricing`;
 
-    secureLog('checkout-public', 'Creating checkout session', { priceId });
+    secureLog('checkout-public', 'Creating checkout session', { priceId, hasEmail: !!validatedEmail });
 
     // Créer la session Stripe Checkout
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -143,7 +149,14 @@ serve(async (req) => {
       },
       // Options de sécurité Stripe
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // Expire dans 30 min
-    });
+    };
+
+    // Pré-remplir l'email si disponible (empêche l'utilisateur de saisir un autre email)
+    if (validatedEmail) {
+      sessionParams.customer_email = validatedEmail;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     secureLog('checkout-public', 'Session created', { sessionId: session.id });
 
