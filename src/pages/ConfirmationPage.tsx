@@ -325,9 +325,9 @@ export default function ConfirmationPage() {
                 <h3 className="text-xl font-bold text-white">Elite</h3>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-lg text-gray-500 line-through">997€</span>
+                <span className="text-lg text-gray-500 line-through">1656€</span>
                 <span className="text-4xl font-bold text-yellow-400">497€</span>
-                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">-50%</span>
+                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">-70%</span>
               </div>
               <span className="text-gray-300 text-sm">paiement unique • accès à vie</span>
               <p className="text-yellow-400/80 text-xs mt-1">ou 3x 166€/mois sans frais</p>
