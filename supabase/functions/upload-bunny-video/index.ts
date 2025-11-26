@@ -119,6 +119,32 @@ serve(async (req) => {
         );
       }
 
+      // Validation de la taille du fichier (max 500 MB)
+      const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+      if (videoFile.size > MAX_FILE_SIZE) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'File size exceeds maximum allowed (500MB)',
+            maxSize: MAX_FILE_SIZE,
+            actualSize: videoFile.size
+          }),
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      // Validation du type MIME
+      const allowedMimeTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+      if (!allowedMimeTypes.includes(videoFile.type)) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Invalid file type. Allowed: MP4, WebM, MOV, AVI, MKV',
+            allowedTypes: allowedMimeTypes,
+            actualType: videoFile.type
+          }),
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
       // Étape 1: Créer la vidéo dans Bunny Stream
       const createUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos`;
       const createResponse = await fetch(createUrl, {

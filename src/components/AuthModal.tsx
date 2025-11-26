@@ -224,9 +224,10 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
       }
 
       // 3. Stocker les infos pour la page de confirmation
+      // ⚠️ Utiliser sessionStorage pour les données sensibles (nettoyé à la fermeture du navigateur)
       localStorage.setItem('userEmail', formData.email);
       localStorage.setItem('userPrenom', formData.prenom);
-      localStorage.setItem('tempPassword', tempPassword); // Pour l'email de bienvenue
+      sessionStorage.setItem('tempPassword', tempPassword); // Temporaire, nettoyé à la fermeture
 
       // 4. Connecter automatiquement l'utilisateur si le compte est créé
       if (signUpData.user && signUpData.session) {

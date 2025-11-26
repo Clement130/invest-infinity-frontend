@@ -4,23 +4,31 @@
  */
 
 // Liste des origines autorisées
-// ⚠️ IMPORTANT: Mettez à jour cette liste avec vos domaines de production
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5174',
-  // Ajoutez vos domaines de production ici
-  // 'https://votre-domaine.com',
-  // 'https://www.votre-domaine.com',
+  // Domaines de production
+  'https://www.investinfinity.fr',
+  'https://investinfinity.fr',
+  'https://invest-infinity-frontend.vercel.app',
 ];
 
 /**
  * Génère les headers CORS en fonction de l'origine de la requête
  */
 export function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 
-    ? origin 
-    : ALLOWED_ORIGINS[0]; // Fallback sur localhost en développement
+  let allowedOrigin = ALLOWED_ORIGINS[0]; // Fallback sur localhost en développement
+  
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      allowedOrigin = origin;
+    }
+    // Accepter les sous-domaines Vercel pour les previews
+    else if (origin.match(/^https:\/\/invest-infinity-frontend.*\.vercel\.app$/)) {
+      allowedOrigin = origin;
+    }
+  }
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

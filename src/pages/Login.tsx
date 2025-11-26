@@ -16,7 +16,7 @@ export default function Login() {
 
 
 
-  const [email, setEmail] = useState('butcher13550@gmail.com');
+  const [email, setEmail] = useState('');
 
   const [password, setPassword] = useState('');
 

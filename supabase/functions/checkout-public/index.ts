@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
@@ -6,12 +6,42 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   httpClient: Stripe.createFetchHttpClient()
 });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
-};
+// Helper CORS sécurisé
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5174',
+    'https://www.investinfinity.fr',
+    'https://investinfinity.fr',
+    'https://invest-infinity-frontend.vercel.app',
+  ];
+  
+  // Vérifier si l'origine est autorisée
+  let allowedOrigin = ALLOWED_ORIGINS[0];
+  
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      allowedOrigin = origin;
+    } 
+    // Accepter les sous-domaines Vercel pour les previews
+    else if (origin.match(/^https:\/\/invest-infinity-frontend.*\.vercel\.app$/)) {
+      allowedOrigin = origin;
+    }
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });

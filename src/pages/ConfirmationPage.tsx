@@ -8,7 +8,7 @@ import { useToast } from '../hooks/useToast';
 import CountdownTimer from '../components/CountdownTimer';
 
 // URL de la fonction checkout publique (sans vérification JWT)
-const CHECKOUT_PUBLIC_URL = 'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
+const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
 
 // Avis Trustpilot
 const reviews = [
@@ -52,7 +52,7 @@ export default function ConfirmationPage() {
     if (autoLoginAttempted || user) return;
     
     const email = localStorage.getItem('userEmail');
-    const tempPassword = localStorage.getItem('tempPassword');
+    const tempPassword = sessionStorage.getItem('tempPassword');
     
     if (email && tempPassword) {
       console.log('[ConfirmationPage] Tentative de connexion automatique...');
@@ -92,7 +92,7 @@ export default function ConfirmationPage() {
       
       if (!session) {
         const email = localStorage.getItem('userEmail');
-        const tempPassword = localStorage.getItem('tempPassword');
+        const tempPassword = sessionStorage.getItem('tempPassword');
         
         if (email && tempPassword) {
           console.log('[ConfirmationPage] Tentative de connexion avant paiement...');

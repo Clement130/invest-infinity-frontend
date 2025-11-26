@@ -7,12 +7,22 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:5174',
-    // Ajoutez vos domaines de production ici
+    'https://www.investinfinity.fr',
+    'https://investinfinity.fr',
+    'https://invest-infinity-frontend.vercel.app',
   ];
   
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 
-    ? origin 
-    : ALLOWED_ORIGINS[0];
+  let allowedOrigin = ALLOWED_ORIGINS[0];
+  
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      allowedOrigin = origin;
+    }
+    // Accepter les sous-domaines Vercel pour les previews
+    else if (origin.match(/^https:\/\/invest-infinity-frontend.*\.vercel\.app$/)) {
+      allowedOrigin = origin;
+    }
+  }
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

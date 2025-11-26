@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, ChevronDown, ChevronUp } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getModuleWithLessons } from '../services/trainingService';
+import { ArrowLeft, Play, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getModuleWithLessons, deleteModule } from '../services/trainingService';
+import { useSession } from '../hooks/useSession';
+import { useToast } from '../hooks/useToast';
 import type { ModuleWithLessons } from '../types/training';
 
 // Structure hiérarchique basée sur les images
@@ -106,8 +108,35 @@ const slugify = (text: string) =>
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
+  const { role } = useSession();
+  const toast = useToast();
+  const queryClient = useQueryClient();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Vérifier si l'utilisateur est admin ou developer
+  const isAdmin = role === 'admin' || role === 'developer';
+
+  // Handler pour la suppression du module
+  const handleDeleteModule = async () => {
+    if (!moduleId || !isAdmin) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteModule(moduleId);
+      toast.success('Module supprimé avec succès');
+      queryClient.invalidateQueries({ queryKey: ['modules'] });
+      navigate('/app');
+    } catch (error: any) {
+      console.error('[ModulePage] Erreur lors de la suppression:', error);
+      toast.error(error?.message || 'Erreur lors de la suppression du module');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
     queryKey: ['module-with-lessons', moduleId],
@@ -210,10 +239,16 @@ export default function ModulePage() {
     return 0;
   }, [data?.lessons]);
 
-  // Initialiser les sections expandées par défaut
+  // Initialiser les sections expandées par défaut (une seule fois au chargement)
   useEffect(() => {
-    if (sections.length > 0 && expandedSections.size === 0) {
-      setExpandedSections(new Set(sections.map(s => s.id)));
+    if (sections.length > 0) {
+      setExpandedSections(prev => {
+        // Ne mettre à jour que si c'est la première fois (set vide)
+        if (prev.size === 0) {
+          return new Set(sections.map(s => s.id));
+        }
+        return prev;
+      });
     }
   }, [sections]);
 
@@ -266,6 +301,44 @@ export default function ModulePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black text-white py-8 px-4">
+      {/* Modal de confirmation de suppression */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-2">Supprimer ce module ?</h3>
+            <p className="text-gray-400 mb-6">
+              Cette action est irréversible. Toutes les leçons associées seront également supprimées.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition text-white font-medium disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteModule}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition text-white font-medium disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Suppression...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Supprimer
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Bouton retour */}
         <button
@@ -282,6 +355,17 @@ export default function ModulePage() {
             <div className="flex items-center gap-4 flex-wrap">
               <h1 className="text-4xl font-bold">{module.title}</h1>
             </div>
+            
+            {/* Bouton Supprimer (admin/developer uniquement) */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition text-red-300 hover:text-red-200 text-sm font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                Supprimer le module
+              </button>
+            )}
           </div>
           
           {/* Barre de progression */}
