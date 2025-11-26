@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Users, Clock, ArrowRight, Shield, Loader2, Star } from 'lucide-react';
-import { STRIPE_PRICE_IDS, SUPABASE_CHECKOUT_FUNCTION_URL, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
+import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
+
+// URL de la fonction checkout publique (sans vérification JWT)
+const CHECKOUT_PUBLIC_URL = 'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../hooks/useToast';
@@ -144,7 +147,7 @@ export default function ConfirmationPage() {
 
       console.log('[ConfirmationPage] Création session checkout pour:', finalEmail, session ? '(avec session)' : '(sans session)');
 
-      const response = await fetch(SUPABASE_CHECKOUT_FUNCTION_URL, {
+      const response = await fetch(CHECKOUT_PUBLIC_URL, {
         method: 'POST',
         headers,
         body: JSON.stringify({
