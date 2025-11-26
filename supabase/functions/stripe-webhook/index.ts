@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { secureLog, addSecurityHeaders } from '../_shared/security.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2023-10-16',
@@ -9,7 +10,6 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
 
 const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
 
-// Supabase Admin client (avec service_role pour créer des utilisateurs)
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -22,20 +22,72 @@ const PRICE_TO_LICENSE: Record<string, string> = {
   'price_1SXfyUKaUb6KDbNFYjpa57JP': 'elite'
 };
 
+// Types d'événements autorisés
+const ALLOWED_EVENT_TYPES = [
+  'checkout.session.completed',
+  'payment_intent.succeeded',
+  'payment_intent.payment_failed',
+];
+
+// Cache pour la protection contre les replays (événements déjà traités)
+const processedEvents = new Map<string, number>();
+const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 serve(async (req) => {
+  // Vérifier la méthode HTTP
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }), 
+      { status: 405, headers: addSecurityHeaders({}) }
+    );
+  }
+
   const signature = req.headers.get('stripe-signature');
   
   if (!signature) {
-    return new Response('No signature', { status: 400 });
+    secureLog('stripe-webhook', 'Missing signature');
+    return new Response(
+      JSON.stringify({ error: 'Missing signature' }), 
+      { status: 400, headers: addSecurityHeaders({}) }
+    );
   }
 
   try {
     const body = await req.text();
     
-    // Vérifier la signature Stripe
+    // Vérifier la signature Stripe (protection contre la falsification)
     const event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
     
-    console.log('[stripe-webhook] Event received:', event.type);
+    // Protection contre les replays
+    const now = Date.now();
+    if (processedEvents.has(event.id)) {
+      secureLog('stripe-webhook', 'Duplicate event ignored', { eventId: event.id });
+      return new Response(
+        JSON.stringify({ received: true, duplicate: true }), 
+        { status: 200, headers: addSecurityHeaders({}) }
+      );
+    }
+    
+    // Nettoyer les anciens événements du cache
+    for (const [id, timestamp] of processedEvents.entries()) {
+      if (now - timestamp > EVENT_CACHE_TTL) {
+        processedEvents.delete(id);
+      }
+    }
+    
+    // Marquer l'événement comme traité
+    processedEvents.set(event.id, now);
+    
+    // Vérifier le type d'événement
+    if (!ALLOWED_EVENT_TYPES.includes(event.type)) {
+      secureLog('stripe-webhook', 'Unhandled event type', { type: event.type });
+      return new Response(
+        JSON.stringify({ received: true, handled: false }), 
+        { status: 200, headers: addSecurityHeaders({}) }
+      );
+    }
+    
+    secureLog('stripe-webhook', 'Event received', { type: event.type, eventId: event.id });
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -48,7 +100,7 @@ serve(async (req) => {
         return new Response('No customer email', { status: 400 });
       }
 
-      console.log('[stripe-webhook] Processing payment for:', customerEmail);
+      secureLog('stripe-webhook', 'Processing payment', { email: customerEmail });
 
       // Vérifier si l'utilisateur existe déjà
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
@@ -58,9 +110,8 @@ serve(async (req) => {
       let passwordToken: string | null = null;
 
       if (existingUser) {
-        // Utilisateur existe déjà
         userId = existingUser.id;
-        console.log('[stripe-webhook] Existing user found:', userId);
+        secureLog('stripe-webhook', 'Existing user found', { userId });
       } else {
         // Créer un nouveau compte avec mot de passe temporaire
         const tempPassword = crypto.randomUUID();
@@ -72,12 +123,15 @@ serve(async (req) => {
         });
 
         if (createError || !newUser.user) {
-          console.error('[stripe-webhook] Error creating user:', createError);
-          return new Response('Error creating user', { status: 500 });
+          secureLog('stripe-webhook', 'Error creating user', { error: createError?.message });
+          return new Response(
+            JSON.stringify({ error: 'Error creating user' }), 
+            { status: 500, headers: addSecurityHeaders({}) }
+          );
         }
 
         userId = newUser.user.id;
-        console.log('[stripe-webhook] New user created:', userId);
+        secureLog('stripe-webhook', 'New user created', { userId });
 
         // Générer un lien de reset password (sans envoyer d'email)
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -86,10 +140,10 @@ serve(async (req) => {
         });
 
         if (linkError) {
-          console.error('[stripe-webhook] Error generating link:', linkError);
+          secureLog('stripe-webhook', 'Error generating link', { error: linkError.message });
         } else if (linkData?.properties?.hashed_token) {
           passwordToken = linkData.properties.hashed_token;
-          console.log('[stripe-webhook] Password token generated');
+          secureLog('stripe-webhook', 'Password token generated');
         }
       }
 
@@ -109,7 +163,7 @@ serve(async (req) => {
         });
 
       if (profileError) {
-        console.error('[stripe-webhook] Error updating profile:', profileError);
+        secureLog('stripe-webhook', 'Error updating profile', { error: profileError.message });
       }
 
       // Donner accès à tous les modules de formation
@@ -132,11 +186,11 @@ serve(async (req) => {
           });
 
         if (accessError) {
-          console.error('[stripe-webhook] Error granting access:', accessError);
+          secureLog('stripe-webhook', 'Error granting access', { error: accessError.message });
         }
       }
 
-      // Enregistrer l'achat avec le token
+      // Enregistrer l'achat
       const { error: purchaseError } = await supabaseAdmin
         .from('purchases')
         .insert({
@@ -146,7 +200,7 @@ serve(async (req) => {
         });
 
       if (purchaseError) {
-        console.error('[stripe-webhook] Error recording purchase:', purchaseError);
+        secureLog('stripe-webhook', 'Error recording purchase', { error: purchaseError.message });
       }
 
       // Stocker le token temporairement pour la redirection
@@ -160,28 +214,33 @@ serve(async (req) => {
           .eq('stripe_session_id', session.id);
       }
 
-      console.log('[stripe-webhook] Successfully processed payment for:', customerEmail, 'License:', license, 'Token:', passwordToken ? 'generated' : 'none');
-
-      // Retourner le token dans les metadata pour que le frontend puisse le récupérer
-      return new Response(JSON.stringify({ 
-        received: true,
-        userId,
-        email: customerEmail,
-        token: passwordToken,
-        isNewUser: !existingUser
-      }), {
-        headers: { 'Content-Type': 'application/json' },
-        status: 200
+      secureLog('stripe-webhook', 'Payment processed successfully', { 
+        license, 
+        isNewUser: !existingUser 
       });
+
+      // Note: Ne pas exposer de données sensibles dans la réponse
+      // Le frontend récupère les infos via get-session-info
+      return new Response(
+        JSON.stringify({ received: true }), 
+        { status: 200, headers: addSecurityHeaders({}) }
+      );
     }
 
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200
-    });
+    return new Response(
+      JSON.stringify({ received: true }), 
+      { status: 200, headers: addSecurityHeaders({}) }
+    );
 
-  } catch (err) {
-    console.error('[stripe-webhook] Error:', err.message);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    
+    // Ne pas exposer les détails de l'erreur (sécurité)
+    secureLog('stripe-webhook', 'Webhook error', { error: errorMessage });
+    
+    return new Response(
+      JSON.stringify({ error: 'Webhook processing failed' }), 
+      { status: 400, headers: addSecurityHeaders({}) }
+    );
   }
 });

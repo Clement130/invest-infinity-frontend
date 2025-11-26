@@ -1,10 +1,24 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
+import {
+  checkRateLimit,
+  getClientIP,
+  rateLimitResponse,
+  secureLog,
+  addSecurityHeaders,
+} from '../_shared/security.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2023-10-16',
   httpClient: Stripe.createFetchHttpClient()
 });
+
+// Liste des priceId autorisés (protection contre manipulation)
+const ALLOWED_PRICE_IDS = [
+  'price_1SXfwzKaUb6KDbNF81uubunw', // starter
+  'price_1SXfxaKaUb6KDbNFRgl7y7I5', // pro
+  'price_1SXfyUKaUb6KDbNFYjpa57JP', // elite
+];
 
 // Helper CORS sécurisé
 function getCorsHeaders(origin: string | null): Record<string, string> {
@@ -17,14 +31,12 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     'https://invest-infinity-frontend.vercel.app',
   ];
   
-  // Vérifier si l'origine est autorisée
   let allowedOrigin = ALLOWED_ORIGINS[0];
   
   if (origin) {
     if (ALLOWED_ORIGINS.includes(origin)) {
       allowedOrigin = origin;
     } 
-    // Accepter les sous-domaines Vercel pour les previews
     else if (origin.match(/^https:\/\/invest-infinity-frontend.*\.vercel\.app$/)) {
       allowedOrigin = origin;
     }
@@ -42,26 +54,78 @@ serve(async (req) => {
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
 
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // ==================== RATE LIMITING ====================
+  const clientIP = getClientIP(req);
+  const rateLimit = checkRateLimit({
+    identifier: `checkout:${clientIP}`,
+    maxRequests: 5,        // 5 tentatives max
+    windowMs: 60 * 1000,   // par minute
+  });
+
+  if (!rateLimit.allowed) {
+    secureLog('checkout-public', 'Rate limit exceeded', { ip: clientIP });
+    return rateLimitResponse(rateLimit.resetIn, corsHeaders);
+  }
+
   try {
-    const { priceId, successUrl, cancelUrl } = await req.json();
+    const body = await req.json();
+    const { priceId, successUrl, cancelUrl } = body;
     
-    // Validation - seul priceId est requis, Stripe collecte l'email
-    if (!priceId) {
-      throw new Error('Missing required field: priceId');
+    // ==================== VALIDATION RENFORCÉE ====================
+    
+    // Valider le priceId
+    if (!priceId || typeof priceId !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Missing or invalid priceId' }),
+        { status: 400, headers: addSecurityHeaders(corsHeaders) }
+      );
     }
 
+    // Vérifier que le priceId est dans la liste autorisée
+    if (!ALLOWED_PRICE_IDS.includes(priceId)) {
+      secureLog('checkout-public', 'Invalid priceId attempted', { priceId, ip: clientIP });
+      return new Response(
+        JSON.stringify({ error: 'Invalid price selection' }),
+        { status: 400, headers: addSecurityHeaders(corsHeaders) }
+      );
+    }
+
+    // Valider les URLs (protection contre open redirect)
     const siteUrl = Deno.env.get('SITE_URL') || 'https://www.investinfinity.fr';
+    const allowedUrlPrefixes = [
+      siteUrl,
+      'https://www.investinfinity.fr',
+      'https://investinfinity.fr',
+      'http://localhost:5173',
+    ];
+
+    const isValidUrl = (url: string | undefined): boolean => {
+      if (!url) return true; // URL par défaut sera utilisée
+      return allowedUrlPrefixes.some(prefix => url.startsWith(prefix));
+    };
+
+    if (!isValidUrl(successUrl) || !isValidUrl(cancelUrl)) {
+      secureLog('checkout-public', 'Invalid redirect URL attempted', { 
+        successUrl, 
+        cancelUrl, 
+        ip: clientIP 
+      });
+      return new Response(
+        JSON.stringify({ error: 'Invalid redirect URL' }),
+        { status: 400, headers: addSecurityHeaders(corsHeaders) }
+      );
+    }
+
     const finalSuccessUrl = successUrl || `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
     const finalCancelUrl = cancelUrl || `${siteUrl}/pricing`;
 
-    console.log('[checkout-public] Creating session for priceId:', priceId);
+    secureLog('checkout-public', 'Creating checkout session', { priceId });
 
-    // Créer la session Stripe Checkout - Stripe collecte l'email du client
+    // Créer la session Stripe Checkout
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -73,26 +137,31 @@ serve(async (req) => {
       mode: 'payment',
       success_url: finalSuccessUrl,
       cancel_url: finalCancelUrl,
-      // Stripe demande l'email au client sur la page de paiement
       metadata: {
-        priceId: priceId
-      }
+        priceId: priceId,
+        createdAt: new Date().toISOString(),
+      },
+      // Options de sécurité Stripe
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // Expire dans 30 min
     });
 
-    console.log('[checkout-public] Session created:', session.id);
+    secureLog('checkout-public', 'Session created', { sessionId: session.id });
 
     return new Response(JSON.stringify({
       sessionId: session.id,
       url: session.url
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: addSecurityHeaders(corsHeaders),
       status: 200
     });
-  } catch (error) {
-    console.error('[checkout-public] Error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400
-    });
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    secureLog('checkout-public', 'Error creating session', { error: errorMessage });
+    
+    return new Response(
+      JSON.stringify({ error: 'Unable to create payment session' }),
+      { status: 500, headers: addSecurityHeaders(corsHeaders) }
+    );
   }
 });
