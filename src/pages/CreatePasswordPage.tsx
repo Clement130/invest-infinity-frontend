@@ -67,10 +67,10 @@ export default function CreatePasswordPage() {
       setSuccess(true);
       toast.success('Mot de passe créé avec succès !');
 
-      // Rediriger vers l'app après 2 secondes
+      // Rediriger vers l'app après 3 secondes (temps de voir le bouton Discord)
       setTimeout(() => {
         navigate('/app');
-      }, 2000);
+      }, 3000);
 
     } catch (err: any) {
       console.error('[CreatePassword] Error:', err);
@@ -112,8 +112,21 @@ export default function CreatePasswordPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold mb-2">Compte activé ! 🎉</h1>
-          <p className="text-gray-400 mb-4">Redirection vers ton espace...</p>
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-pink-500" />
+          <p className="text-gray-400 mb-6">Bienvenue dans la communauté Invest Infinity !</p>
+          
+          {/* Bouton Discord */}
+          <a
+            href="https://discord.gg/Y9RvKDCrWH"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 px-6 py-3 bg-[#5865F2] hover:bg-[#4752C4] rounded-xl font-semibold transition-all mb-6"
+          >
+            <img src="/discord-icon.webp" alt="Discord" className="w-6 h-6" />
+            Rejoindre le Discord
+          </a>
+          
+          <p className="text-gray-500 text-sm mb-2">Redirection vers ton espace dans 3s...</p>
+          <Loader2 className="w-5 h-5 animate-spin mx-auto text-pink-500" />
         </div>
       </div>
     );
