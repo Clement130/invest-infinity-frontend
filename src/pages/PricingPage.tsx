@@ -83,7 +83,7 @@ export default function PricingPage() {
     },
     {
       question: 'Y a-t-il une période d\'essai ?',
-      answer: 'L\'offre Elite inclut une garantie 30 jours satisfait ou remboursé.',
+      answer: 'L\'offre Elite inclut une garantie 14 jours satisfait ou remboursé.',
     },
     {
       question: 'Acceptez-vous les virements bancaires ?',
@@ -91,7 +91,7 @@ export default function PricingPage() {
     },
     {
       question: 'Comment fonctionne la garantie ?',
-      answer: 'Satisfait ou remboursé pendant 30 jours sur l\'offre Elite. Aucune question posée.',
+      answer: 'Satisfait ou remboursé pendant 14 jours sur l\'offre Elite. Aucune question posée.',
     },
   ];
 
@@ -122,7 +122,7 @@ export default function PricingPage() {
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-green-400" />
-                <span>Garantie 30 jours</span>
+                <span>Garantie 14 jours</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-pink-400" />
@@ -301,7 +301,7 @@ export default function PricingPage() {
 
                 <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                   <Shield className="w-5 h-5 text-green-400" />
-                  <span className="text-green-400 text-sm font-medium">Garantie 30 jours satisfait ou remboursé</span>
+                  <span className="text-green-400 text-sm font-medium">Garantie 14 jours satisfait ou remboursé</span>
                 </div>
 
                 <button

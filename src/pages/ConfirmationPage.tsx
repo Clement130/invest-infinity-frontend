@@ -364,7 +364,7 @@ export default function ConfirmationPage() {
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 text-sm font-semibold">Garantie 30 jours satisfait ou remboursé</span>
+                <span className="text-green-400 text-sm font-semibold">Garantie 14 jours satisfait ou remboursé</span>
               </div>
             </div>
             
