@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Users, Clock, ArrowRight, Shield, Loader2, Star } from 'lucide-react';
-import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
-
-// URL de la fonction checkout publique (sans vérification JWT)
-const CHECKOUT_PUBLIC_URL = 'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
+import { CheckCircle, Users, Clock, ArrowRight, Shield, Loader2, Star, Zap, Crown, Phone } from 'lucide-react';
+import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../hooks/useToast';
 import CountdownTimer from '../components/CountdownTimer';
+
+// URL de la fonction checkout publique (sans vérification JWT)
+const CHECKOUT_PUBLIC_URL = 'https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/checkout-public';
 
 // Avis Trustpilot
 const reviews = [
@@ -35,7 +35,7 @@ export default function ConfirmationPage() {
   const toast = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPrenom, setUserPrenom] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<PlanType | null>(null);
   const [waitingForAuth, setWaitingForAuth] = useState(true);
   const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
 
@@ -63,7 +63,6 @@ export default function ConfirmationPage() {
         console.log('[ConfirmationPage] Connexion automatique réussie !');
       } catch (error) {
         console.log('[ConfirmationPage] Connexion automatique échouée:', error);
-        // On ne montre pas d'erreur, l'utilisateur peut toujours se connecter manuellement
       }
     }
   }, [autoLoginAttempted, user, signIn]);
@@ -71,7 +70,6 @@ export default function ConfirmationPage() {
   useEffect(() => {
     if (!authLoading) {
       setWaitingForAuth(false);
-      // Tenter la connexion automatique une fois l'auth chargé
       if (!user) {
         attemptAutoLogin();
       }
@@ -86,13 +84,12 @@ export default function ConfirmationPage() {
     return () => clearTimeout(timeout);
   }, [authLoading, user, attemptAutoLogin]);
 
-  const handlePurchase = async (plan: 'essentiel' | 'premium') => {
-    setLoading(true);
+  const handlePurchase = async (plan: PlanType) => {
+    setLoading(plan);
     
     try {
       let { data: { session } } = await supabase.auth.getSession();
       
-      // Si pas de session, tenter une dernière connexion automatique
       if (!session) {
         const email = localStorage.getItem('userEmail');
         const tempPassword = localStorage.getItem('tempPassword');
@@ -115,11 +112,9 @@ export default function ConfirmationPage() {
         }
       }
       
-      // Récupérer l'email depuis localStorage si pas de session
       const storedEmail = localStorage.getItem('userEmail');
       const finalEmail = session?.user?.email || storedEmail || userEmail;
       
-      // Vérifier qu'on a au moins un email pour le checkout
       if (!finalEmail) {
         toast.error('Connecte-toi pour finaliser ton achat', {
           duration: 5000,
@@ -128,11 +123,10 @@ export default function ConfirmationPage() {
             onClick: () => navigate('/login'),
           },
         });
-        setLoading(false);
+        setLoading(null);
         return;
       }
 
-      // Préparer les headers - utiliser le token si disponible, sinon l'anon key
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -140,7 +134,6 @@ export default function ConfirmationPage() {
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       } else {
-        // Utiliser l'anon key pour les utilisateurs non connectés
         headers['apikey'] = import.meta.env.VITE_SUPABASE_ANON_KEY;
         headers['Authorization'] = `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`;
       }
@@ -174,15 +167,47 @@ export default function ConfirmationPage() {
       console.error('Erreur:', error);
       toast.error(error?.message || 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
+  const renderButton = (plan: PlanType, price: string, variant: 'default' | 'gold' = 'default') => {
+    const isLoading = loading === plan;
+    const isDisabled = loading !== null || waitingForAuth;
+    
+    const baseClasses = "w-full px-6 py-4 font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg";
+    const variantClasses = variant === 'gold' 
+      ? "bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-600 hover:via-amber-600 hover:to-yellow-700 text-black shadow-lg shadow-yellow-500/25"
+      : "bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white";
+    
+    return (
+      <button
+        onClick={() => handlePurchase(plan)}
+        disabled={isDisabled}
+        className={`${baseClasses} ${variantClasses}`}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Redirection...
+          </>
+        ) : waitingForAuth ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Chargement...
+          </>
+        ) : (
+          `Choisir — ${price}`
+        )}
+      </button>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-900/10 via-black to-black pt-20 pb-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black pt-12 pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header de confirmation */}
-        <div className="text-center mb-8 animate-fade-up">
+        <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500/20 rounded-full mb-4">
             <CheckCircle className="w-10 h-10 text-green-400" />
           </div>
@@ -193,143 +218,178 @@ export default function ConfirmationPage() {
             Ton inscription est confirmée
           </p>
           
-          {/* Timer compact inline */}
           <div className="inline-block">
             <CountdownTimer 
               durationMinutes={15} 
-              label="🔥 Offre expire dans" 
+              label="🔥 Prix de lancement - Augmente dans" 
               variant="compact" 
             />
           </div>
         </div>
 
-        {/* 1. PLANS / PRIX EN PREMIER */}
-        <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 rounded-2xl p-6 sm:p-8 border-2 border-pink-500/30 mb-6">
-          <div className="text-center mb-6">
-            <div className="inline-block px-4 py-2 bg-pink-500/20 rounded-full mb-3">
-              <span className="text-pink-400 font-semibold">✨ Accès Complet</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              Prêt à passer au niveau supérieur ?
-            </h2>
-            <p className="text-gray-300 max-w-xl mx-auto">
-              Accède à toutes nos formations vidéo, alertes en temps réel, et coaching personnalisé.
-            </p>
-          </div>
-
-          {/* Plans */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Plan Essentiel */}
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-2">Formation Essentiel</h3>
-              <div className="mb-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg text-gray-500 line-through">79€</span>
-                  <span className="text-4xl font-bold text-white">50€</span>
-                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-37%</span>
-                </div>
-                <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
-              </div>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300 text-sm">Formation complète vidéo</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300 text-sm">Alertes trading en temps réel</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300 text-sm">Accès communauté privée</span>
-                </li>
-              </ul>
-              <button
-                onClick={() => handlePurchase('essentiel')}
-                disabled={loading || waitingForAuth}
-                className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Redirection...
-                  </>
-                ) : waitingForAuth ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Chargement...
-                  </>
-                ) : (
-                  'Choisir Essentiel — 50€'
-                )}
-              </button>
-            </div>
-
-            {/* Plan Premium */}
-            <div className="bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-xl p-6 border-2 border-pink-500/50 relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="px-3 py-1 bg-pink-500 text-white text-xs font-bold rounded-full">
-                  Le plus populaire
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2 mt-2">Formation Premium</h3>
-              <div className="mb-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg text-gray-500 line-through">399€</span>
-                  <span className="text-4xl font-bold text-white">249.95€</span>
-                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-37%</span>
-                </div>
-                <span className="text-gray-300 text-sm">paiement unique • accès à vie</span>
-              </div>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-white font-semibold text-sm">Tout du plan Essentiel</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300 text-sm">Coaching personnalisé 1-to-1</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300 text-sm">Stratégies avancées exclusives</span>
-                </li>
-              </ul>
-              <button
-                onClick={() => handlePurchase('premium')}
-                disabled={loading || waitingForAuth}
-                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Redirection...
-                  </>
-                ) : waitingForAuth ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Chargement...
-                  </>
-                ) : (
-                  'Choisir Premium — 249.95€'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. GARANTIE 14 JOURS */}
-        <div className="bg-white/5 rounded-xl p-5 border border-white/10 text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Shield className="w-6 h-6 text-green-400" />
-            <span className="text-white font-semibold">Garantie 14 jours satisfait ou remboursé</span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            Si tu n'es pas satisfait, on te rembourse intégralement. Pas de questions posées.
+        {/* Section titre plans */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Choisis ton accès
+          </h2>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Investis dans ta réussite avec l'offre qui te correspond
           </p>
         </div>
 
-        {/* 3. STATS : 100+ membres et 7/7 */}
+        {/* 3 PLANS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+          
+          {/* STARTER - 97€ */}
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/10 flex flex-col">
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-5 h-5 text-blue-400" />
+                <h3 className="text-xl font-bold text-white">Starter</h3>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-lg text-gray-500 line-through">149€</span>
+                <span className="text-4xl font-bold text-white">97€</span>
+                <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-35%</span>
+              </div>
+              <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
+            </div>
+            
+            <ul className="space-y-3 mb-6 flex-grow">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Alertes de trading</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Accès à la communauté</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Support 7/7</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Vidéos TopStepX/Apex/Metatrader</span>
+              </li>
+            </ul>
+            
+            {renderButton('starter', '97€')}
+          </div>
+
+          {/* PRO - 347€ */}
+          <div className="bg-white/5 rounded-2xl p-6 border border-pink-500/30 flex flex-col">
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="w-5 h-5 text-pink-400" />
+                <h3 className="text-xl font-bold text-white">Pro</h3>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-lg text-gray-500 line-through">497€</span>
+                <span className="text-4xl font-bold text-white">347€</span>
+                <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-30%</span>
+              </div>
+              <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
+            </div>
+            
+            <ul className="space-y-3 mb-6 flex-grow">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-pink-400 flex-shrink-0 mt-0.5" />
+                <span className="text-white font-semibold text-sm">✅ Tout ce qui est dans Starter</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Lives trading (15h-17h30, lun-ven)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Accès aux replays</span>
+              </li>
+            </ul>
+            
+            {renderButton('pro', '347€')}
+          </div>
+
+          {/* ELITE - 497€ ⭐ MEILLEURE OFFRE */}
+          <div className="bg-gradient-to-br from-yellow-500/10 via-amber-500/10 to-yellow-600/10 rounded-2xl p-6 border-2 border-yellow-500/50 flex flex-col relative lg:scale-105 lg:-my-2 shadow-xl shadow-yellow-500/10">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span className="px-4 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-sm font-bold rounded-full flex items-center gap-1">
+                <Crown className="w-4 h-4" />
+                MEILLEURE OFFRE
+              </span>
+            </div>
+            
+            <div className="mb-4 mt-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="w-5 h-5 text-yellow-400" />
+                <h3 className="text-xl font-bold text-white">Elite</h3>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-lg text-gray-500 line-through">997€</span>
+                <span className="text-4xl font-bold text-yellow-400">497€</span>
+                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">-50%</span>
+              </div>
+              <span className="text-gray-300 text-sm">paiement unique • accès à vie</span>
+              <p className="text-yellow-400/80 text-xs mt-1">ou 3x 166€/mois sans frais</p>
+            </div>
+            
+            <ul className="space-y-3 mb-4 flex-grow">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <span className="text-white font-semibold text-sm">✅ Tout ce qui est dans Pro</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Zone Premium (analyses avancées)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Formation complète Invest Infinity</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">2 stratégies rentables</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-300 text-sm">Mises à jour à vie</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Phone className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <span className="text-yellow-300 font-semibold text-sm">BONUS : Appel 1-to-1 de 30min (200€)</span>
+              </li>
+            </ul>
+            
+            {/* Garantie Elite */}
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-green-400" />
+                <span className="text-green-400 text-sm font-semibold">Garantie 30 jours satisfait ou remboursé</span>
+              </div>
+            </div>
+            
+            {renderButton('elite', '497€', 'gold')}
+            
+            {/* Valeur totale */}
+            <div className="mt-4 text-center">
+              <p className="text-gray-400 text-xs">Valeur totale : <span className="line-through">2 347€</span></p>
+              <p className="text-yellow-400 text-sm font-semibold">Tu économises 1 850€ (79%)</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Garantie générale */}
+        <div className="bg-white/5 rounded-xl p-5 border border-white/10 text-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Shield className="w-6 h-6 text-green-400" />
+            <span className="text-white font-semibold">Paiement 100% sécurisé par Stripe</span>
+          </div>
+          <p className="text-gray-400 text-sm">
+            Tes données bancaires sont protégées et ne sont jamais stockées sur nos serveurs.
+          </p>
+        </div>
+
+        {/* Stats */}
         <div className="bg-white/5 rounded-xl p-5 border border-white/10 mb-6">
           <div className="flex items-center justify-center gap-8 text-center">
             <div>
@@ -350,7 +410,7 @@ export default function ConfirmationPage() {
           </div>
         </div>
 
-        {/* 4. AVIS TRUSTPILOT */}
+        {/* Avis Trustpilot */}
         <div className="bg-white/5 rounded-xl p-6 border border-white/10 mb-6">
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="text-lg">★</span>
