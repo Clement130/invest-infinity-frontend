@@ -322,7 +322,7 @@ export default function PricingPage() {
                   )}
                 </button>
 
-                <div className="mt-4 text-center">
+                <div className="mt-2 text-center">
                   <p className="text-gray-400 text-xs">Valeur totale : 2 347€</p>
                   <p className="text-yellow-400 text-sm font-semibold">Tu économises 1 850€ (79%)</p>
                 </div>
