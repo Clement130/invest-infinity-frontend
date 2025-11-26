@@ -81,10 +81,25 @@ serve(async (req) => {
       });
     }
 
+    // Vérifier le statut du paiement
+    if (session.payment_status !== 'paid') {
+      return new Response(JSON.stringify({ 
+        error: 'Payment not completed',
+        paymentStatus: session.payment_status,
+        message: 'Le paiement n\'a pas encore été finalisé'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
+
     const customerEmail = session.customer_email || session.customer_details?.email;
     
     if (!customerEmail) {
-      return new Response(JSON.stringify({ error: 'No email in session' }), {
+      return new Response(JSON.stringify({ 
+        error: 'No email in session',
+        message: 'Aucun email trouvé. Contactez le support.'
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
       });

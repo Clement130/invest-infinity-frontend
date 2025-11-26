@@ -35,7 +35,14 @@ export default function SuccessPage() {
         console.log('[SuccessPage] Session info:', data);
 
         if (data.error) {
-          setError(data.error);
+          // Message plus explicite selon l'erreur
+          if (data.error === 'Payment not completed') {
+            setError('Le paiement n\'a pas encore été finalisé. Si tu as payé, attends quelques secondes et rafraîchis la page.');
+          } else if (data.error === 'No email in session') {
+            setError('Problème de récupération de ton email. Contacte le support Discord.');
+          } else {
+            setError(data.message || data.error);
+          }
           setLoading(false);
           return;
         }

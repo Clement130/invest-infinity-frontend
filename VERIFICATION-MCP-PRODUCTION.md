@@ -116,3 +116,4 @@ console.log('Boutons suppression trouvés:', deleteBtns.length);
 
 
 
+
