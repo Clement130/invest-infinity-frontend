@@ -7,8 +7,8 @@ interface SocialProofBannerProps {
 
 // Données de social proof (peuvent être dynamiques via API)
 const socialProofData = {
-  membersOnline: 127,
-  todaySignups: 23,
+  membersOnline: 156,
+  todaySignups: 47,
   avgRating: 4.8,
   successRate: 94,
 };
