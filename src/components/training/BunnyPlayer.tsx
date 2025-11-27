@@ -44,9 +44,12 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   const trackerRef = useRef<VideoProgressTracker | null>(null);
   const playerRef = useRef<PlayerJS | null>(null);
   const progressCheckIntervalRef = useRef<number | null>(null);
-  const lastViewedUpdateIntervalRef = useRef<number | null>(null);
-  const isPageVisibleRef = useRef<boolean>(true);
   const baseUrl = import.meta.env.VITE_BUNNY_EMBED_BASE_URL;
+
+  // Déterminer le type d'erreur à afficher
+  const isTestVideo = videoId?.startsWith('test-');
+  const isMissingConfig = !baseUrl;
+  const isMissingVideoId = !videoId || videoId.trim() === '';
 
   // Initialiser le tracker si userId et lessonId sont fournis
   useEffect(() => {
@@ -60,8 +63,8 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     };
   }, [userId, lessonId]);
 
+  // Réinitialiser l'état quand le videoId change
   useEffect(() => {
-    // Réinitialiser l'état d'erreur quand le videoId change
     setHasError(false);
     setIsLoading(true);
 
@@ -72,7 +75,52 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     }
   }, [videoId]);
 
-  if (!baseUrl) {
+  // Timeout pour détecter les vidéos qui ne chargent pas
+  useEffect(() => {
+    if (!isLoading || isMissingConfig || isMissingVideoId || isTestVideo) return;
+
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('[BunnyPlayer] Timeout: la vidéo prend trop de temps à charger');
+        setIsLoading(false);
+      }
+    }, 15000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoading, videoId, isMissingConfig, isMissingVideoId, isTestVideo]);
+
+  // Fonction pour vérifier la progression de la vidéo
+  const checkVideoProgress = useCallback(async () => {
+    if (!iframeRef.current || !videoId || !baseUrl) return;
+    // Placeholder pour l'API BunnyStream
+  }, [videoId, baseUrl]);
+
+  const handleIframeLoad = useCallback(() => {
+    setIsLoading(false);
+    
+    // Démarrer le suivi de progression si userId et lessonId sont fournis
+    if (userId && lessonId && trackerRef.current) {
+      setTimeout(async () => {
+        if (trackerRef.current) {
+          const event: VideoProgressEvent = {
+            currentTime: 30,
+            duration: 100,
+            percentage: 30,
+          };
+          await trackerRef.current.handleProgress(event);
+          if (onProgress) onProgress(event);
+        }
+      }, 30000);
+    }
+  }, [userId, lessonId, onProgress]);
+
+  const handleIframeError = useCallback(() => {
+    setHasError(true);
+    setIsLoading(false);
+  }, []);
+
+  // Rendu conditionnel APRÈS tous les hooks
+  if (isMissingConfig) {
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-red-500/30 bg-black/50 flex items-center justify-center">
         <div className="text-center space-y-2 px-4">
@@ -87,7 +135,7 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     );
   }
 
-  if (!videoId || videoId.trim() === '') {
+  if (isMissingVideoId) {
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-yellow-500/30 bg-black/50 flex items-center justify-center">
         <div className="text-center space-y-2 px-4">
@@ -100,8 +148,7 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     );
   }
 
-  // Détecter les IDs de test
-  if (videoId.startsWith('test-')) {
+  if (isTestVideo) {
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-orange-500/30 bg-black/50 flex items-center justify-center">
         <div className="text-center space-y-3 px-4">
@@ -117,52 +164,6 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       </div>
     );
   }
-
-  // Construction de l'URL d'embed
-  const embedUrl = `${baseUrl}/${videoId}`;
-
-  // Fonction pour vérifier la progression de la vidéo via l'API BunnyStream
-  const checkVideoProgress = useCallback(async () => {
-    if (!iframeRef.current || !videoId || !baseUrl) return;
-
-    try {
-      // Note: BunnyStream ne permet pas d'accéder directement à la progression via iframe
-      // Pour un suivi précis, il faudrait utiliser l'API BunnyStream avec un token
-      // Pour l'instant, on simule avec un délai basé sur le temps écoulé
-      // Cette approche sera améliorée avec l'intégration de l'API BunnyStream
-      
-      // Si on a un tracker et que la vidéo est chargée, on peut estimer la progression
-      // En production, utiliser l'API BunnyStream pour obtenir le temps réel
-    } catch (error) {
-      console.error('[BunnyPlayer] Erreur lors de la vérification de progression:', error);
-    }
-  }, [videoId, baseUrl]);
-
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    
-    // Démarrer le suivi de progression si userId et lessonId sont fournis
-    if (userId && lessonId && trackerRef.current) {
-      // Marquer comme "vue" après 30 secondes (approximation)
-      // En production, utiliser les événements réels de BunnyStream
-      setTimeout(async () => {
-        if (trackerRef.current) {
-          const event: VideoProgressEvent = {
-            currentTime: 30,
-            duration: 100,
-            percentage: 30,
-          };
-          await trackerRef.current.handleProgress(event);
-          if (onProgress) onProgress(event);
-        }
-      }, 30000);
-    }
-  };
-
-  const handleIframeError = () => {
-    setHasError(true);
-    setIsLoading(false);
-  };
 
   if (hasError) {
     return (
@@ -181,22 +182,8 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     );
   }
 
-  // Timeout pour détecter les vidéos qui ne chargent pas
-  useEffect(() => {
-    if (!isLoading) return;
-
-    const timeout = setTimeout(() => {
-      // Si toujours en chargement après 15 secondes, considérer comme erreur potentielle
-      if (isLoading) {
-        console.warn('[BunnyPlayer] Timeout: la vidéo prend trop de temps à charger');
-        setIsLoading(false);
-        // Ne pas définir hasError automatiquement car l'iframe pourrait encore charger
-        // mais on arrête au moins le spinner pour éviter un écran noir infini
-      }
-    }, 15000);
-
-    return () => clearTimeout(timeout);
-  }, [isLoading, videoId]);
+  // Construction de l'URL d'embed
+  const embedUrl = `${baseUrl}/${videoId}`;
 
   return (
     <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
@@ -206,20 +193,6 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto" />
             <p className="text-gray-400 text-sm">Chargement de la vidéo...</p>
             <p className="text-gray-500 text-xs">Cela peut prendre quelques instants</p>
-          </div>
-        </div>
-      )}
-      {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-10">
-          <div className="text-center space-y-3 px-4">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
-            <p className="text-red-400 font-medium text-lg">Erreur de chargement</p>
-            <p className="text-sm text-gray-400">
-              La vidéo n'a pas pu être chargée. Vérifiez que l'ID vidéo est correct.
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              ID vidéo: {videoId}
-            </p>
           </div>
         </div>
       )}
@@ -240,5 +213,3 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     </div>
   );
 }
-
-
