@@ -28,13 +28,11 @@ import {
   Award,
   Target,
   Rocket,
-  Flame,
   Play,
   ChevronRight,
   Sparkles,
   Zap,
   Trophy,
-  Snowflake,
   Coins,
   Mail,
   Smartphone,
@@ -287,16 +285,13 @@ export default function MemberDashboard() {
     (progressQuery.isLoading && !isMobile);
 
   const firstName = profile?.full_name?.split(' ')[0] || 'Trader';
-  const streak = stats?.streak || 7;
   const globalProgress = stats
     ? Math.round((stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100)
     : 0;
   const xpTracks = stats?.xpTracks ?? [];
   const dailyQuests = stats?.dailyQuests ?? [];
-  const freezePasses = stats?.freezePasses ?? 0;
   const walletBalance = stats?.walletBalance ?? 0;
   const totalCoinsEarned = stats?.totalCoinsEarned ?? 0;
-  const activeBooster = stats?.activeBooster ?? null;
 
   // Version mobile ultra-simplifiée
   if (isMobile) {
@@ -379,43 +374,7 @@ export default function MemberDashboard() {
                       : ' Félicitations, tu as tout terminé ! 🎉'}
                   </p>
 
-                  {/* Quick Stats Row - simplifié sur mobile */}
-                  <div className={`flex flex-wrap items-center gap-3 md:gap-4 pt-2 ${isMobile ? 'justify-center' : ''}`}>
-                    <div className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                      <Flame className="w-4 h-4 md:w-5 md:h-5 text-orange-400" />
-                      <span className="text-orange-300 font-bold text-sm md:text-base">{streak}</span>
-                      <span className="text-orange-400/70 text-xs md:text-sm">jours</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                      <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-                      <span className="text-yellow-300 font-bold text-sm md:text-base">Niv. {stats?.level || 1}</span>
-                    </div>
-                    {!isMobile && (
-                      <>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                          <Award className="w-5 h-5 text-purple-400" />
-                          <span className="text-purple-300 font-bold">{stats?.badges?.filter(b => b.unlockedAt)?.length || 0}</span>
-                          <span className="text-purple-400/70 text-sm">badges</span>
-                        </div>
-                        {freezePasses > 0 && (
-                          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                            <Snowflake className="w-5 h-5 text-blue-300" />
-                            <span className="text-blue-200 font-bold">{freezePasses}</span>
-                            <span className="text-blue-200/70 text-sm">Freeze pass</span>
-                          </div>
-                        )}
-                        {activeBooster && (
-                          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30">
-                            <Sparkles className="w-5 h-5 text-pink-200" />
-                            <span className="text-pink-100 font-bold">
-                              x{activeBooster.multiplier.toFixed(1)} XP
-                            </span>
-                            <span className="text-pink-100/70 text-sm">{activeBooster.remainingMinutes} min</span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                  {/* Quick stats supprimés pour un header plus épuré */}
                 </div>
 
                 {/* Global Progress Circle - simplifié sur mobile */}
