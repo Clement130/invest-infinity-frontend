@@ -56,7 +56,7 @@ serve(async (req) => {
     const body = await req.text();
     
     // Vérifier la signature Stripe (protection contre la falsification)
-    const event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+    const event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
     
     // Protection contre les replays
     const now = Date.now();
@@ -144,6 +144,32 @@ serve(async (req) => {
         } else if (linkData?.properties?.hashed_token) {
           passwordToken = linkData.properties.hashed_token;
           secureLog('stripe-webhook', 'Password token generated');
+          
+          // Envoyer l'email de création de mot de passe
+          try {
+            const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-password-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              },
+              body: JSON.stringify({
+                email: customerEmail,
+                token: passwordToken,
+                prenom: session.customer_details?.name?.split(' ')[0] || 'Cher membre',
+              }),
+            });
+
+            if (emailResponse.ok) {
+              secureLog('stripe-webhook', 'Password email sent successfully');
+            } else {
+              const errorData = await emailResponse.json();
+              secureLog('stripe-webhook', 'Failed to send password email', { error: errorData });
+            }
+          } catch (emailError: unknown) {
+            const errorMessage = emailError instanceof Error ? emailError.message : 'Unknown error';
+            secureLog('stripe-webhook', 'Error sending password email', { error: errorMessage });
+          }
         }
       }
 

@@ -179,6 +179,20 @@ export default function MemberDashboard() {
                 value={`${Math.floor((stats?.totalTimeSpent || 0) / 60)}h ${(stats?.totalTimeSpent || 0) % 60}min`}
                 color="green"
               />
+              
+              {/* Discord Card */}
+              <a
+                href="https://discord.gg/Y9RvKDCrWH"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-[#5865F2]/30 bg-gradient-to-br from-[#5865F2]/20 to-[#5865F2]/5 p-6 space-y-2 hover:border-[#5865F2]/50 hover:from-[#5865F2]/30 transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <img src="/discord-icon.webp" alt="Discord" className="w-5 h-5" />
+                  <h3 className="text-sm font-medium text-[#5865F2]">Communauté Discord</h3>
+                </div>
+                <p className="text-2xl font-bold text-white group-hover:text-[#5865F2] transition-colors">Rejoindre →</p>
+              </a>
             </div>
 
             {/* Continue Learning */}

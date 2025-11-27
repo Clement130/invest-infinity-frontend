@@ -125,6 +125,23 @@ export default function ClientSidebar() {
             })}
           </nav>
 
+          {/* Discord Link */}
+          <div className="px-4 pb-2">
+            <a
+              href="https://discord.gg/Y9RvKDCrWH"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[#5865F2]/20 text-[#5865F2] hover:bg-[#5865F2]/30 border border-[#5865F2]/30 transition group"
+            >
+              <img 
+                src="/discord-icon.webp" 
+                alt="Discord" 
+                className="w-5 h-5 group-hover:scale-110 transition-transform"
+              />
+              <span className="font-medium">Rejoindre Discord</span>
+            </a>
+          </div>
+
           {/* Footer - Logout */}
           <div className="p-4 border-t border-pink-500/20">
             <button
