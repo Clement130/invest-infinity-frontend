@@ -33,7 +33,6 @@ import {
   Sparkles,
   Zap,
   Trophy,
-  Coins,
   Mail,
   Smartphone,
 } from 'lucide-react';
@@ -290,8 +289,6 @@ export default function MemberDashboard() {
     : 0;
   const xpTracks = stats?.xpTracks ?? [];
   const dailyQuests = stats?.dailyQuests ?? [];
-  const walletBalance = stats?.walletBalance ?? 0;
-  const totalCoinsEarned = stats?.totalCoinsEarned ?? 0;
 
   // Version mobile ultra-simplifiée
   if (isMobile) {
@@ -471,9 +468,9 @@ export default function MemberDashboard() {
             </motion.section>
           )}
 
-          {/* Stats Grid - Optimisé pour mobile */}
+          {/* Stats Grid épuré */}
           <motion.section variants={itemVariants}>
-            <div className={`grid gap-3 md:gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+            <div className={`grid gap-3 md:gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
               <StatCard
                 icon={BookOpen}
                 label="Modules"
@@ -488,58 +485,6 @@ export default function MemberDashboard() {
                 color="purple"
                 delay={isMobile ? 0 : 0.1}
               />
-              {!isMobile && (
-                <>
-                  <StatCard
-                    icon={Coins}
-                    label="Coins"
-                    value={walletBalance.toLocaleString()}
-                    color="orange"
-                    delay={0.2}
-                  />
-                  {/* Discord Card - Plus compact */}
-                  <motion.a
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    whileHover={{ y: -4 }}
-                    href="https://discord.gg/Y9RvKDCrWH"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="relative overflow-hidden rounded-2xl border border-[#5865F2]/30 bg-gradient-to-br from-[#5865F2]/20 to-[#5865F2]/5 p-4 group"
-                  >
-                    <div className="absolute -top-8 -right-8 w-20 h-20 bg-[#5865F2]/20 rounded-full blur-2xl group-hover:bg-[#5865F2]/30 transition" />
-                    <div className="relative flex flex-col items-center text-center space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-lg shadow-[#5865F2]/30">
-                        <img src="/discord-icon.webp" alt="Discord" className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Communauté</p>
-                        <p className="text-sm font-bold text-[#5865F2] flex items-center justify-center gap-1">
-                          Discord
-                          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </p>
-                      </div>
-                    </div>
-                  </motion.a>
-                </>
-              )}
-              {isMobile && (
-                <motion.a
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileTap={{ scale: 0.95 }}
-                  href="https://discord.gg/Y9RvKDCrWH"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="col-span-2 bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 rounded-xl p-4 text-center transition-colors"
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-lg">💬</span>
-                    <span className="text-sm font-medium text-[#5865F2]">Rejoindre Discord</span>
-                  </div>
-                </motion.a>
-              )}
             </div>
           </motion.section>
 
