@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, Zap, Star, Crown } from 'lucide-react';
 import type { TrainingModule } from '../../../types/training';
+
+type LicenseType = 'starter' | 'pro' | 'elite';
+
+const LICENSE_OPTIONS: { value: LicenseType; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: 'starter', label: 'Starter (97€)', icon: <Zap className="w-4 h-4" />, color: 'text-pink-400' },
+  { value: 'pro', label: 'Pro (347€)', icon: <Star className="w-4 h-4" />, color: 'text-blue-400' },
+  { value: 'elite', label: 'Elite (497€)', icon: <Crown className="w-4 h-4" />, color: 'text-yellow-400' },
+];
 
 interface ModuleModalProps {
   module: TrainingModule | null;
@@ -22,6 +30,7 @@ export function ModuleModal({
     description: '',
     position: 0,
     is_active: true,
+    required_license: 'starter' as LicenseType,
   });
 
   useEffect(() => {
@@ -31,6 +40,7 @@ export function ModuleModal({
         description: module.description || '',
         position: module.position || 0,
         is_active: module.is_active ?? true,
+        required_license: (module.required_license as LicenseType) || 'starter',
       });
     } else {
       setFormData({
@@ -38,6 +48,7 @@ export function ModuleModal({
         description: '',
         position: 0,
         is_active: true,
+        required_license: 'starter',
       });
     }
   }, [module, isOpen]);
@@ -103,6 +114,34 @@ export function ModuleModal({
               className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40"
               min="0"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-400">
+              Licence requise <span className="text-xs text-gray-500">(niveau minimum pour accéder)</span>
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {LICENSE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, required_license: option.value })}
+                  className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
+                    formData.required_license === option.value
+                      ? 'border-purple-500 bg-purple-500/20 text-white'
+                      : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'
+                  }`}
+                >
+                  <span className={option.color}>{option.icon}</span>
+                  <span className="text-sm">{option.label.split(' ')[0]}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">
+              {formData.required_license === 'starter' && '✓ Accessible à tous les clients (Starter, Pro, Elite)'}
+              {formData.required_license === 'pro' && '✓ Accessible aux clients Pro et Elite uniquement'}
+              {formData.required_license === 'elite' && '✓ Accessible aux clients Elite uniquement'}
+            </p>
           </div>
 
           <div className="flex items-center gap-2">

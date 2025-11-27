@@ -121,7 +121,7 @@ export default function PricingPage() {
                   <Zap className="w-6 h-6 text-pink-400" />
                   <h3 className="text-2xl font-bold">Starter</h3>
                 </div>
-                <p className="text-gray-400 mb-6">Pour débuter sereinement</p>
+                <p className="text-gray-400 mb-6">Les outils essentiels pour commencer</p>
                 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-2">
@@ -135,19 +135,19 @@ export default function PricingPage() {
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Alertes de trading</span>
+                    <span className="text-gray-300">Alertes trading en temps réel (Discord)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Accès à la communauté</span>
+                    <span className="text-gray-300">Communauté privée Discord</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Support 7/7</span>
+                    <span className="text-gray-300">Support par chat 7j/7</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Vidéos TopStepX/Apex/Metatrader</span>
+                    <span className="text-gray-300">Tutoriels plateformes (TopStep, Apex, MT4/MT5)</span>
                   </li>
                 </ul>
 
@@ -175,7 +175,7 @@ export default function PricingPage() {
                   <Star className="w-6 h-6 text-yellow-400" />
                   <h3 className="text-2xl font-bold">Pro</h3>
                 </div>
-                <p className="text-gray-400 mb-6">Pour progresser rapidement</p>
+                <p className="text-gray-400 mb-6">Formation + accompagnement en live</p>
                 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-2">
@@ -189,15 +189,15 @@ export default function PricingPage() {
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">✅ Tout ce qui est dans Starter</span>
+                    <span className="text-gray-300">Tout Starter inclus</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Lives trading (15h-17h30, lun-ven)</span>
+                    <span className="text-gray-300">Sessions de trading en direct (lun-ven, 15h-17h30)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Accès aux replays</span>
+                    <span className="text-gray-300">Replays illimités des sessions live</span>
                   </li>
                 </ul>
 
@@ -232,7 +232,7 @@ export default function PricingPage() {
                   <Crown className="w-6 h-6 text-yellow-400" />
                   <h3 className="text-2xl font-bold">Elite</h3>
                 </div>
-                <p className="text-gray-400 mb-2">Pour la maîtrise complète</p>
+                <p className="text-gray-400 mb-2">Formation complète + coaching personnalisé</p>
                 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2">
@@ -247,27 +247,27 @@ export default function PricingPage() {
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">✅ Tout ce qui est dans Pro</span>
+                    <span className="text-gray-300">Tout Pro inclus</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Zone Premium (analyses avancées)</span>
+                    <span className="text-gray-300">Zone Premium : analyses marchés quotidiennes</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Formation complète Invest Infinity</span>
+                    <span className="text-gray-300">Formation vidéo complète (50+ heures)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">2 stratégies rentables</span>
+                    <span className="text-gray-300">2 stratégies de trading éprouvées</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Mises à jour à vie</span>
+                    <span className="text-gray-300">Toutes les futures mises à jour incluses</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Phone className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-yellow-300 font-medium">BONUS : Appel 1-to-1 de 30min (200€)</span>
+                    <span className="text-yellow-300 font-medium">🎁 BONUS : Coaching individuel 30min (valeur 200€)</span>
                   </li>
                 </ul>
 

@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Plus,
@@ -30,17 +29,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  getModules,
-  getLessonsForModule,
-  createOrUpdateModule,
-  deleteModule,
-} from '../../services/trainingService';
+import { useModules, useModuleMutations, useLessons } from '../../hooks/useTraining';
 import type { TrainingModule } from '../../types/training';
 import toast from 'react-hot-toast';
 
 export default function FormationsPage() {
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
@@ -54,10 +47,8 @@ export default function FormationsPage() {
     })
   );
 
-  const { data: modules = [], isLoading } = useQuery({
-    queryKey: ['admin', 'modules'],
-    queryFn: () => getModules({ includeInactive: true }),
-  });
+  const { data: modules = [], isLoading } = useModules({ includeInactive: true });
+  const { createUpdateModule, removeModule } = useModuleMutations();
 
   const filteredModules = useMemo(() => {
     if (!searchQuery) return modules;
@@ -70,24 +61,7 @@ export default function FormationsPage() {
   }, [modules, searchQuery]);
 
   // Mutation pour réordonner les modules
-  const reorderModulesMutation = useMutation({
-    mutationFn: async (reorderedModules: TrainingModule[]) => {
-      const updates = reorderedModules.map((module, index) => ({
-        ...module,
-        position: index,
-      }));
-      await Promise.all(updates.map((m) => createOrUpdateModule(m)));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'modules'] });
-      toast.success('Ordre des modules mis à jour');
-    },
-    onError: () => {
-      toast.error('Erreur lors de la mise à jour de l\'ordre');
-    },
-  });
-
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -96,43 +70,52 @@ export default function FormationsPage() {
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const reordered = arrayMove(filteredModules, oldIndex, newIndex);
-      reorderModulesMutation.mutate(reordered);
+      
+      // Mise à jour optimiste ou appel API pour chaque élément déplacé
+      const updates = reordered.map((module, index) => ({
+        ...module,
+        position: index,
+      }));
+      
+      try {
+        await Promise.all(updates.map((m) => createUpdateModule.mutateAsync(m)));
+        toast.success('Ordre des modules mis à jour');
+      } catch (error) {
+        toast.error('Erreur lors de la mise à jour de l\'ordre');
+      }
     }
   };
 
-  const createModuleMutation = useMutation({
-    mutationFn: createOrUpdateModule,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'modules'] });
-      setModuleModalOpen(false);
-      setEditingModule(null);
-      toast.success('Module créé avec succès');
-    },
-    onError: () => {
-      toast.error('Erreur lors de la création du module');
-    },
-  });
+  const handleCreateOrUpdate = (data: Partial<TrainingModule> & { title: string }) => {
+    createUpdateModule.mutate(data, {
+      onSuccess: () => {
+        setModuleModalOpen(false);
+        setEditingModule(null);
+        toast.success(data.id ? 'Module mis à jour' : 'Module créé avec succès');
+      },
+      onError: () => {
+        toast.error('Erreur lors de l\'enregistrement du module');
+      },
+    });
+  };
 
-  const deleteModuleMutation = useMutation({
-    mutationFn: deleteModule,
-    onSuccess: () => {
-      // Invalider les queries pour rafraîchir la liste
-      queryClient.invalidateQueries({ queryKey: ['admin', 'modules'] });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
-      
-      // Nettoyer l'état local
-      if (selectedModule) setSelectedModule(null);
-      if (editingModule) setEditingModule(null);
-      if (moduleModalOpen) setModuleModalOpen(false);
-      
-      // Afficher un message de succès
-      toast.success('Module supprimé avec succès');
-    },
-    onError: (error: any) => {
-      console.error('Erreur lors de la suppression du module:', error);
-      toast.error(`Erreur lors de la suppression: ${error?.message || 'Une erreur est survenue'}`);
-    },
-  });
+  const handleDelete = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce module ?\n\nCette action est irréversible.')) {
+      removeModule.mutate(id, {
+        onSuccess: () => {
+          if (selectedModule === id) setSelectedModule(null);
+          if (editingModule?.id === id) setEditingModule(null);
+          if (moduleModalOpen) setModuleModalOpen(false);
+          toast.success('Module supprimé avec succès');
+        },
+        onError: (error: any) => {
+          console.error('Erreur suppression module:', error);
+          toast.error(`Erreur lors de la suppression: ${error?.message || 'Une erreur est survenue'}`);
+        },
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -202,17 +185,7 @@ export default function FormationsPage() {
                     setEditingModule(module);
                     setModuleModalOpen(true);
                   }}
-                  onDelete={(e) => {
-                    if (e) e.stopPropagation();
-                    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le module "${module.title}" ?\n\nCette action est irréversible.`)) {
-                      deleteModuleMutation.mutate(module.id, {
-                        onError: (error) => {
-                          // S'assurer qu'on reste sur la page même en cas d'erreur
-                          console.error('Erreur suppression module:', error);
-                        }
-                      });
-                    }
-                  }}
+                  onDelete={(e) => handleDelete(module.id, e)}
                   previewMode={previewMode}
                 />
               ))}
@@ -221,7 +194,7 @@ export default function FormationsPage() {
         </DndContext>
       )}
 
-      {filteredModules.length === 0 && (
+      {filteredModules.length === 0 && !isLoading && (
         <div className="text-center py-8 text-gray-400">
           {searchQuery ? 'Aucun module trouvé' : 'Aucun module'}
         </div>
@@ -234,8 +207,8 @@ export default function FormationsPage() {
             setModuleModalOpen(false);
             setEditingModule(null);
           }}
-          onSave={(data) => createModuleMutation.mutate(data)}
-          isSaving={createModuleMutation.isPending}
+          onSave={handleCreateOrUpdate}
+          isSaving={createUpdateModule.isPending}
         />
       )}
     </div>
@@ -272,10 +245,7 @@ function SortableModuleCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const { data: lessons = [] } = useQuery({
-    queryKey: ['admin', 'lessons', module.id],
-    queryFn: () => getLessonsForModule(module.id),
-  });
+  const { data: lessons = [] } = useLessons(module.id);
 
   return (
     <div
@@ -462,5 +432,3 @@ function ModuleModal({
     </div>
   );
 }
-
-

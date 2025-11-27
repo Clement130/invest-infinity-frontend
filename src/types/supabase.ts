@@ -15,21 +15,33 @@ export type Database = {
           email: string
           full_name: string | null
           role: 'client' | 'admin' | 'developer'
+          license: 'none' | 'starter' | 'pro' | 'elite'
+          license_valid_until: string | null
+          stripe_customer_id: string | null
           created_at: string
+          updated_at: string | null
         }
         Insert: {
           id: string
           email: string
           full_name?: string | null
           role?: 'client' | 'admin' | 'developer'
+          license?: 'none' | 'starter' | 'pro' | 'elite'
+          license_valid_until?: string | null
+          stripe_customer_id?: string | null
           created_at?: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
           email?: string
           full_name?: string | null
           role?: 'client' | 'admin' | 'developer'
+          license?: 'none' | 'starter' | 'pro' | 'elite'
+          license_valid_until?: string | null
+          stripe_customer_id?: string | null
           created_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -170,6 +182,7 @@ export type Database = {
           description: string | null
           position: number
           is_active: boolean
+          required_license: 'starter' | 'pro' | 'elite'
           created_at: string
         }
         Insert: {
@@ -178,6 +191,7 @@ export type Database = {
           description?: string | null
           position?: number
           is_active?: boolean
+          required_license?: 'starter' | 'pro' | 'elite'
           created_at?: string
         }
         Update: {
@@ -186,6 +200,7 @@ export type Database = {
           description?: string | null
           position?: number
           is_active?: boolean
+          required_license?: 'starter' | 'pro' | 'elite'
           created_at?: string
         }
         Relationships: []

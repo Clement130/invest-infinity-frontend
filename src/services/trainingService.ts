@@ -207,6 +207,7 @@ export async function createOrUpdateModule(
     description: payload.description ?? null,
     position: payload.position ?? 0,
     is_active: payload.is_active ?? true,
+    required_license: payload.required_license ?? 'starter',
   };
 
   if (payload.id) {

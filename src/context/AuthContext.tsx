@@ -11,18 +11,16 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import type { UserRole } from '../types/training';
 import type { Tables } from '../types/supabase';
-import { 
-  isAccountLocked, 
-  recordFailedAttempt, 
-  resetLoginAttempts 
-} from '../utils/security';
 
 type ProfileRow = Tables<'profiles'>;
+
+type LicenseType = 'none' | 'starter' | 'pro' | 'elite';
 
 interface AuthContextType {
   user: User | null;
   profile: ProfileRow | null;
   role: UserRole | null;
+  license: LicenseType;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -105,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               id: userId,
               email: authUser.user.email,
               role: 'client',
-            })
+              })
             .select()
             .single();
 
@@ -213,38 +211,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      // ==================== PROTECTION BRUTE FORCE ====================
-      const lockStatus = isAccountLocked(email);
-      if (lockStatus.locked) {
-        throw new Error(
-          `Trop de tentatives. Réessayez dans ${lockStatus.remainingTime} secondes.`
-        );
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        // Enregistrer la tentative échouée
-        const attemptResult = recordFailedAttempt(email);
-        
-        if (attemptResult.locked) {
-          throw new Error(
-            `Compte temporairement bloqué. Réessayez dans ${attemptResult.lockoutTime} secondes.`
-          );
-        } else if (attemptResult.remainingAttempts <= 2) {
-          throw new Error(
-            `${error.message} (${attemptResult.remainingAttempts} tentative(s) restante(s))`
-          );
-        }
-        
         throw error;
       }
-
-      // Réinitialiser les tentatives après succès
-      resetLoginAttempts(email);
 
       setUser(data.user);
       await loadProfile(data.user.id);
@@ -270,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         profile,
         role: profile?.role ?? null,
+        license: (profile?.license as LicenseType) ?? 'none',
         loading,
         signIn,
         signOut,

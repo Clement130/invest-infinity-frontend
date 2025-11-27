@@ -1,8 +1,26 @@
-import { ChevronDown, ChevronRight, Plus, Edit2, GripVertical, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, GripVertical, Trash2, Zap, Star, Crown } from 'lucide-react';
 import { LessonRow } from './LessonRow';
 import { StatusBadge } from './StatusIndicators';
 import { SortableLessonList } from './SortableLessonList';
 import type { TrainingModule, TrainingLesson } from '../../../types/training';
+
+// Badge pour le niveau de licence requis
+function LicenseBadge({ license }: { license: string }) {
+  const config = {
+    starter: { icon: Zap, label: 'Starter', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
+    pro: { icon: Star, label: 'Pro', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+    elite: { icon: Crown, label: 'Elite', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+  }[license] || { icon: Zap, label: 'Starter', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' };
+  
+  const Icon = config.icon;
+  
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${config.color}`}>
+      <Icon className="w-3 h-3" />
+      {config.label}
+    </span>
+  );
+}
 
 interface ModuleSectionProps {
   module: TrainingModule;
@@ -82,6 +100,7 @@ export function ModuleSection({
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-base font-semibold text-white">{module.title}</h3>
               <StatusBadge status={getStatus()} label={getStatusLabel()} size="sm" />
+              <LicenseBadge license={module.required_license || 'starter'} />
             </div>
             <div className="text-xs text-gray-400">
               {totalLessons} leçon{totalLessons > 1 ? 's' : ''} • {lessonsWithVideo} vidéo{lessonsWithVideo > 1 ? 's' : ''} ({completionRate}% complet)

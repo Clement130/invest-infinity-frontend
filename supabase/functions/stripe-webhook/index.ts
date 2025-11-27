@@ -173,16 +173,18 @@ serve(async (req) => {
         }
       }
 
-      // Attribuer la licence
+      // Attribuer la licence selon le plan acheté
       const license = PRICE_TO_LICENSE[priceId || ''] || 'starter';
       
-      // Mettre à jour le profil
+      // Mettre à jour le profil AVEC la licence
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .upsert({
           id: userId,
           email: customerEmail,
           role: 'client',
+          license: license,
+          updated_at: new Date().toISOString(),
           created_at: new Date().toISOString()
         }, {
           onConflict: 'id'
@@ -192,48 +194,74 @@ serve(async (req) => {
         secureLog('stripe-webhook', 'Error updating profile', { error: profileError.message });
       }
 
-      // Donner accès à tous les modules de formation
+      // Hiérarchie des licences : starter < pro < elite
+      const LICENSE_HIERARCHY: Record<string, number> = {
+        'starter': 1,
+        'pro': 2,
+        'elite': 3
+      };
+      
+      const userLicenseLevel = LICENSE_HIERARCHY[license] || 1;
+
+      // Récupérer les modules accessibles selon la licence
+      // Si pas de required_license défini, on considère que c'est 'starter' (accessible à tous)
       const { data: modules } = await supabaseAdmin
         .from('training_modules')
-        .select('id');
+        .select('id, required_license');
       
       if (modules && modules.length > 0) {
-        const accessRecords = modules.map(m => ({
+        // Filtrer les modules selon la licence de l'utilisateur
+        const accessibleModules = modules.filter(m => {
+          const requiredLicense = m.required_license || 'starter';
+          const requiredLevel = LICENSE_HIERARCHY[requiredLicense] || 1;
+          return userLicenseLevel >= requiredLevel;
+        });
+
+        secureLog('stripe-webhook', 'Modules accessibles', { 
+          license, 
+          totalModules: modules.length,
+          accessibleModules: accessibleModules.length 
+        });
+
+        const accessRecords = accessibleModules.map(m => ({
           user_id: userId,
           module_id: m.id,
           access_type: 'full',
           granted_at: new Date().toISOString()
         }));
 
-        const { error: accessError } = await supabaseAdmin
-          .from('training_access')
-          .upsert(accessRecords, {
-            onConflict: 'user_id,module_id'
-          });
+        if (accessRecords.length > 0) {
+          const { error: accessError } = await supabaseAdmin
+            .from('training_access')
+            .upsert(accessRecords, {
+              onConflict: 'user_id,module_id'
+            });
 
-        if (accessError) {
-          secureLog('stripe-webhook', 'Error granting access', { error: accessError.message });
+          if (accessError) {
+            secureLog('stripe-webhook', 'Error granting access', { error: accessError.message });
+          }
         }
       }
 
-      // Enregistrer l'achat
-      const { error: purchaseError } = await supabaseAdmin
-        .from('purchases')
+      // Enregistrer le paiement dans la table payments
+      const { error: paymentError } = await supabaseAdmin
+        .from('payments')
         .insert({
           user_id: userId,
           stripe_session_id: session.id,
+          license_type: license,
           status: 'completed'
         });
 
-      if (purchaseError) {
-        secureLog('stripe-webhook', 'Error recording purchase', { error: purchaseError.message });
+      if (paymentError) {
+        secureLog('stripe-webhook', 'Error recording payment', { error: paymentError.message });
       }
 
       // Stocker le token temporairement pour la redirection
-      // On utilise la table purchases pour stocker le token
+      // On utilise la table payments pour stocker le token
       if (passwordToken) {
         await supabaseAdmin
-          .from('purchases')
+          .from('payments')
           .update({ 
             status: 'pending_password',
           })

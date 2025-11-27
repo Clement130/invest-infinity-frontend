@@ -258,19 +258,19 @@ export default function ConfirmationPage() {
             <ul className="space-y-3 mb-6 flex-grow">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Alertes de trading</span>
+                <span className="text-gray-300 text-sm">Alertes trading en temps réel (Discord)</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Accès à la communauté</span>
+                <span className="text-gray-300 text-sm">Communauté privée Discord</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Support 7/7</span>
+                <span className="text-gray-300 text-sm">Support par chat 7j/7</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Vidéos TopStepX/Apex/Metatrader</span>
+                <span className="text-gray-300 text-sm">Tutoriels plateformes (TopStep, Apex, MT4/MT5)</span>
               </li>
             </ul>
             
@@ -295,15 +295,15 @@ export default function ConfirmationPage() {
             <ul className="space-y-3 mb-6 flex-grow">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-pink-400 flex-shrink-0 mt-0.5" />
-                <span className="text-white font-semibold text-sm">✅ Tout ce qui est dans Starter</span>
+                <span className="text-white font-semibold text-sm">Tout Starter inclus</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Lives trading (15h-17h30, lun-ven)</span>
+                <span className="text-gray-300 text-sm">Sessions de trading en direct (lun-ven, 15h-17h30)</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Accès aux replays</span>
+                <span className="text-gray-300 text-sm">Replays illimités des sessions live</span>
               </li>
             </ul>
             
@@ -336,27 +336,27 @@ export default function ConfirmationPage() {
             <ul className="space-y-3 mb-4 flex-grow">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span className="text-white font-semibold text-sm">✅ Tout ce qui est dans Pro</span>
+                <span className="text-white font-semibold text-sm">Tout Pro inclus</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Zone Premium (analyses avancées)</span>
+                <span className="text-gray-300 text-sm">Zone Premium : analyses marchés quotidiennes</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Formation complète Invest Infinity</span>
+                <span className="text-gray-300 text-sm">Formation vidéo complète (50+ heures)</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">2 stratégies rentables</span>
+                <span className="text-gray-300 text-sm">2 stratégies de trading éprouvées</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Mises à jour à vie</span>
+                <span className="text-gray-300 text-sm">Toutes les futures mises à jour incluses</span>
               </li>
               <li className="flex items-start gap-2">
                 <Phone className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span className="text-yellow-300 font-semibold text-sm">BONUS : Appel 1-to-1 de 30min (200€)</span>
+                <span className="text-yellow-300 font-semibold text-sm">🎁 BONUS : Coaching individuel 30min (valeur 200€)</span>
               </li>
             </ul>
             
