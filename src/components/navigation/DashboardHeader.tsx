@@ -11,19 +11,13 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  Flame,
   X,
   BookOpen,
   Target,
   Calendar,
   Sparkles,
-  Snowflake,
-  Coins,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { getUserWallet } from '../../services/economyService';
-import StoreModal from '../economy/StoreModal';
-import InventoryDrawer from '../economy/InventoryDrawer';
 
 interface Notification {
   id: string;
@@ -80,8 +74,6 @@ export default function DashboardHeader() {
   const [notifications, setNotifications] = useState(mockNotifications);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  const [showStore, setShowStore] = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ['member-stats', user?.id],
@@ -89,14 +81,7 @@ export default function DashboardHeader() {
     enabled: !!user?.id,
   });
 
-  const { data: wallet } = useQuery({
-    queryKey: ['wallet', user?.id],
-    queryFn: () => getUserWallet(user?.id || ''),
-    enabled: !!user?.id,
-  });
-
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const streak = stats?.streak || 7; // Mock streak for demo
 
   // Keyboard shortcut pour la recherche
   useEffect(() => {
@@ -177,43 +162,6 @@ export default function DashboardHeader() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
-              {/* Streak Counter - No animation on navigation */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30">
-                <Flame className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-bold text-orange-300">{streak}</span>
-                <span className="text-xs text-orange-400/70">jours</span>
-              </div>
-
-              {stats?.freezePasses ? (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 border border-blue-500/30">
-                  <Snowflake className="w-4 h-4 text-blue-300" />
-                  <span className="text-sm font-bold text-blue-200">{stats.freezePasses}</span>
-                  <span className="text-xs text-blue-200/80">Freeze pass</span>
-                </div>
-              ) : null}
-
-              {stats?.activeBooster ? (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30">
-                  <Sparkles className="w-4 h-4 text-pink-200" />
-                  <span className="text-sm font-bold text-pink-100">
-                    x{stats.activeBooster.multiplier.toFixed(1)} XP
-                  </span>
-                  <span className="text-xs text-pink-100/70">
-                    {stats.activeBooster.remainingMinutes} min
-                  </span>
-                </div>
-              ) : null}
-
-              {wallet && (
-                <button
-                  onClick={() => setShowStore(true)}
-                  className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-sm text-yellow-100 hover:bg-yellow-500/20 transition"
-                >
-                  <Coins className="w-4 h-4" />
-                  {wallet.focusCoins.toLocaleString()}
-                </button>
-              )}
-
               {/* Notifications */}
               <div className="relative">
                 <button
@@ -489,22 +437,6 @@ export default function DashboardHeader() {
         )}
       </AnimatePresence>
 
-      <StoreModal
-        open={showStore}
-        onClose={() => setShowStore(false)}
-        onOpenInventory={() => {
-          setShowStore(false);
-          setShowInventory(true);
-        }}
-      />
-      <InventoryDrawer
-        open={showInventory}
-        onClose={() => setShowInventory(false)}
-        onOpenStore={() => {
-          setShowInventory(false);
-          setShowStore(true);
-        }}
-      />
     </>
   );
 }
