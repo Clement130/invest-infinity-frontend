@@ -136,23 +136,14 @@ export default function DashboardHeader() {
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/60 border-b border-white/5">
         <div className="px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Greeting (hidden on mobile) */}
+            {/* Left: Greeting (hidden on mobile) - No animation on navigation */}
             <div className="hidden md:flex flex-col">
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-gray-400"
-              >
+              <p className="text-sm text-gray-400">
                 {getGreeting()},
-              </motion.p>
-              <motion.h2
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-lg font-semibold text-white"
-              >
+              </p>
+              <h2 className="text-lg font-semibold text-white">
                 {firstName} 👋
-              </motion.h2>
+              </h2>
             </div>
 
             {/* Center: Search Bar */}
@@ -173,16 +164,12 @@ export default function DashboardHeader() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
-              {/* Streak Counter */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30"
-              >
+              {/* Streak Counter - No animation on navigation */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30">
                 <Flame className="w-4 h-4 text-orange-400" />
                 <span className="text-sm font-bold text-orange-300">{streak}</span>
                 <span className="text-xs text-orange-400/70">jours</span>
-              </motion.div>
+              </div>
 
               {/* Notifications */}
               <div className="relative">

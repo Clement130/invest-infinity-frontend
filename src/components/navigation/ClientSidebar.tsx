@@ -14,7 +14,7 @@ import {
   Zap,
   ChevronRight,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { useQuery } from '@tanstack/react-query';
 import { getUserStats } from '../../services/memberStatsService';
@@ -81,46 +81,50 @@ const sidebarVariants = {
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: {
-      delay: i * 0.05,
-      duration: 0.3,
-    },
-  }),
-};
+// Variants removed - using CSS transitions instead for better performance on navigation
 
-export default function ClientSidebar() {
+function ClientSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signOut } = useSession();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  
+  // Track if this is the initial mount to prevent animations on subsequent renders
+  const isInitialMount = useRef(true);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      // Set hasAnimated to true after initial animations complete
+      const timer = setTimeout(() => setHasAnimated(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const { data: stats } = useQuery({
     queryKey: ['member-stats', user?.id],
     queryFn: () => getUserStats(user?.id || ''),
     enabled: !!user?.id,
+    staleTime: 30000, // Keep data fresh for 30 seconds to reduce refetches
   });
 
-  const handleNavClick = (path: string) => {
+  const handleNavClick = useCallback((path: string) => {
     navigate(path);
     setIsMobileOpen(false);
-  };
+  }, [navigate]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await signOut();
     navigate('/');
-  };
+  }, [signOut, navigate]);
 
-  const isActive = (path: string) => {
+  const isActive = useCallback((path: string) => {
     if (path === '/app') {
       return location.pathname === '/app';
     }
     return location.pathname.startsWith(path);
-  };
+  }, [location.pathname]);
 
   const firstName = profile?.full_name?.split(' ')[0] || 'Trader';
   const level = stats?.level || 1;
@@ -130,23 +134,15 @@ export default function ClientSidebar() {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Logo */}
+      {/* Logo - No animation on navigation */}
       <div className="p-6 border-b border-white/5">
         <div className="flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-3"
-          >
+          <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-slate-950"
-              />
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-slate-950" />
             </div>
             <div>
               <h2 className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -156,7 +152,7 @@ export default function ClientSidebar() {
                 Trading Academy
               </p>
             </div>
-          </motion.div>
+          </div>
           <button
             onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition"
@@ -166,14 +162,9 @@ export default function ClientSidebar() {
         </div>
       </div>
 
-      {/* User Card */}
+      {/* User Card - Static, no animation on navigation */}
       <div className="p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-white/5 p-4"
-        >
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-white/5 p-4">
           {/* Background glow */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
@@ -200,7 +191,7 @@ export default function ClientSidebar() {
               </div>
             </div>
 
-            {/* XP Progress */}
+            {/* XP Progress - Only animate on initial mount */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Progression XP</span>
@@ -209,36 +200,30 @@ export default function ClientSidebar() {
                 </span>
               </div>
               <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${xpProgress}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-full relative"
+                <div
+                  style={{ width: `${xpProgress}%` }}
+                  className="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-full relative transition-all duration-500"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                </motion.div>
+                </div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - No entrance animations to prevent re-animation on route change */}
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
         <p className="px-3 mb-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
           Menu
         </p>
-        {navItems.map((item, index) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
 
           return (
-            <motion.button
+            <button
               key={item.path}
-              custom={index}
-              initial="hidden"
-              animate="visible"
-              variants={itemVariants}
               onClick={() => handleNavClick(item.path)}
               className={clsx(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative',
@@ -247,13 +232,13 @@ export default function ClientSidebar() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               )}
             >
-              {/* Active indicator */}
-              {active && (
-                <motion.div
-                  layoutId="activeIndicator"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-pink-500 to-purple-500 rounded-full"
-                />
-              )}
+              {/* Active indicator - CSS transition instead of layout animation */}
+              <div
+                className={clsx(
+                  'absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-pink-500 to-purple-500 rounded-full transition-all duration-200',
+                  active ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+                )}
+              />
 
               {/* Icon with gradient background on active */}
               <div
@@ -288,7 +273,7 @@ export default function ClientSidebar() {
                   active ? 'text-pink-400' : 'text-gray-600 opacity-0 group-hover:opacity-100'
                 )}
               />
-            </motion.button>
+            </button>
           );
         })}
 
@@ -296,11 +281,7 @@ export default function ClientSidebar() {
         <div className="my-4 border-t border-white/5" />
 
         {/* Settings */}
-        <motion.button
-          custom={navItems.length}
-          initial="hidden"
-          animate="visible"
-          variants={itemVariants}
+        <button
           onClick={() => handleNavClick('/app/settings')}
           className={clsx(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
@@ -320,21 +301,18 @@ export default function ClientSidebar() {
             <Settings className="w-4 h-4" />
           </div>
           <span className="font-medium text-sm">Paramètres</span>
-        </motion.button>
+        </button>
       </nav>
 
-      {/* Discord CTA */}
+      {/* Discord CTA - No entrance animation */}
       <div className="p-4">
-        <motion.a
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+        <a
           href="https://discord.gg/Y9RvKDCrWH"
           target="_blank"
           rel="noopener noreferrer"
           className="block w-full relative overflow-hidden rounded-xl bg-[#5865F2] p-4 group"
         >
-          {/* Animated background */}
+          {/* Animated background on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#5865F2] via-[#7289da] to-[#5865F2] opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <div className="relative flex items-center gap-3">
@@ -349,15 +327,12 @@ export default function ClientSidebar() {
             </div>
             <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform" />
           </div>
-        </motion.a>
+        </a>
       </div>
 
-      {/* Logout */}
+      {/* Logout - No entrance animation */}
       <div className="p-4 border-t border-white/5">
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+        <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all group"
         >
@@ -365,7 +340,7 @@ export default function ClientSidebar() {
             <LogOut className="w-4 h-4" />
           </div>
           <span className="font-medium text-sm">Déconnexion</span>
-        </motion.button>
+        </button>
       </div>
     </div>
   );
@@ -428,3 +403,6 @@ export default function ClientSidebar() {
     </>
   );
 }
+
+// Export memoized component to prevent re-renders from parent
+export default memo(ClientSidebar);
