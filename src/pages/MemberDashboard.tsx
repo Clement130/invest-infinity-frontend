@@ -65,17 +65,13 @@ function MobileDashboard({
   user,
   firstName,
   globalProgress,
-  streak,
-  walletBalance,
   continueLearning,
-  navigate
+  navigate,
 }: {
   isLoading: boolean;
   user: any;
   firstName: string;
   globalProgress: number;
-  streak: number;
-  walletBalance: number;
   continueLearning: any;
   navigate: (path: string) => void;
 }) {
@@ -124,20 +120,6 @@ function MobileDashboard({
         <p className="text-sm text-gray-400">
           {globalProgress}% complété
         </p>
-      </div>
-
-      {/* Stats essentielles seulement */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white/5 rounded-xl p-4 text-center">
-          <Flame className="w-6 h-6 mx-auto mb-2 text-orange-400" />
-          <div className="text-lg font-bold text-white">{streak}</div>
-          <div className="text-xs text-gray-400">jours</div>
-        </div>
-        <div className="bg-white/5 rounded-xl p-4 text-center">
-          <Coins className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
-          <div className="text-lg font-bold text-white">{walletBalance}</div>
-          <div className="text-xs text-gray-400">coins</div>
-        </div>
       </div>
 
       {/* CTA principal simplifié */}
@@ -325,8 +307,6 @@ export default function MemberDashboard() {
           user={user}
           firstName={firstName}
           globalProgress={globalProgress}
-          streak={streak}
-          walletBalance={walletBalance}
           continueLearning={continueLearning}
           navigate={navigate}
         />
