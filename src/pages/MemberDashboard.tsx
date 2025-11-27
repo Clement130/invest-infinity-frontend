@@ -33,6 +33,7 @@ import {
   Sparkles,
   Zap,
   Trophy,
+  Coins,
   Mail,
   Smartphone,
 } from 'lucide-react';
