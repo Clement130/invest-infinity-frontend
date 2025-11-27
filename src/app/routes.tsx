@@ -9,7 +9,6 @@ const TradingAccount = lazy(() => import('../pages/TradingAccount'));
 const PropFirmChallenge = lazy(() => import('../pages/PropFirmChallenge'));
 const Login = lazy(() => import('../pages/Login'));
 const ClientApp = lazy(() => import('../pages/ClientApp'));
-const AdminDashboard = lazy(() => import('../pages/AdminDashboard')); // Semble inutilisé ou doublon avec DashboardPage ?
 const DashboardPage = lazy(() => import('../pages/admin/DashboardPage'));
 const UsersPage = lazy(() => import('../pages/admin/UsersPage'));
 const LeadsPage = lazy(() => import('../pages/admin/LeadsPage'));
@@ -19,7 +18,6 @@ const AnalyticsPage = lazy(() => import('../pages/admin/AnalyticsPage'));
 const ContenuPage = lazy(() => import('../pages/admin/ContenuPage'));
 const ClientPreviewPage = lazy(() => import('../pages/admin/ClientPreviewPage'));
 const AdminChallengesPage = lazy(() => import('../pages/admin/ChallengesPage'));
-const VideosManagerPage = lazy(() => import('../pages/admin/VideosManagerPage'));
 const VideosManagement = lazy(() => import('../pages/admin/VideosManagement'));
 const AdminSettingsPage = lazy(() => import('../pages/admin/SettingsPage'));
 const ModulePage = lazy(() => import('../pages/ModulePage'));
@@ -34,7 +32,7 @@ const SuccessPage = lazy(() => import('../pages/SuccessPage'));
 const ConfirmationPage = lazy(() => import('../pages/ConfirmationPage'));
 const CreatePasswordPage = lazy(() => import('../pages/CreatePasswordPage'));
 const UpgradeOffer = lazy(() => import('../components/UpgradeOffer'));
-const LandingForm = lazy(() => import('../components/LandingForm/LandingForm').then(module => ({ default: module.LandingForm }))); // Named export handling
+const LandingForm = lazy(() => import('../components/LandingForm/LandingForm').then(module => ({ default: module.LandingForm })));
 
 export type MarketingRouteConfig = {
   path: string;
@@ -46,7 +44,12 @@ export type MarketingRouteConfig = {
   };
 };
 
-export type DashboardRouteConfig = {
+export type ClientRouteConfig = {
+  path: string; // Chemin relatif (ex: "" pour /app, "dashboard" pour /app/dashboard)
+  element: ReactNode;
+};
+
+export type AdminRouteConfig = {
   path: string;
   element: ReactNode;
   allowedRoles?: UserRole[];
@@ -102,15 +105,21 @@ export const marketingRoutes: MarketingRouteConfig[] = [
   },
 ];
 
-export const dashboardRoutes: DashboardRouteConfig[] = [
-  { path: '/app', element: <ClientApp /> },
-  { path: '/app/dashboard', element: <MemberDashboard /> },
-  { path: '/app/progress', element: <ProgressPage /> },
-  { path: '/app/challenges', element: <ClientChallengesPage /> },
-  { path: '/app/events', element: <EventsPage /> },
-  { path: '/app/settings', element: <SettingsPage /> },
-  { path: '/app/modules/:moduleId', element: <ModulePage /> },
-  { path: '/app/modules/:moduleId/lessons/:lessonId', element: <LessonPlayerPage /> },
+// Routes client avec chemins relatifs pour les nested routes
+// Le layout persiste car il est parent de toutes ces routes
+export const clientRoutes: ClientRouteConfig[] = [
+  { path: '', element: <ClientApp /> }, // /app
+  { path: 'dashboard', element: <MemberDashboard /> }, // /app/dashboard
+  { path: 'progress', element: <ProgressPage /> }, // /app/progress
+  { path: 'challenges', element: <ClientChallengesPage /> }, // /app/challenges
+  { path: 'events', element: <EventsPage /> }, // /app/events
+  { path: 'settings', element: <SettingsPage /> }, // /app/settings
+  { path: 'modules/:moduleId', element: <ModulePage /> }, // /app/modules/:moduleId
+  { path: 'modules/:moduleId/lessons/:lessonId', element: <LessonPlayerPage /> }, // /app/modules/:moduleId/lessons/:lessonId
+];
+
+// Routes admin
+export const adminRoutes: AdminRouteConfig[] = [
   { path: '/admin', element: <AdminLayout activeSection="dashboard"><DashboardPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/users', element: <AdminLayout activeSection="users"><UsersPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/leads', element: <AdminLayout activeSection="leads"><LeadsPage /></AdminLayout>, allowedRoles: ['admin'] },

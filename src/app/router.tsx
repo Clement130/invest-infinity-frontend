@@ -1,25 +1,32 @@
-import { Routes, Route } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Routes, Route, Outlet } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import MarketingLayout from '../layouts/MarketingLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PageLoader from '../components/PageLoader';
-// On importe les routes qui contiennent maintenant des composants Lazy
-import { marketingRoutes, dashboardRoutes } from './routes';
-
-// Pour la route catch-all /admin/dashboard, on a besoin de DashboardPage
-// Mais on doit l'importer lazy aussi ou le récupérer de routes.tsx s'il est exporté
-// Simplifions en évitant d'importer directement DashboardPage ici si possible
-// Mais pour le fallback * et admin/dashboard, on va devoir faire attention.
-import { lazy } from 'react';
+import { marketingRoutes, clientRoutes, adminRoutes } from './routes';
 
 const DashboardPage = lazy(() => import('../pages/admin/DashboardPage'));
+
+// Layout wrapper persistant pour les routes client /app/*
+function ClientLayoutWrapper() {
+  return (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
+      </DashboardLayout>
+    </ProtectedRoute>
+  );
+}
 
 export default function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Routes marketing */}
         {marketingRoutes.map(({ path, element, layout }) => {
           const {
             header: showHeader = true,
@@ -44,21 +51,30 @@ export default function AppRouter() {
           );
         })}
 
-        {dashboardRoutes.map(({ path, element, allowedRoles }) => {
-          const isAdminRoute = path.startsWith('/admin');
-          
-          return (
+        {/* Routes client avec layout persistant */}
+        <Route path="/app" element={<ClientLayoutWrapper />}>
+          {clientRoutes.map(({ path, element }) => (
             <Route
-              key={path}
-              path={path}
-              element={
-                <ProtectedRoute allowedRoles={allowedRoles}>
-                  {isAdminRoute ? element : <DashboardLayout>{element}</DashboardLayout>}
-                </ProtectedRoute>
-              }
+              key={path || 'index'}
+              index={path === ''}
+              path={path || undefined}
+              element={element}
             />
-          );
-        })}
+          ))}
+        </Route>
+
+        {/* Routes admin */}
+        {adminRoutes.map(({ path, element, allowedRoles }) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <ProtectedRoute allowedRoles={allowedRoles}>
+                {element}
+              </ProtectedRoute>
+            }
+          />
+        ))}
         
         {/* Route catch-all pour /admin/dashboard -> redirige vers /admin */}
         <Route
