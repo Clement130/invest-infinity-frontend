@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-11-27T16:44:38.771Z",
+  "url": "https://invest-infinity-frontend.vercel.app",
+  "totalTests": 3,
+  "passedTests": 3,
+  "failedTests": 0,
+  "results": [
+    {
+      "name": "Test Page Accueil",
+      "url": "https://invest-infinity-frontend.vercel.app/",
+      "success": true,
+      "errors": [
+        "Refused to load the script 'https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+        "Refused to load the script 'https://leadbooster-chat.pipedrive.com/assets/loader.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+        "Refused to connect to 'https://analytics-ipv6.tiktokw.us/ipv6/enrich_ipv6' because it violates the following Content Security Policy directive: \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://video.bunnycdn.com https://analytics.tiktok.com https://www.google-analytics.com\".\n"
+      ],
+      "warnings": [],
+      "checks": [
+        {
+          "type": "load-time",
+          "success": true,
+          "message": "Temps de chargement OK (4046ms <= 10000ms)"
+        },
+        {
+          "type": "no-error",
+          "success": true,
+          "message": "Aucune erreur JavaScript"
+        },
+        {
+          "type": "console-errors",
+          "success": false,
+          "message": "3 erreur(s) dans la console",
+          "details": [
+            "Refused to load the script 'https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+            "Refused to load the script 'https://leadbooster-chat.pipedrive.com/assets/loader.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+            "Refused to connect to 'https://analytics-ipv6.tiktokw.us/ipv6/enrich_ipv6' because it violates the following Content Security Policy directive: \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://video.bunnycdn.com https://analytics.tiktok.com https://www.google-analytics.com\".\n"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Dashboard Admin",
+      "url": "https://invest-infinity-frontend.vercel.app/admin/dashboard",
+      "success": true,
+      "errors": [
+        "Refused to load the script 'https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+        "Refused to connect to 'https://analytics-ipv6.tiktokw.us/ipv6/enrich_ipv6' because it violates the following Content Security Policy directive: \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://video.bunnycdn.com https://analytics.tiktok.com https://www.google-analytics.com\".\n"
+      ],
+      "warnings": [],
+      "checks": [
+        {
+          "type": "text",
+          "success": true,
+          "message": "Texte \"Dashboard\" non trouvé (optionnel)"
+        },
+        {
+          "type": "no-error",
+          "success": true,
+          "message": "Aucune erreur JavaScript"
+        },
+        {
+          "type": "load-time",
+          "success": true,
+          "message": "Temps de chargement OK (1243ms <= 10000ms)"
+        },
+        {
+          "type": "console-errors",
+          "success": false,
+          "message": "2 erreur(s) dans la console",
+          "details": [
+            "Refused to load the script 'https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+            "Refused to connect to 'https://analytics-ipv6.tiktokw.us/ipv6/enrich_ipv6' because it violates the following Content Security Policy directive: \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://video.bunnycdn.com https://analytics.tiktok.com https://www.google-analytics.com\".\n"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Page Vidéos Admin (Bunny Stream)",
+      "url": "https://invest-infinity-frontend.vercel.app/admin/videos",
+      "success": true,
+      "errors": [
+        "Refused to load the script 'https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+        "Refused to connect to 'https://analytics-ipv6.tiktokw.us/ipv6/enrich_ipv6' because it violates the following Content Security Policy directive: \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://video.bunnycdn.com https://analytics.tiktok.com https://www.google-analytics.com\".\n"
+      ],
+      "warnings": [],
+      "checks": [
+        {
+          "type": "no-error",
+          "success": true,
+          "message": "Aucune erreur JavaScript"
+        },
+        {
+          "type": "load-time",
+          "success": true,
+          "message": "Temps de chargement OK (1240ms <= 15000ms)"
+        },
+        {
+          "type": "text",
+          "success": true,
+          "message": "Texte \"Bunny\" non trouvé (optionnel)"
+        },
+        {
+          "type": "console-errors",
+          "success": false,
+          "message": "2 erreur(s) dans la console",
+          "details": [
+            "Refused to load the script 'https://assets.mediadelivery.net/playerjs/playerjs-latest.min.js' because it violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://analytics.tiktok.com https://js.stripe.com https://*.supabase.co\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.\n",
+            "Refused to connect to 'https://analytics-ipv6.tiktokw.us/ipv6/enrich_ipv6' because it violates the following Content Security Policy directive: \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://video.bunnycdn.com https://analytics.tiktok.com https://www.google-analytics.com\".\n"
+          ]
+        }
+      ]
+    }
+  ]
+}

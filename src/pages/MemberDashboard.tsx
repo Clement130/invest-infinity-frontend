@@ -36,6 +36,7 @@ import {
   Trophy,
   Snowflake,
   Coins,
+  Mail,
 } from 'lucide-react';
 import { getModules } from '../services/trainingService';
 import clsx from 'clsx';
@@ -596,6 +597,26 @@ export default function MemberDashboard() {
           </motion.section>
         </motion.div>
       )}
+
+      {/* Contact Section - Très discret */}
+      <motion.section
+        variants={itemVariants}
+        className="mt-12 pt-8 border-t border-white/5"
+      >
+        <div className="text-center">
+          <p className="text-xs text-gray-500 mb-2">
+            Besoin d'aide personnalisée ?
+          </p>
+          <a
+            href="mailto:clement.ia.consulting@gmail.com"
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-pink-400 transition-colors duration-200 group"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Contactez Clement</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </a>
+        </div>
+      </motion.section>
 
       <style>{`
         @keyframes shimmer {
