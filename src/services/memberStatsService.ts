@@ -12,6 +12,7 @@ export interface UserStats {
   level: number;
   xp: number;
   nextLevelXp: number;
+  streak: number; // jours consécutifs d'activité
 }
 
 export interface Badge {
@@ -109,6 +110,9 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     xp,
   });
 
+  // Calculer le streak (jours consécutifs d'activité)
+  const streak = await calculateStreak(userId);
+
   return {
     totalModules,
     completedModules,
@@ -119,7 +123,69 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     level,
     xp: xp % 100,
     nextLevelXp: 100,
+    streak,
   };
+}
+
+// Calculer le streak de l'utilisateur
+async function calculateStreak(userId: string): Promise<number> {
+  const { data: progress } = await supabase
+    .from('training_progress')
+    .select('last_viewed')
+    .eq('user_id', userId)
+    .not('last_viewed', 'is', null)
+    .order('last_viewed', { ascending: false })
+    .limit(365);
+
+  if (!progress || progress.length === 0) {
+    return 0;
+  }
+
+  // Extraire les dates uniques d'activité
+  const activityDates = new Set<string>();
+  progress.forEach((p) => {
+    if (p.last_viewed) {
+      const date = new Date(p.last_viewed);
+      date.setHours(0, 0, 0, 0);
+      activityDates.add(date.toISOString().split('T')[0]);
+    }
+  });
+
+  // Trier les dates par ordre décroissant
+  const sortedDates = Array.from(activityDates).sort((a, b) => b.localeCompare(a));
+
+  // Vérifier si l'utilisateur a été actif aujourd'hui ou hier
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  // Si pas d'activité aujourd'hui ou hier, le streak est cassé
+  if (sortedDates[0] !== todayStr && sortedDates[0] !== yesterdayStr) {
+    return 0;
+  }
+
+  // Compter les jours consécutifs
+  let streak = 1;
+  let currentDate = new Date(sortedDates[0]);
+
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prevDate = new Date(currentDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+    const prevDateStr = prevDate.toISOString().split('T')[0];
+
+    if (sortedDates[i] === prevDateStr) {
+      streak++;
+      currentDate = prevDate;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
 }
 
 // Récupérer les badges de l'utilisateur
