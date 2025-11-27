@@ -88,7 +88,7 @@ function ClientSidebar() {
   const location = useLocation();
   const { user, profile, signOut } = useSession();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  
+
   // Track if this is the initial mount to prevent animations on subsequent renders
   const isInitialMount = useRef(true);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -133,10 +133,10 @@ function ClientSidebar() {
   const xpProgress = (xp / nextLevelXp) * 100;
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full">
       {/* Logo - No animation on navigation */}
       <div className="p-6 border-b border-white/5">
-        <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
@@ -153,14 +153,14 @@ function ClientSidebar() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setIsMobileOpen(false)}
+              <button
+                onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
-      </div>
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+          </div>
 
       {/* User Card - Static, no animation on navigation */}
       <div className="p-4">
@@ -218,13 +218,13 @@ function ClientSidebar() {
           Menu
         </p>
         {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
+              const Icon = item.icon;
+              const active = isActive(item.path);
 
-          return (
-            <button
-              key={item.path}
-              onClick={() => handleNavClick(item.path)}
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavClick(item.path)}
               className={clsx(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative',
                 active
@@ -244,7 +244,7 @@ function ClientSidebar() {
               <div
                 className={clsx(
                   'w-9 h-9 rounded-lg flex items-center justify-center transition-all',
-                  active
+                    active
                     ? `bg-gradient-to-br ${item.gradient} shadow-lg`
                     : 'bg-white/5 group-hover:bg-white/10'
                 )}
@@ -273,9 +273,9 @@ function ClientSidebar() {
                   active ? 'text-pink-400' : 'text-gray-600 opacity-0 group-hover:opacity-100'
                 )}
               />
-            </button>
-          );
-        })}
+                </button>
+              );
+            })}
 
         {/* Divider */}
         <div className="my-4 border-t border-white/5" />
@@ -302,47 +302,47 @@ function ClientSidebar() {
           </div>
           <span className="font-medium text-sm">Paramètres</span>
         </button>
-      </nav>
+          </nav>
 
       {/* Discord CTA - No entrance animation */}
       <div className="p-4">
-        <a
-          href="https://discord.gg/Y9RvKDCrWH"
-          target="_blank"
-          rel="noopener noreferrer"
+            <a
+              href="https://discord.gg/Y9RvKDCrWH"
+              target="_blank"
+              rel="noopener noreferrer"
           className="block w-full relative overflow-hidden rounded-xl bg-[#5865F2] p-4 group"
-        >
+            >
           {/* Animated background on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#5865F2] via-[#7289da] to-[#5865F2] opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <div className="relative flex items-center gap-3">
-            <img
-              src="/discord-icon.webp"
-              alt="Discord"
+              <img 
+                src="/discord-icon.webp" 
+                alt="Discord" 
               className="w-8 h-8 group-hover:scale-110 transition-transform"
-            />
+              />
             <div className="flex-1">
               <p className="font-semibold text-white text-sm">Rejoins la communauté</p>
               <p className="text-[11px] text-white/70">+100 traders actifs</p>
             </div>
             <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform" />
           </div>
-        </a>
-      </div>
+            </a>
+          </div>
 
       {/* Logout - No entrance animation */}
       <div className="p-4 border-t border-white/5">
-        <button
-          onClick={handleLogout}
+            <button
+              onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all group"
         >
           <div className="w-9 h-9 rounded-lg bg-white/5 group-hover:bg-red-500/20 flex items-center justify-center transition-all">
             <LogOut className="w-4 h-4" />
           </div>
           <span className="font-medium text-sm">Déconnexion</span>
-        </button>
-      </div>
-    </div>
+            </button>
+          </div>
+        </div>
   );
 
   return (

@@ -6,6 +6,7 @@ import { getUserStats } from '../services/memberStatsService';
 import { getUserProgressSummary } from '../services/progressService';
 import ProgressChecklist from '../components/member/ProgressChecklist';
 import ActivityHeatmap from '../components/member/ActivityHeatmap';
+import XpTrackMeter from '../components/member/XpTrackMeter';
 import EmptyState from '../components/common/EmptyState';
 import { StatCardSkeleton } from '../components/common/Skeleton';
 import GlassCard from '../components/ui/GlassCard';
@@ -99,6 +100,7 @@ export default function ProgressPage() {
     : 0;
 
   const streak = stats?.streak || 7;
+  const xpTracks = stats?.xpTracks ?? [];
   const activeDays = activityData.filter((d) => d.count > 0).length;
 
   const isLoading = statsQuery.isLoading || progressSummaryQuery.isLoading || modulesQuery.isLoading;
@@ -279,6 +281,25 @@ export default function ProgressPage() {
               />
             </div>
           </motion.section>
+
+          {xpTracks.length > 0 && (
+            <motion.section variants={itemVariants}>
+              <GlassCard hover={false} glow="none">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Maîtrise par compétence</h2>
+                    <p className="text-sm text-gray-400">
+                      Visualise ton XP sur chaque axe clé de la méthode ICT
+                    </p>
+                  </div>
+                </div>
+                <XpTrackMeter tracks={xpTracks} compact />
+              </GlassCard>
+            </motion.section>
+          )}
 
           {/* Activity Heatmap */}
           <motion.section variants={itemVariants}>

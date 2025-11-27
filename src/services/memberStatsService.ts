@@ -1,6 +1,18 @@
 import { supabase } from '../lib/supabaseClient';
 import { getModules } from './trainingService';
 import type { TrainingProgress, TrainingModule } from '../types/training';
+import { fetchUserQuests, type UserQuest } from './questsService';
+
+export type TrackType = 'foundation' | 'execution' | 'mindset' | 'community';
+
+export interface XpTrackStats {
+  track: TrackType;
+  label: string;
+  xp: number;
+  level: number;
+  nextLevelXp: number;
+  progress: number;
+}
 
 export interface UserStats {
   totalModules: number;
@@ -13,7 +25,39 @@ export interface UserStats {
   xp: number;
   nextLevelXp: number;
   streak: number; // jours consécutifs d'activité
+  xpTracks: XpTrackStats[];
+  dailyQuests: DailyQuest[];
+  freezePasses: number;
+  walletBalance: number;
+  totalCoinsEarned: number;
+  activeBooster: ActiveBooster | null;
 }
+
+export type DailyQuest = UserQuest;
+
+export interface ActiveBooster {
+  multiplier: number;
+  expiresAt: string;
+  remainingMinutes: number;
+}
+
+const TRACK_ORDER: TrackType[] = ['foundation', 'execution', 'mindset', 'community'];
+
+const TRACK_META: Record<
+  TrackType,
+  {
+    label: string;
+    weight: number;
+  }
+> = {
+  foundation: { label: 'Fondation ICT', weight: 0.4 },
+  execution: { label: 'Execution & Entrées', weight: 0.3 },
+  mindset: { label: 'Mindset & Gestion', weight: 0.2 },
+  community: { label: 'Communauté & Partage', weight: 0.1 },
+};
+
+const TRACK_BASE_XP = 500;
+const TRACK_INCREMENT_PER_LEVEL = 250;
 
 export interface Badge {
   id: string;
@@ -113,6 +157,14 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   // Calculer le streak (jours consécutifs d'activité)
   const streak = await calculateStreak(userId);
 
+  const [xpTracks, dailyQuests, freezePasses, walletInfo, activeBooster] = await Promise.all([
+    fetchXpTrackStats(userId, xp),
+    fetchUserQuests(userId),
+    fetchFreezePassCount(userId),
+    fetchWalletInfo(userId),
+    fetchActiveBooster(userId),
+  ]);
+
   return {
     totalModules,
     completedModules,
@@ -124,6 +176,12 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     xp: xp % 100,
     nextLevelXp: 100,
     streak,
+    xpTracks,
+    dailyQuests,
+    freezePasses,
+    walletBalance: walletInfo.balance,
+    totalCoinsEarned: walletInfo.totalEarned,
+    activeBooster,
   };
 }
 
@@ -414,6 +472,108 @@ export async function getActivityHeatmap(userId: string): Promise<ActivityDay[]>
   }
 
   return days;
+}
+
+function computeTrackNextLevel(level: number) {
+  return TRACK_BASE_XP + (level - 1) * TRACK_INCREMENT_PER_LEVEL;
+}
+
+async function fetchXpTrackStats(userId: string, fallbackXp: number): Promise<XpTrackStats[]> {
+  if (!userId) return [];
+
+  const { data } = await supabase
+    .from('user_xp_tracks')
+    .select('track, xp, level')
+    .eq('user_id', userId);
+
+  const rows = (data as Array<{ track: TrackType; xp: number; level: number }> | null) ?? [];
+
+  return TRACK_ORDER.map((track) => {
+    const row = rows.find((r) => r.track === track);
+    const derivedXp = Math.round(fallbackXp * TRACK_META[track].weight);
+    const trackXp = row?.xp ?? derivedXp;
+    const level = row?.level ?? Math.max(1, Math.floor(trackXp / TRACK_BASE_XP) + 1);
+    const nextLevelXp = computeTrackNextLevel(level);
+    const progress = nextLevelXp > 0 ? Math.min(100, (trackXp / nextLevelXp) * 100) : 0;
+
+    return {
+      track,
+      label: TRACK_META[track].label,
+      xp: trackXp,
+      level,
+      nextLevelXp,
+      progress,
+    };
+  });
+}
+
+async function fetchFreezePassCount(userId: string): Promise<number> {
+  if (!userId) return 0;
+
+  const { data, error } = await supabase
+    .from('user_items')
+    .select('quantity')
+    .eq('user_id', userId)
+    .eq('item', 'freeze_pass')
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('[fetchFreezePassCount] error', error);
+  }
+
+  return data?.quantity ?? 0;
+}
+
+async function fetchWalletInfo(userId: string): Promise<{ balance: number; totalEarned: number }> {
+  if (!userId) return { balance: 0, totalEarned: 0 };
+
+  const { data, error } = await supabase
+    .from('user_wallets')
+    .select('focus_coins, total_earned')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('[fetchWalletInfo] error', error);
+  }
+
+  return {
+    balance: data?.focus_coins ?? 0,
+    totalEarned: data?.total_earned ?? 0,
+  };
+}
+
+async function fetchActiveBooster(userId: string): Promise<ActiveBooster | null> {
+  if (!userId) return null;
+
+  const { data, error } = await supabase
+    .from('user_boosters')
+    .select('multiplier, expires_at')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString())
+    .order('expires_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('[fetchActiveBooster] error', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  const expiresAt = data.expires_at as string;
+  const remainingMinutes = Math.max(
+    0,
+    Math.round((new Date(expiresAt).getTime() - Date.now()) / 60000),
+  );
+
+  return {
+    multiplier: Number(data.multiplier ?? 1),
+    expiresAt,
+    remainingMinutes,
+  };
 }
 
 // Récupérer les événements à venir

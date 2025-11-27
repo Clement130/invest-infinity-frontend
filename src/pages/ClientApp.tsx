@@ -250,8 +250,8 @@ export default function ClientApp() {
                   <h3 className="text-xl font-bold text-white">Bienvenue dans ton espace formation ! 🎉</h3>
                   <p className="text-gray-400 mt-1">
                     Commence par explorer les modules ci-dessous et lance-toi dans ta première leçon.
-                  </p>
-                </div>
+              </p>
+            </div>
               </div>
             </GlassCard>
           </motion.section>
@@ -284,19 +284,19 @@ export default function ClientApp() {
             {FILTERS.map((item) => {
               const Icon = item.icon;
               return (
-                <button
-                  key={item.key}
-                  onClick={() => setFilter(item.key)}
+              <button
+                key={item.key}
+                onClick={() => setFilter(item.key)}
                   className={clsx(
                     'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all',
-                    filter === item.key
+                  filter === item.key
                       ? 'bg-pink-500/20 border-pink-500/40 text-pink-300'
                       : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20'
                   )}
-                >
+              >
                   <Icon className="w-4 h-4" />
-                  {item.label}
-                </button>
+                {item.label}
+              </button>
               );
             })}
           </div>
@@ -329,7 +329,7 @@ export default function ClientApp() {
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🎬</span>
+          <span className="text-2xl">🎬</span>
             <h2 className="text-xl font-bold text-white">Tes modules</h2>
             <span className="px-2 py-1 rounded-lg bg-white/10 text-sm text-gray-400">
               {filteredModules.length} module{filteredModules.length > 1 ? 's' : ''}
@@ -452,9 +452,9 @@ export default function ClientApp() {
 
                 return (
                   <motion.div key={module.id} variants={itemVariants}>
-                    <TrainingModuleCard
-                      module={module}
-                      onClick={() => handleModuleClick(module.id)}
+              <TrainingModuleCard
+                module={module}
+                onClick={() => handleModuleClick(module.id)}
                       progress={progress}
                     />
                   </motion.div>

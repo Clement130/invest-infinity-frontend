@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useSession } from '../hooks/useSession';
 import {
@@ -18,6 +18,9 @@ import { DashboardSkeleton } from '../components/common/Skeleton';
 import StatCard from '../components/ui/StatCard';
 import GlassCard from '../components/ui/GlassCard';
 import AnimatedProgress from '../components/ui/AnimatedProgress';
+import XpTrackMeter from '../components/member/XpTrackMeter';
+import DailyGoalsCard from '../components/member/DailyGoalsCard';
+import EconomyTimeline from '../components/economy/EconomyTimeline';
 import {
   TrendingUp,
   BookOpen,
@@ -31,9 +34,12 @@ import {
   Sparkles,
   Zap,
   Trophy,
+  Snowflake,
+  Coins,
 } from 'lucide-react';
 import { getModules } from '../services/trainingService';
 import clsx from 'clsx';
+import { claimQuestReward } from '../services/questsService';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -53,11 +59,26 @@ const itemVariants = {
 export default function MemberDashboard() {
   const { user, profile } = useSession();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
 
   const statsQuery = useQuery({
     queryKey: ['member-stats', user?.id],
     queryFn: () => getUserStats(user?.id || ''),
     enabled: !!user?.id,
+  });
+
+  const claimQuestMutation = useMutation({
+    mutationFn: (questId: string) => claimQuestReward(questId, user?.id || ''),
+    onMutate: (questId) => {
+      setClaimingQuestId(questId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['member-stats', user?.id] });
+    },
+    onSettled: () => {
+      setClaimingQuestId(null);
+    },
   });
 
   const challengesQuery = useQuery({
@@ -126,22 +147,28 @@ export default function MemberDashboard() {
   const globalProgress = stats
     ? Math.round((stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100)
     : 0;
+  const xpTracks = stats?.xpTracks ?? [];
+  const dailyQuests = stats?.dailyQuests ?? [];
+  const freezePasses = stats?.freezePasses ?? 0;
+  const walletBalance = stats?.walletBalance ?? 0;
+  const totalCoinsEarned = stats?.totalCoinsEarned ?? 0;
+  const activeBooster = stats?.activeBooster ?? null;
 
   return (
     <div className="space-y-8 pb-8">
-      {isLoading ? (
-        <DashboardSkeleton />
-      ) : !user ? (
-        <EmptyState
-          emoji="🔒"
-          title="Session expirée"
-          description="Votre session a expiré. Veuillez vous reconnecter pour accéder à votre dashboard."
-          action={{
-            label: 'Se reconnecter',
-            onClick: () => navigate('/login'),
-          }}
-        />
-      ) : (
+        {isLoading ? (
+          <DashboardSkeleton />
+        ) : !user ? (
+          <EmptyState
+            emoji="🔒"
+            title="Session expirée"
+            description="Votre session a expiré. Veuillez vous reconnecter pour accéder à votre dashboard."
+            action={{
+              label: 'Se reconnecter',
+              onClick: () => navigate('/login'),
+            }}
+          />
+        ) : (
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -199,6 +226,22 @@ export default function MemberDashboard() {
                       <span className="text-purple-300 font-bold">{stats?.badges?.filter(b => b.unlockedAt)?.length || 0}</span>
                       <span className="text-purple-400/70 text-sm">badges</span>
                     </div>
+                    {freezePasses > 0 && (
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                        <Snowflake className="w-5 h-5 text-blue-300" />
+                        <span className="text-blue-200 font-bold">{freezePasses}</span>
+                        <span className="text-blue-200/70 text-sm">Freeze pass</span>
+                      </div>
+                    )}
+                    {activeBooster && (
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30">
+                        <Sparkles className="w-5 h-5 text-pink-200" />
+                        <span className="text-pink-100 font-bold">
+                          x{activeBooster.multiplier.toFixed(1)} XP
+                        </span>
+                        <span className="text-pink-100/70 text-sm">{activeBooster.remainingMinutes} min</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -298,7 +341,7 @@ export default function MemberDashboard() {
 
           {/* Stats Grid */}
           <motion.section variants={itemVariants}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <StatCard
                 icon={BookOpen}
                 label="Modules complétés"
@@ -321,11 +364,19 @@ export default function MemberDashboard() {
                 color="green"
                 delay={0.2}
               />
+              <StatCard
+                icon={Coins}
+                label="Focus Coins"
+                value={walletBalance.toLocaleString()}
+                subValue={`${totalCoinsEarned.toLocaleString()} gagnés`}
+                color="orange"
+                delay={0.3}
+              />
               {/* Discord Card */}
               <motion.a
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
                 whileHover={{ y: -4 }}
                 href="https://discord.gg/Y9RvKDCrWH"
                 target="_blank"
@@ -349,6 +400,49 @@ export default function MemberDashboard() {
             </div>
           </motion.section>
 
+          {stats && (
+            <motion.section variants={itemVariants}>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <GlassCard hover={false} glow="none">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-purple-500 flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white">Maîtrise par compétences</h2>
+                      <p className="text-sm text-gray-400">Suis tes progrès sur chaque axe clé</p>
+                    </div>
+                  </div>
+                  <XpTrackMeter tracks={xpTracks} />
+                </GlassCard>
+
+                <GlassCard hover={false} glow="none">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white">Quêtes du jour</h2>
+                      <p className="text-sm text-gray-400">Complète des objectifs rapides pour gagner du boost</p>
+                    </div>
+                  </div>
+                  <DailyGoalsCard
+                    quests={dailyQuests}
+                    onClaim={(questId) => claimQuestMutation.mutateAsync(questId)}
+                    claimingId={claimingQuestId}
+                    isLoading={claimQuestMutation.isPending}
+                  />
+                </GlassCard>
+              </div>
+            </motion.section>
+          )}
+
+          <motion.section variants={itemVariants}>
+            <GlassCard hover={false} glow="none">
+              <EconomyTimeline />
+            </GlassCard>
+          </motion.section>
+
           {/* Level & XP Section */}
           {stats && (
             <motion.section variants={itemVariants}>
@@ -367,13 +461,13 @@ export default function MemberDashboard() {
                         <Award className="w-3 h-3 text-yellow-900" />
                       </motion.div>
                     </div>
-                    <div>
+                <div>
                       <h3 className="text-lg font-bold text-white">Niveau {stats.level}</h3>
                       <p className="text-sm text-gray-400">
                         {stats.nextLevelXp - stats.xp} XP avant le niveau {stats.level + 1}
-                      </p>
-                    </div>
-                  </div>
+                  </p>
+                </div>
+              </div>
 
                   <div className="flex-1">
                     <div className="flex items-center justify-between text-sm mb-2">
@@ -383,7 +477,7 @@ export default function MemberDashboard() {
                       <span className="text-purple-400 font-medium">
                         {stats.nextLevelXp.toLocaleString()} XP
                       </span>
-                    </div>
+                </div>
                     <div className="h-3 bg-slate-800/50 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
@@ -398,10 +492,10 @@ export default function MemberDashboard() {
                 </div>
               </GlassCard>
             </motion.section>
-          )}
+            )}
 
-          {/* Recommendations */}
-          {recommendedModules.length > 0 ? (
+            {/* Recommendations */}
+            {recommendedModules.length > 0 ? (
             <motion.section variants={itemVariants} className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
@@ -416,7 +510,7 @@ export default function MemberDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {recommendedModules.map(({ module, completion, nextLesson }, index) => (
                   <motion.div
-                    key={module.id}
+                      key={module.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -438,11 +532,11 @@ export default function MemberDashboard() {
                         <h3 className="font-bold text-white group-hover:text-pink-200 transition-colors line-clamp-1">
                           {module.title}
                         </h3>
-                        {nextLesson && (
+                      {nextLesson && (
                           <p className="text-sm text-gray-400 mt-1 line-clamp-1">
                             Prochaine : {nextLesson}
                           </p>
-                        )}
+                      )}
                       </div>
 
                       <AnimatedProgress
@@ -454,11 +548,11 @@ export default function MemberDashboard() {
                       />
                     </div>
                   </motion.div>
-                ))}
+                  ))}
               </div>
             </motion.section>
-          ) : (
-            modules.length > 0 && (
+            ) : (
+              modules.length > 0 && (
               <motion.section variants={itemVariants}>
                 <GlassCard hover={false} glow="none">
                   <EmptyState
@@ -472,13 +566,13 @@ export default function MemberDashboard() {
                   />
                 </GlassCard>
               </motion.section>
-            )
-          )}
+              )
+            )}
 
-          {/* Main Grid */}
+            {/* Main Grid */}
           <motion.section variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
+              {/* Left Column */}
+              <div className="space-y-6">
               <GlassCard hover={false} glow="none">
                 <ProgressChecklist
                   modules={modules}
@@ -488,10 +582,10 @@ export default function MemberDashboard() {
               <GlassCard hover={false} glow="none">
                 <BadgesDisplay badges={stats?.badges || []} />
               </GlassCard>
-            </div>
+              </div>
 
-            {/* Right Column */}
-            <div className="space-y-6">
+              {/* Right Column */}
+              <div className="space-y-6">
               <GlassCard hover={false} glow="none">
                 <ChallengesList challenges={challenges} />
               </GlassCard>

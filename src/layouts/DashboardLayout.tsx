@@ -2,17 +2,38 @@ import { type ReactNode, memo } from 'react';
 import { motion } from 'framer-motion';
 import ClientSidebar from '../components/navigation/ClientSidebar';
 import DashboardHeader from '../components/navigation/DashboardHeader';
+import { useSession } from '../hooks/useSession';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+const THEME_CONFIG = {
+  default: {
+    base: 'from-slate-950 via-black to-slate-950',
+    orbs: ['bg-pink-500/8', 'bg-purple-500/8', 'bg-blue-500/6'],
+  },
+  aurora: {
+    base: 'from-[#02121d] via-[#030712] to-[#050b16]',
+    orbs: ['bg-emerald-500/15', 'bg-cyan-500/12', 'bg-indigo-500/10'],
+  },
+  eclipse: {
+    base: 'from-[#1a0b2e] via-[#0f071a] to-[#050109]',
+    orbs: ['bg-orange-500/12', 'bg-rose-500/12', 'bg-indigo-500/12'],
+  },
+} as const;
+
+type ThemeKey = keyof typeof THEME_CONFIG;
+
 // Background animé mémorisé pour éviter les re-renders
-const AnimatedBackground = memo(function AnimatedBackground() {
+const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { themeKey: ThemeKey }) {
+  const config = THEME_CONFIG[themeKey] ?? THEME_CONFIG.default;
+  const [orbPrimary, orbSecondary, orbTertiary] = config.orbs;
+
   return (
     <div className="fixed inset-0 z-0">
       {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-950" />
+      <div className={`absolute inset-0 bg-gradient-to-br ${config.base}`} />
       
       {/* Animated gradient orbs */}
       <motion.div
@@ -26,7 +47,7 @@ const AnimatedBackground = memo(function AnimatedBackground() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-pink-500/5 rounded-full blur-[120px]"
+        className={`absolute top-0 left-1/4 w-[600px] h-[600px] ${orbPrimary} rounded-full blur-[120px]`}
       />
       <motion.div
         animate={{
@@ -39,7 +60,7 @@ const AnimatedBackground = memo(function AnimatedBackground() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px]"
+        className={`absolute bottom-0 right-1/4 w-[500px] h-[500px] ${orbSecondary} rounded-full blur-[100px]`}
       />
       <motion.div
         animate={{
@@ -51,7 +72,7 @@ const AnimatedBackground = memo(function AnimatedBackground() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/3 rounded-full blur-[150px]"
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] ${orbTertiary} rounded-full blur-[150px]`}
       />
 
       {/* Grid pattern overlay */}
@@ -80,10 +101,13 @@ const MemoizedSidebar = memo(ClientSidebar);
 const MemoizedHeader = memo(DashboardHeader);
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { profile } = useSession();
+  const themeKey = (profile?.theme as ThemeKey) ?? 'default';
+
   return (
     <div className="flex min-h-screen bg-black text-white overflow-hidden">
       {/* Animated Background - ne se re-render jamais */}
-      <AnimatedBackground />
+      <AnimatedBackground themeKey={themeKey} />
 
       {/* Sidebar - reste statique lors des navigations */}
       <MemoizedSidebar />

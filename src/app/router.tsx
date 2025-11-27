@@ -65,15 +65,15 @@ export default function AppRouter() {
 
         {/* Routes admin */}
         {adminRoutes.map(({ path, element, allowedRoles }) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <ProtectedRoute allowedRoles={allowedRoles}>
+            <Route
+              key={path}
+              path={path}
+              element={
+                <ProtectedRoute allowedRoles={allowedRoles}>
                 {element}
-              </ProtectedRoute>
-            }
-          />
+                </ProtectedRoute>
+              }
+            />
         ))}
         
         {/* Route catch-all pour /admin/dashboard -> redirige vers /admin */}
