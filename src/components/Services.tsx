@@ -160,7 +160,7 @@ export default function Services({ onOpenRegister }: ServicesProps) {
               pour ta réussite
             </span>
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">Découvre ce qui t'attend sur le Discord !</p>
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">Découvre ce qui t'attend dans la formation !</p>
         </div>
 
         <div className="relative flex flex-col lg:flex-row gap-8">
