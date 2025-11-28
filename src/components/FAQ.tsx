@@ -28,7 +28,7 @@ const faqCategories = [
     questions: [
       {
         question: "Comment rejoindre Invest Infinity ?",
-        answer: "C'est simple et rapide :\n\n1️⃣ Sélectionne ton offre dans tarif\n2️⃣ Active ton espace membre\n3️⃣ Accède à la formation"
+        answer: "C'est simple et rapide :\n\n1️⃣ Sélectionne ton offre dans tarif\n2️⃣ Active ton espace membre\n3️⃣ Accède à la formation\n\nTout le processus prend moins de 5 minutes !"
       },
       {
         question: "Je suis déjà chez RaiseFX avec un autre affilié, comment faire ?",
