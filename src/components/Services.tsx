@@ -62,7 +62,7 @@ const services = [
       { value: '24/7', label: 'support' },
       { value: 'VIP', label: 'coaching' },
     ],
-    features: ['Mentorat personnalisé', 'Sessions live hebdomadaires', 'Groupe privé Discord', 'Événements exclusifs'],
+    features: ['Mentorat', 'Sessions live hebdomadaires'],
     color: '#fda4af',
   },
 ];
