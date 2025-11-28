@@ -216,35 +216,6 @@ export default function ProgressPage() {
             </GlassCard>
           </motion.section>
 
-          {/* Stats Cards */}
-          <motion.section variants={itemVariants}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:shadow-xl p-5"
-              >
-                <div className="relative space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-400 mb-1">Niveau actuel</p>
-                    <div className="flex items-baseline gap-2">
-                      <motion.p
-                        initial={{ scale: 0.5 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.3, delay: 0.3 }}
-                        className="text-2xl font-bold text-yellow-400"
-                      >
-                        {stats?.level || 1}
-                      </motion.p>
-                      <span className="text-sm text-gray-500">{stats?.xp || 0} XP</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </motion.section>
-
           {xpTracks.length > 0 && (
             <motion.section variants={itemVariants}>
               <GlassCard hover={false} glow="none">
