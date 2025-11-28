@@ -12,12 +12,10 @@ async function verifyGamification() {
   console.log('🔍 Vérification du système gamification...\n');
 
   const checks = [
-    { name: 'Store Items', table: 'store_items', expected: 5 },
     { name: 'Quest Templates', table: 'quest_templates', expected: 4 },
-    { name: 'User Wallets', table: 'user_wallets', expected: '>=0' },
+    { name: 'User XP Tracks', table: 'user_xp_tracks', expected: '>=0' },
+    { name: 'User Quests', table: 'user_quests', expected: '>=0' },
     { name: 'User Items', table: 'user_items', expected: '>=0' },
-    { name: 'User Boosters', table: 'user_boosters', expected: '>=0' },
-    { name: 'Economy Events', table: 'user_economy_events', expected: '>=0' },
   ];
 
   for (const check of checks) {
@@ -56,7 +54,7 @@ async function verifyGamification() {
 
   const rpcTests = [
     { name: 'increment_xp_track', params: ['test-user', 'test-track', 10] },
-    { name: 'adjust_focus_coins', params: ['test-user', 100] },
+    { name: 'claim_user_quest', params: ['test-quest-id', 'test-user-id'] },
   ];
 
   for (const test of rpcTests) {

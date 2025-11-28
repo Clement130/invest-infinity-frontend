@@ -5,7 +5,6 @@ export type QuestType = 'daily' | 'weekly';
 export interface QuestReward {
   xp?: number;
   item?: 'freeze_pass' | 'booster';
-  focusCoins?: number;
 }
 
 export interface UserQuest {
@@ -44,7 +43,6 @@ function mapQuestRow(row: QuestRow): UserQuest {
   const percentage = target > 0 ? Math.min(100, (progress / target) * 100) : 0;
 
   const xpRewardValue = rewardPayload?.xp;
-  const focusRewardValue = rewardPayload?.focusCoins;
   const itemRewardValue = rewardPayload?.item;
 
   return {
@@ -64,12 +62,6 @@ function mapQuestRow(row: QuestRow): UserQuest {
           ? Number(xpRewardValue)
           : undefined,
       item: (itemRewardValue as QuestReward['item']) ?? undefined,
-      focusCoins:
-        typeof focusRewardValue === 'number'
-          ? focusRewardValue
-          : focusRewardValue
-          ? Number(focusRewardValue)
-          : undefined,
     },
     percentage,
   };

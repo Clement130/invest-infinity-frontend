@@ -68,12 +68,6 @@ export default function DailyGoalsCard({
                       {quest.reward.xp ?? 25} XP
                     </p>
                   </div>
-                  {quest.reward.focusCoins ? (
-                    <p className="text-xs text-emerald-300 flex items-center gap-1 justify-end">
-                      <Trophy className="w-3 h-3" />
-                      {quest.reward.focusCoins} Focus coins
-                    </p>
-                  ) : null}
                   {quest.reward.item && (
                     <p className="text-xs text-purple-300 flex items-center gap-1 justify-end">
                       <Trophy className="w-3 h-3" />

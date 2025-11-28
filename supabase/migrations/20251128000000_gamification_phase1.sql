@@ -103,9 +103,7 @@ declare
   quest_record record;
   reward_json jsonb;
   xp_reward integer;
-  focus_reward integer;
   item_reward text;
-  new_balance integer;
   response jsonb := '{}'::jsonb;
 begin
   select uq.*, qt.reward
@@ -125,19 +123,10 @@ begin
 
   reward_json := coalesce(quest_record.reward, jsonb_build_object('xp', 25));
   xp_reward := coalesce((reward_json ->> 'xp')::int, 0);
-  focus_reward := coalesce((reward_json ->> 'focusCoins')::int, 0);
 
   if xp_reward > 0 then
     perform public.increment_xp_track(p_user_id, 'foundation', xp_reward);
     response := response || jsonb_build_object('xpAwarded', xp_reward);
-  end if;
-
-  if focus_reward > 0 then
-    new_balance := public.adjust_focus_coins(p_user_id, focus_reward);
-    response := response || jsonb_build_object(
-      'focusCoinsAwarded', focus_reward,
-      'focusCoinsBalance', new_balance
-    );
   end if;
 
   if reward_json ? 'item' then

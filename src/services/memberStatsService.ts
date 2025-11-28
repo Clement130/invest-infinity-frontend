@@ -28,8 +28,6 @@ export interface UserStats {
   xpTracks: XpTrackStats[];
   dailyQuests: DailyQuest[];
   freezePasses: number;
-  walletBalance: number;
-  totalCoinsEarned: number;
   activeBooster: ActiveBooster | null;
 }
 
@@ -163,11 +161,10 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   // Calculer le streak (jours consécutifs d'activité)
   const streak = await calculateStreak(userId);
 
-  const [xpTracks, dailyQuests, freezePasses, walletInfo, activeBooster] = await Promise.all([
+  const [xpTracks, dailyQuests, freezePasses, activeBooster] = await Promise.all([
     fetchXpTrackStats(userId, xp),
     fetchUserQuests(userId),
     fetchFreezePassCount(userId),
-    fetchWalletInfo(userId),
     fetchActiveBooster(userId),
   ]);
 
@@ -185,8 +182,6 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     xpTracks,
     dailyQuests,
     freezePasses,
-    walletBalance: walletInfo.balance,
-    totalCoinsEarned: walletInfo.totalEarned,
     activeBooster,
   };
 }
@@ -530,24 +525,6 @@ async function fetchFreezePassCount(userId: string): Promise<number> {
   return data?.quantity ?? 0;
 }
 
-async function fetchWalletInfo(userId: string): Promise<{ balance: number; totalEarned: number }> {
-  if (!userId) return { balance: 0, totalEarned: 0 };
-
-  const { data, error } = await supabase
-    .from('user_wallets')
-    .select('focus_coins, total_earned')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('[fetchWalletInfo] error', error);
-  }
-
-  return {
-    balance: data?.focus_coins ?? 0,
-    totalEarned: data?.total_earned ?? 0,
-  };
-}
 
 async function fetchActiveBooster(userId: string): Promise<ActiveBooster | null> {
   if (!userId) return null;

@@ -5,7 +5,6 @@
  * basé sur le temps de visionnage et la progression de la vidéo.
  */
 import { supabase } from '../lib/supabaseClient';
-import { grantFocusCoins } from './economyService';
 
 export interface VideoProgressEvent {
   currentTime: number;
@@ -21,8 +20,6 @@ export interface LessonProgressState {
 
 const VIEWED_THRESHOLD_SECONDS = 30; // Marquer comme "vue" après 30 secondes
 const COMPLETED_THRESHOLD_PERCENTAGE = 90; // Marquer comme "complétée" à 90%
-const LESSON_FOCUS_REWARD = 5;
-const MODULE_FOCUS_REWARD = 35;
 
 /**
  * Marque une leçon comme "vue" si le seuil est atteint
@@ -113,7 +110,6 @@ export async function markLessonAsCompleted(
       if (error) throw error;
     }
 
-    await rewardLessonCompletion(userId, lessonId);
     return { success: true };
   } catch (error: any) {
     console.error('[progressTrackingService] Erreur lors du marquage comme complétée:', error);
@@ -121,56 +117,6 @@ export async function markLessonAsCompleted(
   }
 }
 
-async function rewardLessonCompletion(userId: string, lessonId: string) {
-  if (!userId || !lessonId) return;
-
-  try {
-    await grantFocusCoins(userId, LESSON_FOCUS_REWARD);
-
-    const { data: lesson, error: lessonError } = await supabase
-      .from('training_lessons')
-      .select('id, module_id')
-      .eq('id', lessonId)
-      .maybeSingle();
-
-    if (lessonError || !lesson) {
-      if (lessonError) {
-        console.error('[rewardLessonCompletion] lesson fetch error', lessonError);
-      }
-      return;
-    }
-
-    const { data: moduleLessons, error: lessonsError } = await supabase
-      .from('training_lessons')
-      .select('id')
-      .eq('module_id', lesson.module_id);
-
-    if (lessonsError || !moduleLessons?.length) {
-      if (lessonsError) console.error('[rewardLessonCompletion] module lessons error', lessonsError);
-      return;
-    }
-
-    const lessonIds = moduleLessons.map((l) => l.id);
-
-    const { data: completedLessons, error: completedError } = await supabase
-      .from('training_progress')
-      .select('lesson_id')
-      .eq('user_id', userId)
-      .eq('done', true)
-      .in('lesson_id', lessonIds);
-
-    if (completedError) {
-      console.error('[rewardLessonCompletion] completed lessons error', completedError);
-      return;
-    }
-
-    if ((completedLessons?.length ?? 0) >= lessonIds.length) {
-      await grantFocusCoins(userId, MODULE_FOCUS_REWARD);
-    }
-  } catch (error) {
-    console.error('[rewardLessonCompletion] error', error);
-  }
-}
 
 /**
  * Gère le suivi de progression basé sur les événements vidéo

@@ -22,26 +22,12 @@ async function testGamification() {
   // Test 1: Vérification des données Supabase
   console.log('1️⃣ Test des données Supabase...');
   try {
-    const { data: storeItems, error: storeError } = await supabase
-      .from('store_items')
-      .select('*');
-
     const { data: questTemplates, error: questError } = await supabase
       .from('quest_templates')
       .select('*');
 
-    if (storeError || questError) {
+    if (questError) {
       throw new Error('Erreur Supabase');
-    }
-
-    if (storeItems.length >= 3) {
-      console.log('✅ Items boutique:', storeItems.length, '/ 5');
-      tests.push({ name: 'Items boutique', status: 'PASS' });
-      passed++;
-    } else {
-      console.log('❌ Items boutique insuffisants:', storeItems.length, '/ 5');
-      tests.push({ name: 'Items boutique', status: 'FAIL' });
-      failed++;
     }
 
     if (questTemplates.length >= 2) {
@@ -69,8 +55,7 @@ async function testGamification() {
   console.log('\n3️⃣ Test des fonctions RPC...');
   const rpcFunctions = [
     'increment_xp_track',
-    'adjust_focus_coins',
-    'purchase_store_item'
+    'claim_user_quest'
   ];
 
   for (const func of rpcFunctions) {
@@ -101,12 +86,12 @@ async function testGamification() {
   try {
     // Essayer d'accéder aux données sans authentification
     const { data, error } = await supabase
-      .from('user_wallets')
+      .from('user_xp_tracks')
       .select('*')
       .limit(1);
 
     if (error && error.message.includes('permission denied')) {
-      console.log('✅ RLS activé sur user_wallets');
+      console.log('✅ RLS activé sur user_xp_tracks');
       tests.push({ name: 'Sécurité RLS', status: 'PASS' });
       passed++;
     } else {
