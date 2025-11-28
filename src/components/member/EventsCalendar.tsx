@@ -129,10 +129,10 @@ export default function EventsCalendar({ events }: EventsCalendarProps) {
                       {registeringEventId === event.id ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Inscription...
+                          Rejoindre...
                         </>
                       ) : (
-                        'S\'inscrire'
+                        'Rejoindre'
                       )}
                     </button>
                   )}
