@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone } from 'lucide-react';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
 import { useToast } from '../hooks/useToast';
@@ -11,6 +11,11 @@ export default function PricingPage() {
   const toast = useToast();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Scroller vers le haut de la page au chargement
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Paiement direct sans inscription - Stripe collecte l'email
   const handlePurchase = async (plan: PlanType) => {
@@ -241,7 +246,10 @@ export default function PricingPage() {
                     <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">-70%</span>
                   </div>
                   <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
-                  <p className="text-yellow-400/80 text-sm mt-1">ou 3x 166€/mois sans frais</p>
+                  <p className="text-yellow-400/80 text-sm mt-1 flex items-center gap-1">
+                    <span>ou 3x 166€/mois sans frais</span>
+                    <span className="text-xs text-gray-500">(via Klarna)</span>
+                  </p>
                 </div>
 
                 <ul className="space-y-3 mb-6">
