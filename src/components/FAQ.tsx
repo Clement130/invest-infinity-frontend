@@ -47,7 +47,7 @@ const faqCategories = [
       },
       {
         question: "Quels sont les résultats de nos experts ?",
-        answer: "Nos experts partagent leurs résultats en toute transparence sur le Discord. Tu peux consulter leur track record complet avec les gains ET les pertes. En moyenne, ils visent un Risk/Reward de 3:1 avec 2-3 positions par jour. Les lives permettent de voir leur analyse en temps réel."
+        answer: "Nos experts partagent leurs résultats en toute transparence sur le Discord. Tu peux consulter leur track record complet avec les gains ET les pertes. En moyenne, ils visent un Risk/Reward de 3:1 avec 1-2 positions par jour. Les lives permettent de voir leur analyse en temps réel."
       }
     ]
   },
