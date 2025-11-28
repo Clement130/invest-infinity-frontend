@@ -231,15 +231,15 @@ export default function Services({ onOpenRegister }: ServicesProps) {
 
                         <div className="space-y-3">
                           {service.features.map((feature, featureIndex) => (
-                            <div key={featureIndex} className="flex items-center text-gray-300">
+                            <div key={featureIndex} className="flex items-start text-gray-300">
                               <div
-                                className="w-1.5 h-1.5 rounded-full mr-3"
+                                className="w-1.5 h-1.5 rounded-full mr-3 mt-1.5 shrink-0"
                                 style={{
                                   backgroundColor: service.color,
                                   boxShadow: `0 0 8px ${service.color}80`,
                                 }}
                               />
-                              {feature}
+                              <span className="flex-1 leading-relaxed">{feature}</span>
                             </div>
                           ))}
                         </div>
