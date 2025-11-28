@@ -27,7 +27,7 @@ export default function Footer({ onOpenRGPD }: FooterProps) {
               />
             </button>
             <p className="text-gray-400 mb-6 max-w-md">
-            Le mentor qu'il te faut pour réussir en trading. Accède au discord dès maintenant et rejoins la formation pour apprendre les stratégies qui te permettront de développer tes compétences et générer tes premiers gains en trading.
+            Arrête de perdre de l'argent. Rejoins la formation maintenant et maîtrise les stratégies ICT qui transforment les débutants en traders rentables. Accès Discord instantané → commence à générer tes premiers gains dès aujourd'hui.
             </p>
           </div>
 
