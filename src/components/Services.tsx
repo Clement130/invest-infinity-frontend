@@ -34,7 +34,7 @@ const services = [
     features: [
       'Analyse et identification de la tendance en direct',
       'Identification des zones clés',
-      'Plan complet : point d'entrée, stop-loss et take profit expliqué',
+      'Plan complet : point d\'entrée, stop-loss et take profit expliqué',
       'Questions/réponses en live pour clarifier chaque décision',
     ],
     color: '#fb7185',
