@@ -84,10 +84,6 @@ const faqCategories = [
     title: "Autres questions",
     questions: [
       {
-        question: "Comment Invest Infinity gagne-t-il de l'argent ?",
-        answer: "Transparence totale : on est rémunéré par nos brokers partenaires via un système d'affiliation. Quand tu trades, une partie du spread nous revient. C'est gagnant-gagnant : tu accèdes à tout gratuitement, et on peut continuer à développer du contenu de qualité."
-      },
-      {
         question: "Je suis débutant total, est-ce pour moi ?",
         answer: "Carrément ! Nos formations commencent vraiment de zéro : qu'est-ce qu'un pip, comment lire un graphique, les bases du money management... Tu seras guidé pas à pas. Et la communauté est là pour t'aider si tu bloques."
       }
