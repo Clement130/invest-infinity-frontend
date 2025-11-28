@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   MessageCircle,
-  X,
   Send,
   Bot,
   User,
@@ -13,7 +12,9 @@ import {
   BookOpen,
   Search,
   Settings,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { chatbotService, type ChatAction, type ChatMessage } from '../services/chatbotService';
@@ -40,6 +41,7 @@ const formatTimeAgo = (date: Date): string => {
 function useMobileOptimization() {
   const [isMobile, setIsMobile] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -51,19 +53,50 @@ function useMobileOptimization() {
       setReducedMotion(mobile || prefersReducedMotion);
     };
 
+    // Détecter l'ouverture du clavier virtuel
+    const detectKeyboard = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        // Si le viewport est significativement plus petit, le clavier est ouvert
+        setIsKeyboardOpen(windowHeight - viewportHeight > 150);
+      }
+    };
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', detectKeyboard);
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', detectKeyboard);
+      }
+    };
   }, []);
 
-  return { isMobile, reducedMotion };
+  return { isMobile, reducedMotion, isKeyboardOpen };
 }
+
+// Suggestions rapides pour mobile (plus courtes)
+const mobileQuickReplies = [
+  { icon: '📊', text: 'Mon progrès', query: 'Mon progrès dans les formations' },
+  { icon: '🏆', text: 'Challenges', query: 'Quels challenges sont actifs ?' },
+  { icon: '▶️', text: 'Continuer', query: 'Continuer ma formation' },
+  { icon: '💬', text: 'Discord', query: 'Comment rejoindre Discord ?' },
+  { icon: '❓', text: 'Comment ça marche', query: 'Comment ça fonctionne ?' },
+  { icon: '📞', text: 'Contact', query: 'Comment contacter le support ?' },
+];
 
 export default function ChatBot() {
   const { user } = useAuth();
-  const { isMobile, reducedMotion } = useMobileOptimization();
+  const { isMobile, reducedMotion, isKeyboardOpen } = useMobileOptimization();
   const [isOpen, setIsOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -78,7 +111,8 @@ export default function ChatBot() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -373,10 +407,37 @@ export default function ChatBot() {
     "Comment contacter le support ?"
   ];
 
+  // Fonction pour envoyer une réponse rapide
+  const handleQuickReply = (query: string) => {
+    setInputValue(query);
+    setShowQuickReplies(false);
+    setTimeout(() => handleSend(), 100);
+  };
+
+  // Fermer le chat avec animation sur mobile
+  const handleClose = () => {
+    if (isMobile) {
+      // Petit délai pour l'animation
+      setIsOpen(false);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  // Scroll vers le bas quand le clavier s'ouvre
+  useEffect(() => {
+    if (isKeyboardOpen && isMobile) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [isKeyboardOpen, isMobile]);
+
   return (
     <>
       {/* Chat Window - Optimisé pour mobile */}
       <div
+        ref={chatContainerRef}
         className={`
           fixed z-50
           ${isMobile 
@@ -384,146 +445,207 @@ export default function ChatBot() {
             : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] rounded-2xl'
           }
           bg-[#0f0f13]
-          border border-pink-500/20
+          ${!isMobile && 'border border-pink-500/20'}
           shadow-2xl shadow-pink-500/10
-          transform transition-all ${reducedMotion ? 'duration-200' : 'duration-500'} ease-out
+          transform transition-all ${reducedMotion ? 'duration-150' : 'duration-300'} ease-out
           ${isOpen
             ? 'opacity-100 translate-y-0 scale-100'
-            : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
+            : isMobile 
+              ? 'opacity-0 translate-y-full pointer-events-none'
+              : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
           }
+          flex flex-col
         `}
         style={isMobile ? { 
           contain: 'layout style paint',
           height: `${viewportHeight}px`,
-          maxHeight: '100vh'
+          maxHeight: '100dvh',
+          paddingTop: 'env(safe-area-inset-top)'
         } : undefined}
       >
-        {/* Header */}
-        <div className={`relative bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-pink-500/20 border-b border-pink-500/20 overflow-hidden ${
-          isMobile ? 'p-3 rounded-none' : 'p-4 rounded-t-2xl'
+        {/* Header Mobile - Plus compact et touch-friendly */}
+        <div className={`relative flex-shrink-0 ${
+          isMobile 
+            ? 'bg-[#0f0f13] border-b border-pink-500/20 safe-area-top' 
+            : 'bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-pink-500/20 border-b border-pink-500/20 overflow-hidden rounded-t-2xl'
         }`}>
-          <div className="absolute inset-0 bg-[#0f0f13]/90 rounded-t-2xl" />
-          {/* Animated background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-violet-500/5 animate-pulse rounded-t-2xl" />
+          {!isMobile && (
+            <>
+              <div className="absolute inset-0 bg-[#0f0f13]/90 rounded-t-2xl" />
+              <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-violet-500/5 animate-pulse rounded-t-2xl" />
+            </>
+          )}
 
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className={`relative flex items-center justify-between ${isMobile ? 'px-4 py-3' : 'p-4'}`}>
+            {/* Bouton retour sur mobile */}
+            {isMobile && (
+              <button
+                onClick={handleClose}
+                className="p-2 -ml-2 mr-2 hover:bg-white/10 rounded-full transition-all duration-200 active:scale-90"
+                aria-label="Fermer le chat"
+              >
+                <ArrowLeft size={22} className="text-gray-300" />
+              </button>
+            )}
+
+            <div className="flex items-center gap-3 flex-1">
               <div className="relative">
-                <div className="w-11 h-11 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center shadow-lg shadow-pink-500/30 hover:scale-110 transition-transform duration-300">
-                  <Bot size={20} className="text-white" />
+                <div className={`${isMobile ? 'w-10 h-10' : 'w-11 h-11'} rounded-full bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center shadow-lg shadow-pink-500/30`}>
+                  <Bot size={isMobile ? 18 : 20} className="text-white" />
                 </div>
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#0f0f13] animate-pulse" />
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 opacity-20 animate-ping" />
+                <span className={`absolute bottom-0 right-0 ${isMobile ? 'w-3 h-3' : 'w-3.5 h-3.5'} bg-green-500 rounded-full border-2 border-[#0f0f13]`} />
               </div>
               <div>
-                <h3 className="font-bold text-white flex items-center gap-2 text-base">
+                <h3 className={`font-bold text-white flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
                   Assistant IA
-                  <Sparkles size={16} className="text-pink-400 animate-pulse" />
+                  {!isMobile && <Sparkles size={16} className="text-pink-400 animate-pulse" />}
                 </h3>
-                <p className="text-xs text-gray-400">Toujours disponible</p>
+                <p className="text-xs text-gray-400">
+                  {user ? 'En ligne • Personnalisé' : 'Toujours disponible'}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Status indicator */}
-              {user && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-full border border-green-500/20">
+
+            {/* Actions header */}
+            <div className="flex items-center gap-1">
+              {/* Badge En ligne - Desktop uniquement */}
+              {user && !isMobile && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-full border border-green-500/20 mr-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   <span className="text-xs text-green-400 font-medium">En ligne</span>
                 </div>
               )}
 
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
-                aria-label="Fermer le chat"
-              >
-                <Minimize2 size={18} className="text-gray-400 hover:text-white transition-colors" />
-              </button>
+              {/* Bouton fermer - Desktop */}
+              {!isMobile && (
+                <button
+                  onClick={handleClose}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
+                  aria-label="Fermer le chat"
+                >
+                  <Minimize2 size={18} className="text-gray-400 hover:text-white transition-colors" />
+                </button>
+              )}
+
+              {/* Menu mobile - 3 points */}
+              {isMobile && (
+                <button
+                  onClick={() => setShowQuickReplies(!showQuickReplies)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-all duration-200 active:scale-90"
+                  aria-label="Options"
+                >
+                  <ChevronDown size={20} className={`text-gray-400 transition-transform ${showQuickReplies ? 'rotate-180' : ''}`} />
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Quick Replies Bar - Mobile Only */}
+          {isMobile && showQuickReplies && !isKeyboardOpen && (
+            <div className="px-3 pb-3 overflow-x-auto scrollbar-none">
+              <div className="flex gap-2 min-w-max">
+                {mobileQuickReplies.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickReply(item.query)}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-[#1f1f23] hover:bg-pink-500/20 rounded-full border border-pink-500/20 transition-all duration-200 active:scale-95 whitespace-nowrap"
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    <span className="text-xs text-gray-300 font-medium">{item.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Messages */}
         <div 
-          className={`overflow-y-auto space-y-4 scrollbar-thin ${
-            isMobile ? 'p-3' : 'h-[400px] p-4'
+          className={`flex-1 overflow-y-auto space-y-3 scrollbar-thin ${
+            isMobile ? 'px-3 py-2' : 'h-[400px] p-4'
           }`}
           style={isMobile ? {
-            height: `${viewportHeight - 180}px`,
-            maxHeight: 'calc(100vh - 180px)'
+            minHeight: 0, // Important pour flex
           } : undefined}
         >
           {messages.map((message, index) => (
             <div
               key={message.id}
-              className={`flex items-start gap-3 ${
+              className={`flex items-end gap-2 ${
                 message.sender === 'user' ? 'flex-row-reverse' : ''
               }`}
               style={reducedMotion ? undefined : {
-                animation: `fadeSlideIn 0.3s ease-out ${index * 0.1}s both`
+                animation: `fadeSlideIn 0.2s ease-out both`
               }}
             >
-              {/* Avatar */}
-              <div className={`relative flex-shrink-0 ${
-                message.sender === 'user' ? 'order-2' : 'order-1'
-              }`}>
-                <div className={`
-                  w-9 h-9 rounded-full flex items-center justify-center shadow-lg
-                  ${message.sender === 'bot'
-                    ? 'bg-gradient-to-r from-pink-500 to-violet-500 shadow-pink-500/30'
-                    : 'bg-slate-700 shadow-slate-700/30'
-                  }
-                `}>
-                  {message.sender === 'bot' ? (
-                    <Bot size={16} className="text-white" />
-                  ) : (
-                    <User size={16} className="text-gray-300" />
-                  )}
+              {/* Avatar - Plus petit sur mobile */}
+              {!isMobile && (
+                <div className={`relative flex-shrink-0 ${
+                  message.sender === 'user' ? 'order-2' : 'order-1'
+                }`}>
+                  <div className={`
+                    w-8 h-8 rounded-full flex items-center justify-center shadow-md
+                    ${message.sender === 'bot'
+                      ? 'bg-gradient-to-r from-pink-500 to-violet-500 shadow-pink-500/20'
+                      : 'bg-slate-700 shadow-slate-700/20'
+                    }
+                  `}>
+                    {message.sender === 'bot' ? (
+                      <Bot size={14} className="text-white" />
+                    ) : (
+                      <User size={14} className="text-gray-300" />
+                    )}
+                  </div>
                 </div>
-                {message.sender === 'bot' && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#0f0f13] animate-pulse" />
-                )}
-              </div>
+              )}
 
               {/* Message Content */}
-              <div className={`flex-1 ${message.sender === 'user' ? 'order-1' : 'order-2'}`}>
-                {/* Message Bubble */}
+              <div className={`${isMobile ? 'max-w-[85%]' : 'max-w-[80%]'} ${message.sender === 'user' ? 'order-1' : 'order-2'}`}>
+                {/* Message Bubble - Optimisé pour mobile */}
                 <div className={`
-                  px-4 py-3 rounded-2xl shadow-lg whitespace-pre-line
+                  ${isMobile ? 'px-3 py-2.5' : 'px-4 py-3'} rounded-2xl shadow-sm whitespace-pre-line
                   ${message.sender === 'bot'
-                    ? 'bg-[#1f1f23] text-gray-200 rounded-bl-md border border-pink-500/10'
-                    : 'bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-br-md'
+                    ? 'bg-[#1f1f23] text-gray-200 rounded-bl-sm'
+                    : 'bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-br-sm'
                   }
                 `}>
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  <p className={`${isMobile ? 'text-[15px]' : 'text-sm'} leading-relaxed`}>{message.content}</p>
                 </div>
 
-                {/* Actions */}
+                {/* Actions - Plus grandes et touch-friendly sur mobile */}
                 {message.actions && message.actions.length > 0 && (
-                  <div className={`flex flex-wrap gap-2 mt-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex flex-wrap gap-2 mt-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {message.actions.map((action, actionIndex) => (
                       <button
                         key={actionIndex}
                         onClick={() => handleActionClick(action)}
-                        className="px-3 py-2 bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 rounded-lg border border-pink-500/20 transition-all duration-200 hover:scale-105 text-xs font-medium flex items-center gap-2"
+                        className={`
+                          ${isMobile ? 'px-4 py-2.5' : 'px-3 py-2'} 
+                          bg-pink-500/10 hover:bg-pink-500/20 active:bg-pink-500/30
+                          text-pink-400 rounded-xl border border-pink-500/20 
+                          transition-all duration-200 active:scale-95
+                          ${isMobile ? 'text-sm' : 'text-xs'} font-medium 
+                          flex items-center gap-2
+                        `}
                       >
-                        {action.type === 'continue_lesson' && <BookOpen size={14} />}
-                        {action.type === 'join_challenge' && <Trophy size={14} />}
-                        {action.type === 'view_progress' && <Zap size={14} />}
-                        {action.type === 'search_content' && <Search size={14} />}
-                        {action.type === 'claim_reward' && <Sparkles size={14} />}
-                        {action.label}
-                        <ChevronRight size={12} />
+                        {action.type === 'continue_lesson' && <BookOpen size={isMobile ? 16 : 14} />}
+                        {action.type === 'join_challenge' && <Trophy size={isMobile ? 16 : 14} />}
+                        {action.type === 'view_progress' && <Zap size={isMobile ? 16 : 14} />}
+                        {action.type === 'search_content' && <Search size={isMobile ? 16 : 14} />}
+                        {action.type === 'claim_reward' && <Sparkles size={isMobile ? 16 : 14} />}
+                        <span className={isMobile ? 'max-w-[150px] truncate' : ''}>{action.label}</span>
+                        <ChevronRight size={isMobile ? 14 : 12} />
                       </button>
                     ))}
                   </div>
                 )}
 
-                {/* Timestamp */}
-                <div className={`text-xs text-gray-500 mt-1 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                  {formatTimeAgo(message.timestamp)}
-                </div>
+                {/* Timestamp - Discret */}
+                {!isMobile && (
+                  <div className={`text-xs text-gray-600 mt-1 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    {formatTimeAgo(message.timestamp)}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -531,11 +653,13 @@ export default function ChatBot() {
           {/* Typing Indicator */}
           {isTyping && (
             <div className="flex items-end gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center">
-                <Bot size={16} className="text-white" />
-              </div>
-              <div className="bg-[#1f1f23] px-4 py-3 rounded-2xl rounded-bl-md">
-                <div className="flex gap-1">
+              {!isMobile && (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center">
+                  <Bot size={14} className="text-white" />
+                </div>
+              )}
+              <div className={`bg-[#1f1f23] ${isMobile ? 'px-4 py-3' : 'px-4 py-3'} rounded-2xl rounded-bl-sm`}>
+                <div className="flex gap-1.5">
                   <span className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -544,195 +668,192 @@ export default function ChatBot() {
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-1" />
         </div>
 
-        {/* Suggestions intelligentes */}
-        {(messages.length === 1 || (messages[messages.length - 1]?.suggestions && messages[messages.length - 1].sender === 'bot')) && (
-          <div className="px-4 pb-2">
-            <p className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+        {/* Suggestions intelligentes - Optimisé pour mobile */}
+        {!isMobile && (messages.length === 1 || (messages[messages.length - 1]?.suggestions && messages[messages.length - 1].sender === 'bot')) && (
+          <div className="px-4 pb-2 flex-shrink-0">
+            <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
               <Sparkles size={12} className="text-pink-400" />
-              Suggestions personnalisées :
+              Suggestions :
             </p>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(messages[messages.length - 1]?.suggestions || quickSuggestions).slice(0, 4).map((suggestion, index) => (
                 <button
                   key={index}
-                  onClick={() => {
-                    setInputValue(suggestion);
-                    setTimeout(() => handleSend(), 100);
-                  }}
-                  className="text-xs px-3 py-2.5 bg-gradient-to-r from-pink-500/5 to-violet-500/5 hover:from-pink-500/10 hover:to-violet-500/10 text-gray-300 hover:text-white rounded-xl transition-all duration-200 border border-pink-500/20 hover:border-pink-500/40 text-left group"
+                  onClick={() => handleQuickReply(suggestion)}
+                  className="text-xs px-3 py-2 bg-[#1f1f23] hover:bg-pink-500/10 text-gray-300 hover:text-white rounded-lg transition-all duration-200 border border-pink-500/10 hover:border-pink-500/30 text-left truncate"
                 >
-                  <div className="flex items-center gap-2">
-                    {suggestion.includes('progrès') && <Zap size={14} className="text-pink-400 group-hover:scale-110 transition-transform" />}
-                    {suggestion.includes('challenge') && <Trophy size={14} className="text-pink-400 group-hover:scale-110 transition-transform" />}
-                    {suggestion.includes('formation') && <BookOpen size={14} className="text-pink-400 group-hover:scale-110 transition-transform" />}
-                    {suggestion.includes('support') && <Settings size={14} className="text-pink-400 group-hover:scale-110 transition-transform" />}
-                    {!suggestion.includes('progrès') && !suggestion.includes('challenge') && !suggestion.includes('formation') && !suggestion.includes('support') && (
-                      <MessageCircle size={14} className="text-pink-400 group-hover:scale-110 transition-transform" />
-                    )}
-                    {suggestion}
-                  </div>
+                  {suggestion}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Input */}
+        {/* Mobile: Suggestions inline après message bot */}
+        {isMobile && messages.length > 1 && messages[messages.length - 1]?.suggestions && messages[messages.length - 1].sender === 'bot' && !isKeyboardOpen && (
+          <div className="px-3 pb-2 flex-shrink-0">
+            <div className="flex flex-wrap gap-2">
+              {messages[messages.length - 1].suggestions?.slice(0, 3).map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickReply(suggestion)}
+                  className="text-sm px-3 py-2 bg-[#1f1f23] active:bg-pink-500/20 text-gray-300 rounded-full transition-all duration-150 border border-pink-500/20 active:scale-95"
+                >
+                  {suggestion.length > 25 ? suggestion.substring(0, 25) + '...' : suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Input - Optimisé pour mobile */}
         <div 
-          className={`border-t border-pink-500/10 bg-[#0f0f13]/50 ${
-            isMobile ? 'p-3' : 'p-4'
+          className={`flex-shrink-0 border-t border-pink-500/10 bg-[#0f0f13] ${
+            isMobile ? 'px-3 py-2' : 'p-4'
           }`}
           style={isMobile ? {
-            paddingBottom: `max(12px, env(safe-area-inset-bottom))`
+            paddingBottom: `max(8px, env(safe-area-inset-bottom))`
           } : undefined}
         >
-          <div className="flex items-end gap-3">
+          <div className={`flex items-end ${isMobile ? 'gap-2' : 'gap-3'}`}>
             <div className="flex-1 relative">
               <textarea
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => {
                   setInputValue(e.target.value);
+                  setShowQuickReplies(false);
                   // Auto-resize
                   e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                  e.target.style.height = Math.min(e.target.scrollHeight, isMobile ? 80 : 120) + 'px';
                 }}
                 onKeyPress={handleKeyPress}
-                placeholder={user ? "Pose-moi une question sur ton parcours..." : "Écris ton message..."}
-                className="w-full bg-[#1f1f23] text-white placeholder-gray-500 px-4 py-3 rounded-xl border border-pink-500/10 focus:border-pink-500/30 focus:outline-none transition-all duration-200 resize-none min-h-[48px] max-h-[120px] scrollbar-thin"
+                onFocus={() => {
+                  if (isMobile) {
+                    setShowQuickReplies(false);
+                    // Scroll vers le bas après un petit délai
+                    setTimeout(() => {
+                      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }, 300);
+                  }
+                }}
+                placeholder={isMobile 
+                  ? "Message..." 
+                  : user 
+                    ? "Pose-moi une question sur ton parcours..." 
+                    : "Écris ton message..."
+                }
+                className={`
+                  w-full bg-[#1f1f23] text-white placeholder-gray-500 
+                  ${isMobile ? 'px-4 py-2.5 text-base rounded-2xl min-h-[44px] max-h-[80px]' : 'px-4 py-3 rounded-xl min-h-[48px] max-h-[120px]'}
+                  border border-pink-500/10 focus:border-pink-500/30 focus:outline-none 
+                  transition-all duration-200 resize-none scrollbar-thin
+                `}
                 rows={1}
               />
-              {inputValue.length > 100 && (
+              {!isMobile && inputValue.length > 100 && (
                 <div className="absolute bottom-2 right-3 text-xs text-gray-500">
                   {inputValue.length}/500
                 </div>
               )}
             </div>
+            
+            {/* Bouton envoyer - Plus grand sur mobile */}
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || isTyping}
               className={`
-                p-3 rounded-xl transition-all duration-300 flex-shrink-0
+                ${isMobile ? 'p-3 rounded-2xl' : 'p-3 rounded-xl'} 
+                transition-all duration-200 flex-shrink-0
                 ${inputValue.trim() && !isTyping
-                  ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-105 active:scale-95'
+                  ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white active:scale-90 shadow-lg shadow-pink-500/20'
                   : 'bg-[#1f1f23] text-gray-500 cursor-not-allowed'
                 }
               `}
               aria-label="Envoyer le message"
             >
               {isTyping ? (
-                <Loader2 size={20} className="animate-spin" />
+                <Loader2 size={isMobile ? 22 : 20} className="animate-spin" />
               ) : (
-                <Send size={18} />
+                <Send size={isMobile ? 22 : 18} />
               )}
             </button>
           </div>
 
-          {/* Footer avec raccourcis - Caché sur mobile */}
+          {/* Footer avec raccourcis - Desktop uniquement */}
           {!isMobile && (
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-center text-xs text-gray-500">
-                <div className="flex items-center gap-2">
-                  <kbd className="px-2 py-1 bg-[#1f1f23] rounded text-xs border border-gray-600">Enter</kbd>
-                  <span>pour envoyer</span>
-                </div>
+            <div className="mt-3 flex items-center justify-center gap-4 text-xs text-gray-600">
+              <div className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-700">Enter</kbd>
+                <span>envoyer</span>
               </div>
-
-              {/* Raccourcis clavier */}
-              <div className="flex items-center justify-center gap-3 text-xs text-gray-600">
-                <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">/</kbd>
-                  <span>ouvrir</span>
-                </div>
-                <span className="text-gray-700">•</span>
-                <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">Esc</kbd>
-                  <span>fermer</span>
-                </div>
-                <span className="text-gray-700">•</span>
-                <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">Ctrl+K</kbd>
-                  <span>focus</span>
-                </div>
+              <div className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-700">Esc</kbd>
+                <span>fermer</span>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Floating Button - Optimisé pour mobile */}
-      <div className={`fixed z-50 ${
-        isMobile 
-          ? isOpen ? 'top-4 right-4' : 'bottom-4 right-4'
-          : 'bottom-4 right-4 sm:right-6'
-      }`}>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`
-            w-16 h-16 rounded-full
-            bg-gradient-to-r from-pink-500 to-violet-500
-            text-white shadow-xl shadow-pink-500/40
-            flex items-center justify-center
-            transition-all ${reducedMotion ? 'duration-200' : 'duration-500'} ease-out
-            ${reducedMotion ? '' : 'hover:scale-110 hover:shadow-2xl hover:shadow-pink-500/50'}
-            active:scale-95
-            relative overflow-hidden
-            group
-          `}
-          aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat avec l\'assistant IA'}
-          style={isMobile ? { contain: 'layout style paint' } : undefined}
-        >
-          {/* Background glow */}
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+      {/* Floating Button - Caché quand chat ouvert sur mobile */}
+      {(!isMobile || !isOpen) && (
+        <div className={`fixed z-50 ${
+          isMobile 
+            ? 'bottom-5 right-4'
+            : 'bottom-4 right-4 sm:right-6'
+        }`}>
+          <button
+            onClick={() => {
+              setIsOpen(!isOpen);
+              if (!isOpen) {
+                setShowQuickReplies(true);
+              }
+            }}
+            className={`
+              ${isMobile ? 'w-14 h-14' : 'w-16 h-16'} rounded-full
+              bg-gradient-to-r from-pink-500 to-violet-500
+              text-white shadow-xl shadow-pink-500/30
+              flex items-center justify-center
+              transition-all ${reducedMotion ? 'duration-150' : 'duration-300'} ease-out
+              active:scale-90
+              relative overflow-hidden
+              group
+            `}
+            aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat avec l\'assistant IA'}
+            style={{ contain: 'layout style paint' }}
+          >
+            <div className="relative z-10">
+              <MessageCircle size={isMobile ? 24 : 26} className="drop-shadow-sm" />
+              {/* Notification Badge */}
+              {hasNewMessage && (
+                <span className={`absolute ${isMobile ? '-top-0.5 -right-0.5 w-3 h-3' : '-top-1 -right-1 w-4 h-4'} bg-green-500 rounded-full border-2 border-white shadow-lg`}>
+                  {!reducedMotion && <span className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />}
+                </span>
+              )}
+            </div>
 
-          <div className="relative z-10">
-            {isOpen ? (
-              <X size={26} className="transition-transform duration-300 drop-shadow-sm" />
-            ) : (
-              <>
-                <MessageCircle size={26} className="transition-transform duration-300 drop-shadow-sm" />
-                {/* Notification Badge */}
-                {hasNewMessage && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse border-2 border-white shadow-lg">
-                    <span className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />
-                  </span>
-                )}
-              </>
+            {/* Pulse Effect - Désactivé sur mobile pour performance */}
+            {!reducedMotion && (
+              <span className="absolute inset-0 rounded-full bg-pink-500 animate-ping opacity-15" />
             )}
-          </div>
+          </button>
 
-          {/* Pulse Effect - Désactivé sur mobile pour performance */}
-          {!isOpen && !reducedMotion && (
-            <span className="absolute inset-0 rounded-full bg-pink-500 animate-ping opacity-20" />
+          {/* Tooltip - Desktop uniquement */}
+          {!isMobile && (
+            <div className="absolute bottom-full right-0 mb-3 px-3 py-2 bg-gray-900/95 backdrop-blur-sm text-white text-sm rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 border border-gray-700 whitespace-nowrap pointer-events-none">
+              <div className="font-medium flex items-center gap-2">
+                <Sparkles size={14} className="text-pink-400" />
+                {user ? 'Assistant IA' : 'Besoin d\'aide ?'}
+              </div>
+              <div className="absolute top-full right-5 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95" />
+            </div>
           )}
-
-          {/* Ripple effect on hover */}
-          <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 animate-ping" />
-        </button>
-
-        {/* Tooltip - Simplifié sur mobile */}
-        {!isOpen && !isMobile && (
-          <div className="absolute bottom-full right-0 mb-3 px-4 py-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 border border-gray-700 min-w-[200px]">
-            <div className="font-medium mb-2">
-              {user ? 'Assistant IA personnalisé' : 'Parler à l\'assistant IA'}
-            </div>
-            <div className="text-xs text-gray-300 space-y-1">
-              <div className="flex items-center justify-between">
-                <span>Ouvrir le chat:</span>
-                <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs">/</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Raccourci:</span>
-                <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs">Ctrl+K</kbd>
-              </div>
-            </div>
-            <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* CSS for animations - Optimisé pour mobile */}
       <style>{`
