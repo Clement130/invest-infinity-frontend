@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import AnimatedSection from './AnimatedSection';
 
@@ -7,6 +8,8 @@ interface FinalCTAProps {
 }
 
 export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative bg-[#0f0f13] py-20 overflow-hidden">
       {/* Points de lumière néon */}
@@ -22,7 +25,7 @@ export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
               Prêt à commencer votre voyage vers la réussite ?
             </h3>
             <button 
-              onClick={onOpenRegister}
+              onClick={() => navigate('/pricing')}
               className="group relative inline-flex items-center"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-pink-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
