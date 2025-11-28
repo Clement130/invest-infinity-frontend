@@ -16,9 +16,10 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { chatbotService, type ChatAction } from '../services/chatbotService';
+import { chatbotService, type ChatAction, type ChatMessage } from '../services/chatbotService';
 
-// Utiliser directement le type ChatMessage du service
+// Alias pour simplifier l'utilisation dans le composant
+type Message = ChatMessage;
 
 // Fonction utilitaire pour formater le temps écoulé
 const formatTimeAgo = (date: Date): string => {
@@ -62,6 +63,7 @@ export default function ChatBot() {
   const { user } = useAuth();
   const { isMobile, reducedMotion } = useMobileOptimization();
   const [isOpen, setIsOpen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -169,6 +171,28 @@ export default function ChatBot() {
       window.removeEventListener('openChatbot', handleOpenChatbot);
     };
   }, []);
+
+  // Détecter les changements de hauteur de viewport (clavier virtuel sur mobile)
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleResize = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    // Utiliser visualViewport si disponible (meilleur pour le clavier mobile)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleResize);
+      };
+    } else {
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [isMobile]);
 
   // Raccourcis clavier
   useEffect(() => {
@@ -354,9 +378,12 @@ export default function ChatBot() {
       {/* Chat Window - Optimisé pour mobile */}
       <div
         className={`
-          fixed bottom-24 right-4 sm:right-6 z-50
-          w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px]
-          bg-[#0f0f13] rounded-2xl
+          fixed z-50
+          ${isMobile 
+            ? 'inset-x-0 bottom-0 top-0 w-full rounded-none' 
+            : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] rounded-2xl'
+          }
+          bg-[#0f0f13]
           border border-pink-500/20
           shadow-2xl shadow-pink-500/10
           transform transition-all ${reducedMotion ? 'duration-200' : 'duration-500'} ease-out
@@ -365,10 +392,16 @@ export default function ChatBot() {
             : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
           }
         `}
-        style={isMobile ? { contain: 'layout style paint' } : undefined}
+        style={isMobile ? { 
+          contain: 'layout style paint',
+          height: `${viewportHeight}px`,
+          maxHeight: '100vh'
+        } : undefined}
       >
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-pink-500/20 p-4 rounded-t-2xl border-b border-pink-500/20 overflow-hidden">
+        <div className={`relative bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-pink-500/20 border-b border-pink-500/20 overflow-hidden ${
+          isMobile ? 'p-3 rounded-none' : 'p-4 rounded-t-2xl'
+        }`}>
           <div className="absolute inset-0 bg-[#0f0f13]/90 rounded-t-2xl" />
           {/* Animated background */}
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-violet-500/5 animate-pulse rounded-t-2xl" />
@@ -388,26 +421,17 @@ export default function ChatBot() {
                   Assistant IA
                   <Sparkles size={16} className="text-pink-400 animate-pulse" />
                 </h3>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-400">Toujours disponible</p>
-                  {user && (
-                    <>
-                      <span className="text-xs text-gray-600">•</span>
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-green-400 font-medium">Connecté</span>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <p className="text-xs text-gray-400">Toujours disponible</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {/* Status indicator */}
-              <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-full border border-green-500/20">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-xs text-green-400 font-medium">En ligne</span>
-              </div>
+              {user && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-full border border-green-500/20">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-xs text-green-400 font-medium">En ligne</span>
+                </div>
+              )}
 
               <button
                 onClick={() => setIsOpen(false)}
@@ -421,7 +445,15 @@ export default function ChatBot() {
         </div>
 
         {/* Messages */}
-        <div className="h-[400px] overflow-y-auto p-4 space-y-4 scrollbar-thin">
+        <div 
+          className={`overflow-y-auto space-y-4 scrollbar-thin ${
+            isMobile ? 'p-3' : 'h-[400px] p-4'
+          }`}
+          style={isMobile ? {
+            height: `${viewportHeight - 180}px`,
+            maxHeight: 'calc(100vh - 180px)'
+          } : undefined}
+        >
           {messages.map((message, index) => (
             <div
               key={message.id}
@@ -549,7 +581,14 @@ export default function ChatBot() {
         )}
 
         {/* Input */}
-        <div className="p-4 border-t border-pink-500/10 bg-[#0f0f13]/50">
+        <div 
+          className={`border-t border-pink-500/10 bg-[#0f0f13]/50 ${
+            isMobile ? 'p-3' : 'p-4'
+          }`}
+          style={isMobile ? {
+            paddingBottom: `max(12px, env(safe-area-inset-bottom))`
+          } : undefined}
+        >
           <div className="flex items-end gap-3">
             <div className="flex-1 relative">
               <textarea
@@ -592,44 +631,44 @@ export default function ChatBot() {
             </button>
           </div>
 
-          {/* Footer avec raccourcis */}
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-[#1f1f23] rounded text-xs border border-gray-600">Enter</kbd>
-                <span>pour envoyer</span>
-              </div>
-              {user && (
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span>Connecté</span>
+          {/* Footer avec raccourcis - Caché sur mobile */}
+          {!isMobile && (
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center justify-center text-xs text-gray-500">
+                <div className="flex items-center gap-2">
+                  <kbd className="px-2 py-1 bg-[#1f1f23] rounded text-xs border border-gray-600">Enter</kbd>
+                  <span>pour envoyer</span>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Raccourcis clavier */}
-            <div className="flex items-center justify-center gap-3 text-xs text-gray-600">
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">/</kbd>
-                <span>ouvrir</span>
-              </div>
-              <span className="text-gray-700">•</span>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">Esc</kbd>
-                <span>fermer</span>
-              </div>
-              <span className="text-gray-700">•</span>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">Ctrl+K</kbd>
-                <span>focus</span>
+              {/* Raccourcis clavier */}
+              <div className="flex items-center justify-center gap-3 text-xs text-gray-600">
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">/</kbd>
+                  <span>ouvrir</span>
+                </div>
+                <span className="text-gray-700">•</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">Esc</kbd>
+                  <span>fermer</span>
+                </div>
+                <span className="text-gray-700">•</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#1f1f23] rounded text-xs border border-gray-600">Ctrl+K</kbd>
+                  <span>focus</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Floating Button - Optimisé pour mobile */}
-      <div className="fixed bottom-4 right-4 sm:right-6 z-50">
+      <div className={`fixed z-50 ${
+        isMobile 
+          ? isOpen ? 'top-4 right-4' : 'bottom-4 right-4'
+          : 'bottom-4 right-4 sm:right-6'
+      }`}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`

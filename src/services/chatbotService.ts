@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { getUserProgressSummary, type UserProgressSummary } from './progressService';
-import { getActiveChallenges, type ChallengeWithParticipation } from './challengesService';
+import { getActiveChallenges, joinChallenge, type ChallengeWithParticipation } from './challengesService';
 import { fetchUserQuests, type UserQuest } from './questsService';
 import { getModules, getLessonsForModule, type TrainingLesson } from './trainingService';
 
@@ -747,12 +747,14 @@ class ChatbotService {
     switch (action.type) {
       case 'continue_lesson':
         // Logique pour rediriger vers la leçon
-        return `Redirection vers la leçon "${action.data.lessonTitle}"...`;
+        const lessonData = action.data as { lessonTitle?: string } | undefined;
+        return `Redirection vers la leçon "${lessonData?.lessonTitle || 'la leçon suivante'}"...`;
 
       case 'join_challenge':
-        if (this.context.userId) {
+        if (this.context.userId && action.data) {
           try {
-            await joinChallenge(action.data.challengeId, this.context.userId);
+            const challengeData = action.data as { challengeId: string };
+            await joinChallenge(challengeData.challengeId, this.context.userId);
             // Recharger le contexte
             await this.initializeContext(this.context.userId);
             return `✅ Challenge rejoint avec succès !`;
