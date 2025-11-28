@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserPlus, Wallet, MessageSquare, ArrowRight } from 'lucide-react';
 
 interface JoinStepsProps {
@@ -6,6 +7,8 @@ interface JoinStepsProps {
 }
 
 export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
+  const navigate = useNavigate();
+  
   const steps = [
     {
       icon: UserPlus,
@@ -16,13 +19,13 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
     {
       icon: Wallet,
       title: "CONFIGURE TON COMPTE",
-      description: "Paramètre ton compte de trading avec nos courtiers partenaires",
+      description: "Active ton espace membre en quelques secondes et débloque immédiatement ton accès",
       gradient: "from-pink-500 to-pink-500"
     },
     {
       icon: MessageSquare,
-      title: "ACCÈDE AU DISCORD",
-      description: "Rejoins notre communauté Discord exclusive de traders performants",
+      title: "ACCÈDE À LA FORMATION",
+      description: "Accède à notre formation et progresse avec nos analyses, stratégies et lives.",
       gradient: "from-pink-500 to-pink-600"
     }
   ];
@@ -58,9 +61,8 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
 
         <div className="flex flex-col md:flex-row gap-8 mb-20">
           {steps.map((step, index) => (
-            <button
+            <div
               key={index}
-              onClick={onOpenRegister}
               className="flex-1 group relative text-left"
             >
               {/* Connecting lines */}
@@ -99,14 +101,14 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
                   </p>
                 </div>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
         {/* CTA Button */}
         <div className="flex justify-center">
           <button 
-            onClick={onOpenRegister}
+            onClick={() => navigate('/pricing')}
             className="group relative"
           >
             {/* Button gradient background with blur effect */}
