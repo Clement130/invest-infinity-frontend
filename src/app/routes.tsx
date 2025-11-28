@@ -18,6 +18,7 @@ const AnalyticsPage = lazy(() => import('../pages/admin/AnalyticsPage'));
 const ContenuPage = lazy(() => import('../pages/admin/ContenuPage'));
 const ClientPreviewPage = lazy(() => import('../pages/admin/ClientPreviewPage'));
 const AdminChallengesPage = lazy(() => import('../pages/admin/ChallengesPage'));
+const AdminEventsPage = lazy(() => import('../pages/admin/EventsPage'));
 const VideosManagement = lazy(() => import('../pages/admin/VideosManagement'));
 const AdminSettingsPage = lazy(() => import('../pages/admin/SettingsPage'));
 const ModulePage = lazy(() => import('../pages/ModulePage'));
@@ -130,5 +131,6 @@ export const adminRoutes: AdminRouteConfig[] = [
   { path: '/admin/preview', element: <AdminLayout activeSection="preview"><ClientPreviewPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/videos', element: <AdminLayout activeSection="videos"><VideosManagement /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/challenges', element: <AdminLayout activeSection="challenges"><AdminChallengesPage /></AdminLayout>, allowedRoles: ['admin'] },
+  { path: '/admin/events', element: <AdminLayout activeSection="events"><AdminEventsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/settings', element: <AdminLayout activeSection="settings"><AdminSettingsPage /></AdminLayout>, allowedRoles: ['admin'] },
 ];

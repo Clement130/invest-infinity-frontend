@@ -12,6 +12,7 @@ import {
   Eye,
   Target,
   Video,
+  Calendar,
   ChevronDown,
   LogOut,
   Settings,
@@ -46,6 +47,7 @@ export default function AdminLayout({ children, activeSection = 'dashboard' }: A
     { id: 'contenu', label: 'Contenu', icon: FileText, path: '/admin/contenu' },
     { id: 'videos', label: 'Vidéos', icon: Video, path: '/admin/videos' },
     { id: 'challenges', label: 'Défis', icon: Target, path: '/admin/challenges' },
+    { id: 'events', label: 'Événements', icon: Calendar, path: '/admin/events' },
     { id: 'preview', label: 'Vue Client', icon: Eye, path: '/admin/preview' },
     { id: 'settings', label: 'Paramètres', icon: Settings, path: '/admin/settings' },
   ];

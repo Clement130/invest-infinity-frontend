@@ -584,46 +584,51 @@ async function fetchActiveBooster(userId: string): Promise<ActiveBooster | null>
 
 // Récupérer les événements à venir
 export async function getUpcomingEvents(userId: string): Promise<Event[]> {
-  // Pour l'instant, on retourne des événements mockés
-  // À implémenter avec une vraie table d'événements
-  const events: Event[] = [
-    {
-      id: 'live-1',
-      title: 'Session Live : Analyse du Marché',
-      description: 'Analyse en direct des mouvements du marché et opportunités du jour',
-      type: 'live',
-      date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      duration: 60,
-      speaker: 'Mentor Principal',
-      isExclusive: false,
-      registrationRequired: true,
-      registered: false,
-    },
-    {
-      id: 'workshop-1',
-      title: 'Atelier : Risk Management Avancé',
-      description: 'Apprenez les techniques avancées de gestion du risque',
-      type: 'workshop',
-      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      duration: 90,
-      speaker: 'Expert Invité',
-      isExclusive: true,
-      registrationRequired: true,
-      registered: true,
-    },
-    {
-      id: 'masterclass-1',
-      title: 'Masterclass : Trading Algorithmique',
-      description: 'Masterclass exclusive avec un trader professionnel',
-      type: 'masterclass',
-      date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      duration: 120,
-      speaker: 'Trader Pro',
-      isExclusive: true,
-      registrationRequired: true,
-      registered: false,
-    },
-  ];
+  const { supabase } = await import('../lib/supabaseClient');
+  
+  // Récupérer les événements actifs
+  const { data: eventsData, error: eventsError } = await supabase
+    .from('events')
+    .select('*')
+    .eq('is_active', true)
+    .order('date', { ascending: true });
+
+  if (eventsError) {
+    console.error('Error fetching events:', eventsError);
+    return [];
+  }
+
+  if (!eventsData || eventsData.length === 0) {
+    return [];
+  }
+
+  // Récupérer les inscriptions de l'utilisateur
+  const { data: registrationsData, error: registrationsError } = await supabase
+    .from('event_registrations')
+    .select('event_id')
+    .eq('user_id', userId);
+
+  if (registrationsError) {
+    console.error('Error fetching registrations:', registrationsError);
+  }
+
+  const registeredEventIds = new Set(
+    (registrationsData || []).map((r) => r.event_id)
+  );
+
+  // Transformer les données de la DB vers le format Event
+  const events: Event[] = eventsData.map((event) => ({
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    type: event.type as 'live' | 'workshop' | 'masterclass' | 'event',
+    date: event.date,
+    duration: event.duration,
+    speaker: event.speaker || undefined,
+    isExclusive: event.is_exclusive,
+    registrationRequired: event.registration_required,
+    registered: registeredEventIds.has(event.id),
+  }));
 
   return events;
 }
