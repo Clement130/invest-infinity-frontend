@@ -7,7 +7,8 @@ interface FAQProps {
 }
 
 // Catégories de FAQ avec icônes
-// Dernière mise à jour: FAQ mise à jour - organisation formation et positions 1-2 par jour
+// Dernière mise à jour: FAQ complète - chatbot, horaires lives, organisation formation
+// Build: 2025-11-28 - Toutes modifications FAQ déployées
 const faqCategories = [
   {
     icon: HelpCircle,
