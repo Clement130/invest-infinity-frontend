@@ -59,8 +59,7 @@ const services = [
     image: 'https://i.postimg.cc/jdQRMgjK/Screenshot-2025-02-16-155649.png',
     stats: [
       { value: '100+', label: 'membres' },
-      { value: '24/7', label: 'support' },
-      { value: 'VIP', label: 'coaching' },
+      { value: '7/7', label: 'support' },
     ],
     features: ['Mentorat', 'Sessions live hebdomadaires'],
     color: '#fda4af',
