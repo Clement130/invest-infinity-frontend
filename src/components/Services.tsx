@@ -10,11 +10,11 @@ const services = [
     icon: Bell,
     title: 'Alertes Trading',
     description:
-      'Reçois des alertes de trading chaque jours grâce aux analyses de Mickaël pour saisir les meilleures opportunités du marché.',
+      'Reçois des alertes de trading chaque jours grâce aux analyses de nos experts pour saisir les meilleures opportunités du marché.',
     image: 'https://i.postimg.cc/DwdC8NcW/image.png',
     stats: [
       { value: '3', label: 'Risk/Reward moyen' },
-      { value: '2', label: 'Positions par jours' },
+      { value: '1', label: 'Positions par jours' },
     ],
     features: [
       'Alertes précises et facile à prendre',
