@@ -182,12 +182,13 @@ export class VideoProgressTracker {
   private hasBeenCompleted: boolean = false;
   private lastUpdateTime: number = 0;
   private lastViewedUpdateTime: number = 0;
-  private updateThrottle: number = 5000; // Mettre à jour max toutes les 5 secondes
+  private updateThrottle: number = 2000; // Mettre à jour max toutes les 2 secondes
   private lastViewedUpdateInterval: number = 30000; // Mettre à jour last_viewed toutes les 30 secondes
 
   constructor(userId: string, lessonId: string) {
     this.userId = userId;
     this.lessonId = lessonId;
+    console.log('[VideoProgressTracker] Initialisé pour:', { userId, lessonId });
   }
 
   /**
@@ -196,24 +197,36 @@ export class VideoProgressTracker {
   async handleProgress(event: VideoProgressEvent): Promise<void> {
     const now = Date.now();
 
-    // Throttle : ne pas mettre à jour trop souvent
+    // Vérifier les seuils AVANT le throttle pour ne pas rater les événements importants
+    const shouldMarkViewed = !this.hasBeenViewed && event.currentTime >= VIEWED_THRESHOLD_SECONDS;
+    const shouldMarkCompleted = !this.hasBeenCompleted && event.percentage >= COMPLETED_THRESHOLD_PERCENTAGE;
+
+    // Si on doit marquer un seuil important, ignorer le throttle
+    if (shouldMarkViewed || shouldMarkCompleted) {
+      if (shouldMarkViewed) {
+        console.log('[VideoProgressTracker] 🎯 Seuil "vue" atteint:', event.currentTime, 'secondes');
+        this.hasBeenViewed = true;
+        const result = await markLessonAsViewed(this.userId, this.lessonId);
+        console.log('[VideoProgressTracker] Résultat markLessonAsViewed:', result);
+      }
+
+      if (shouldMarkCompleted) {
+        console.log('[VideoProgressTracker] 🏆 Seuil "complétée" atteint:', event.percentage, '%');
+        this.hasBeenCompleted = true;
+        const result = await markLessonAsCompleted(this.userId, this.lessonId);
+        console.log('[VideoProgressTracker] Résultat markLessonAsCompleted:', result);
+      }
+
+      this.lastUpdateTime = now;
+      return;
+    }
+
+    // Throttle pour les mises à jour régulières
     if (now - this.lastUpdateTime < this.updateThrottle) {
       return;
     }
 
     this.lastUpdateTime = now;
-
-    // Marquer comme "vue" si le seuil est atteint
-    if (!this.hasBeenViewed && event.currentTime >= VIEWED_THRESHOLD_SECONDS) {
-      this.hasBeenViewed = true;
-      await markLessonAsViewed(this.userId, this.lessonId);
-    }
-
-    // Marquer comme "complétée" si le seuil est atteint
-    if (!this.hasBeenCompleted && event.percentage >= COMPLETED_THRESHOLD_PERCENTAGE) {
-      this.hasBeenCompleted = true;
-      await markLessonAsCompleted(this.userId, this.lessonId);
-    }
 
     // Mettre à jour last_viewed périodiquement pendant la lecture
     if (now - this.lastViewedUpdateTime >= this.lastViewedUpdateInterval) {

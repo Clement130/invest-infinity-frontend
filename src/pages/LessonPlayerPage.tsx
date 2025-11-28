@@ -1,14 +1,16 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getModuleWithLessons, getLessonById } from '../services/trainingService';
 import type { TrainingLesson } from '../types/training';
 import BunnyPlayer from '../components/training/BunnyPlayer';
 import { VideoPlayerSkeleton } from '../components/common/Skeleton';
 import { useSession } from '../hooks/useSession';
 import { useToast } from '../hooks/useToast';
+import { markLessonAsCompleted } from '../services/progressTrackingService';
 import type { VideoProgressEvent } from '../services/progressTrackingService';
+import { PROGRESS_KEYS } from '../hooks/useTraining';
 
 export default function LessonPlayerPage() {
   const { moduleId, lessonId } = useParams<{ moduleId: string; lessonId: string }>();
@@ -118,18 +120,47 @@ export default function LessonPlayerPage() {
     }
   };
 
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  // Mutation pour marquer comme complétée manuellement
+  const markCompletedMutation = useMutation({
+    mutationFn: () => markLessonAsCompleted(user!.id, lessonId!),
+    onSuccess: () => {
+      setIsCompleted(true);
+      toast.success('Leçon marquée comme complétée ! 🎉', { duration: 3000 });
+      // Invalider le cache de progression
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.summary(user.id) });
+        queryClient.invalidateQueries({ queryKey: ['member-progress', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['member-stats', user.id] });
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Erreur lors du marquage de la leçon', { duration: 3000 });
+      console.error('[LessonPlayerPage] Erreur markCompleted:', error);
+    },
+  });
+
   const handleProgress = async (event: VideoProgressEvent) => {
     // Invalider les queries de progression pour mettre à jour l'UI
     if (user?.id) {
       // Invalider la progression détaillée
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.summary(user.id) });
       queryClient.invalidateQueries({ queryKey: ['member-progress', user.id] });
       // Invalider les statistiques pour mettre à jour les cartes
       queryClient.invalidateQueries({ queryKey: ['member-stats', user.id] });
       
       // Feedback visuel pour la progression
       if (event.percentage >= 90) {
+        setIsCompleted(true);
         toast.success('Leçon complétée ! 🎉', { duration: 3000 });
       }
+    }
+  };
+
+  const handleMarkAsCompleted = () => {
+    if (user?.id && lessonId && !isCompleted) {
+      markCompletedMutation.mutate();
     }
   };
 

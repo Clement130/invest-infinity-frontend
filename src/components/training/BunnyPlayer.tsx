@@ -55,14 +55,17 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   // Initialiser le tracker si userId et lessonId sont fournis
   useEffect(() => {
     if (userId && lessonId) {
+      console.log('[BunnyPlayer] Création du tracker pour:', { userId, lessonId, videoId });
       trackerRef.current = new VideoProgressTracker(userId, lessonId);
+    } else {
+      console.log('[BunnyPlayer] Tracker non créé - paramètres manquants:', { userId: !!userId, lessonId: !!lessonId });
     }
     return () => {
       if (progressCheckIntervalRef.current) {
         clearInterval(progressCheckIntervalRef.current);
       }
     };
-  }, [userId, lessonId]);
+  }, [userId, lessonId, videoId]);
 
   // Construire l'URL d'embed directement (sans token de sécurité)
   useEffect(() => {

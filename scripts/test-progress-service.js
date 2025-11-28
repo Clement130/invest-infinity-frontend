@@ -65,6 +65,90 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     : undefined,
 });
 
+// Fonctions de suivi de progression (extraites de progressTrackingService.ts)
+async function markLessonAsViewed(userId, lessonId) {
+  try {
+    // Vérifier si une entrée existe déjà
+    const { data: existing } = await supabase
+      .from('training_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('lesson_id', lessonId)
+      .maybeSingle();
+
+    const now = new Date().toISOString();
+
+    if (existing) {
+      // Mettre à jour last_viewed pour actualiser la date d'activité (même si déjà vue)
+      const { error } = await supabase
+        .from('training_progress')
+        .update({
+          last_viewed: now,
+        })
+        .eq('id', existing.id);
+
+      if (error) throw error;
+    } else {
+      // Créer une nouvelle entrée
+      const { error } = await supabase.from('training_progress').insert({
+        user_id: userId,
+        lesson_id: lessonId,
+        done: false,
+        last_viewed: now,
+      });
+
+      if (error) throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('[markLessonAsViewed] Erreur:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function markLessonAsCompleted(userId, lessonId) {
+  try {
+    const now = new Date().toISOString();
+
+    // Vérifier si une entrée existe déjà
+    const { data: existing } = await supabase
+      .from('training_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('lesson_id', lessonId)
+      .maybeSingle();
+
+    if (existing) {
+      // Mettre à jour
+      const { error } = await supabase
+        .from('training_progress')
+        .update({
+          done: true,
+          last_viewed: now,
+        })
+        .eq('id', existing.id);
+
+      if (error) throw error;
+    } else {
+      // Créer une nouvelle entrée
+      const { error } = await supabase.from('training_progress').insert({
+        user_id: userId,
+        lesson_id: lessonId,
+        done: true,
+        last_viewed: now,
+      });
+
+      if (error) throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('[markLessonAsCompleted] Erreur:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 async function getModules() {
   const { data, error } = await supabase
     .from('training_modules')
@@ -222,10 +306,87 @@ async function getUserProgressSummary(userId) {
   };
 }
 
+async function testProgressTracking(userId) {
+  console.log('🧪 Test du suivi de progression en temps réel\n');
+
+  // 1. Récupérer une leçon existante qui n'est pas encore complétée
+  const { data: lessons, error: lessonsError } = await supabase
+    .from('training_lessons')
+    .select('id, title, module_id')
+    .limit(5);
+
+  if (lessonsError || !lessons || lessons.length === 0) {
+    console.error('❌ Aucune leçon trouvée');
+    return;
+  }
+
+  const lesson = lessons[0];
+  console.log(`🎥 Test avec la leçon: ${lesson.title} (${lesson.id})\n`);
+
+  // 2. Vérifier l'état initial
+  console.log('📊 État initial:');
+  const initialProgress = await getUserProgressSummary(userId);
+  const initialCompleted = initialProgress.completedLessonIds.includes(lesson.id);
+  console.log(`   - Leçon complétée: ${initialCompleted ? '✅ OUI' : '❌ NON'}`);
+
+  // 3. Simuler le marquage comme vue
+  console.log('\n👁️  Test: Marquage comme vue...');
+  const viewedResult = await markLessonAsViewed(userId, lesson.id);
+  console.log(`   - Résultat: ${viewedResult.success ? '✅ SUCCÈS' : '❌ ÉCHEC'}`);
+  if (!viewedResult.success) {
+    console.log(`   - Erreur: ${viewedResult.error}`);
+  }
+
+  // 4. Vérifier que last_viewed a été mis à jour
+  const { data: progressAfterViewed } = await supabase
+    .from('training_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('lesson_id', lesson.id)
+    .maybeSingle();
+
+  if (progressAfterViewed) {
+    console.log(`   - last_viewed mis à jour: ${progressAfterViewed.last_viewed ? '✅ OUI' : '❌ NON'}`);
+    console.log(`   - done: ${progressAfterViewed.done ? '✅ OUI' : '❌ NON'}`);
+  }
+
+  // 5. Simuler la complétion de la leçon
+  console.log('\n✅ Test: Marquage comme complétée...');
+  const completedResult = await markLessonAsCompleted(userId, lesson.id);
+  console.log(`   - Résultat: ${completedResult.success ? '✅ SUCCÈS' : '❌ ÉCHEC'}`);
+  if (!completedResult.success) {
+    console.log(`   - Erreur: ${completedResult.error}`);
+  }
+
+  // 6. Vérifier l'état final
+  console.log('\n📊 État final:');
+  const finalProgress = await getUserProgressSummary(userId);
+  const finalCompleted = finalProgress.completedLessonIds.includes(lesson.id);
+  console.log(`   - Leçon complétée: ${finalCompleted ? '✅ OUI' : '❌ NON'}`);
+
+  // 7. Calculer la nouvelle progression globale
+  const totalLessons = finalProgress.modules.reduce((sum, m) => sum + m.totalLessons, 0);
+  const globalProgress = totalLessons > 0
+    ? Math.round((finalProgress.completedLessonIds.length / totalLessons) * 100)
+    : 0;
+
+  console.log(`\n📈 Résultats du test:`);
+  console.log(`   - Progression globale: ${globalProgress}%`);
+  console.log(`   - Leçons complétées: ${finalProgress.completedLessonIds.length}/${totalLessons}`);
+
+  if (finalCompleted && !initialCompleted) {
+    console.log(`\n🎉 Test réussi! La progression s'est mise à jour correctement.`);
+  } else if (finalCompleted && initialCompleted) {
+    console.log(`\n⚠️  La leçon était déjà complétée. Test partiellement réussi.`);
+  } else {
+    console.log(`\n❌ Test échoué: La leçon n'a pas été marquée comme complétée.`);
+  }
+}
+
 async function main() {
   const userId = process.argv[2];
 
-  console.log('🧪 Test du service de progression\n');
+  console.log('🧪 Test complet du système de progression\n');
 
   try {
     if (!userId) {
@@ -239,6 +400,9 @@ async function main() {
 
       const user = profiles[0];
       console.log(`📧 Utilisation de l'utilisateur: ${user.email} (${user.full_name || 'Sans nom'})\n`);
+
+      // Test du calcul de progression existant
+      console.log('🔍 Test 1: Calcul de progression existant');
       const result = await getUserProgressSummary(user.id);
 
       console.log('✅ Résultats du test:\n');
@@ -264,23 +428,27 @@ async function main() {
       }
 
       const totalLessons = result.modules.reduce((sum, m) => sum + m.totalLessons, 0);
-      const globalProgress = totalLessons > 0 
+      const globalProgress = totalLessons > 0
         ? Math.round((result.completedLessonIds.length / totalLessons) * 100)
         : 0;
-      
+
       console.log(`\n✅ Leçons complétées: ${result.completedLessonIds.length}/${totalLessons}`);
       console.log(`📈 Progression globale: ${globalProgress}%`);
       console.log(`\n📋 Détails du calcul:`);
       console.log(`   - Leçons complétées (modules actifs uniquement): ${result.completedLessonIds.length}`);
       console.log(`   - Total de leçons (modules actifs uniquement): ${totalLessons}`);
       console.log(`   - Calcul: (${result.completedLessonIds.length} / ${totalLessons}) * 100 = ${globalProgress}%`);
+
+      // Test du suivi de progression en temps réel
+      console.log('\n🔄 Test 2: Suivi de progression en temps réel');
+      await testProgressTracking(user.id);
     } else {
       const result = await getUserProgressSummary(userId);
       const totalLessons = result.modules.reduce((sum, m) => sum + m.totalLessons, 0);
-      const globalProgress = totalLessons > 0 
+      const globalProgress = totalLessons > 0
         ? Math.round((result.completedLessonIds.length / totalLessons) * 100)
         : 0;
-      
+
       console.log(`📈 Progression globale: ${globalProgress}%`);
       console.log(`📊 Leçons complétées: ${result.completedLessonIds.length}/${totalLessons}`);
       console.log(JSON.stringify(result, null, 2));
