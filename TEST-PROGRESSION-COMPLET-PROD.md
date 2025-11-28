@@ -181,3 +181,4 @@ node scripts/create-test-user-with-progress.js
 
 **Prochaine étape:** Tester manuellement avec un utilisateur ayant de la progression pour valider le calcul dans tous les cas.
 
+

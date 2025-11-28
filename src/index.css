@@ -155,6 +155,29 @@ section {
   will-change: transform, opacity;
 }
 
+/* Optimisations pour mobile et animations réduites */
+@media (max-width: 768px) {
+  /* Réduire les animations sur mobile */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+
+  /* Désactiver les animations complexes sur mobile */
+  .animate-pulse-slow,
+  .animate-float,
+  .animate-move-right,
+  .animate-move-left,
+  .animate-gradient {
+    animation: none !important;
+  }
+
+  /* Optimiser les éléments qui se transforment */
+  .transform, .hover\\:scale-110, .hover\\:scale-105 {
+    will-change: transform;
+  }
+}
+
 /* Reduce motion if user prefers */
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -162,5 +185,70 @@ section {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Optimisations de performance générales */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Optimisations CSS modernes pour mobile */
+@supports (contain-intrinsic-size: 1px) {
+  .mobile-optimized {
+    contain-intrinsic-size: 200px 100px;
+    content-visibility: auto;
+  }
+}
+
+@supports (content-visibility: auto) {
+  /* Masquer le contenu hors écran pour améliorer les performances */
+  .content-visibility-auto {
+    content-visibility: auto;
+  }
+
+  /* Sections qui peuvent être masquées quand elles sont hors écran */
+  .section-optimizable {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 200px;
+  }
+}
+
+/* Optimisations pour les listes longues */
+.virtual-scroll-container {
+  contain: layout style paint;
+}
+
+.virtual-scroll-item {
+  contain-intrinsic-size: 0 60px;
+  content-visibility: auto;
+}
+
+/* Optimisations pour les cartes et composants */
+.card-optimized {
+  contain: layout style paint;
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  /* Appliquer contain-intrinsic-size sur mobile pour améliorer le rendu */
+  .mobile-card {
+    contain-intrinsic-size: 0 120px;
+    content-visibility: auto;
+  }
+
+  .mobile-section {
+    contain-intrinsic-size: 0 300px;
+    content-visibility: auto;
   }
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -9,18 +9,19 @@ import {
   getUpcomingEvents,
 } from '../services/memberStatsService';
 import { getUserProgressSummary } from '../services/progressService';
-import ProgressChecklist from '../components/member/ProgressChecklist';
-import EventsCalendar from '../components/member/EventsCalendar';
-import BadgesDisplay from '../components/member/BadgesDisplay';
-import ChallengesList from '../components/member/ChallengesList';
 import EmptyState from '../components/common/EmptyState';
 import { DashboardSkeleton } from '../components/common/Skeleton';
 import StatCard from '../components/ui/StatCard';
 import GlassCard from '../components/ui/GlassCard';
 import AnimatedProgress from '../components/ui/AnimatedProgress';
-import XpTrackMeter from '../components/member/XpTrackMeter';
-import DailyGoalsCard from '../components/member/DailyGoalsCard';
-import EconomyTimeline from '../components/economy/EconomyTimeline';
+
+// Lazy load composants lourds pour améliorer les performances
+const ProgressChecklist = lazy(() => import('../components/member/ProgressChecklist'));
+const EventsCalendar = lazy(() => import('../components/member/EventsCalendar'));
+const BadgesDisplay = lazy(() => import('../components/member/BadgesDisplay'));
+const ChallengesList = lazy(() => import('../components/member/ChallengesList'));
+const XpTrackMeter = lazy(() => import('../components/member/XpTrackMeter'));
+const DailyGoalsCard = lazy(() => import('../components/member/DailyGoalsCard'));
 import {
   TrendingUp,
   BookOpen,

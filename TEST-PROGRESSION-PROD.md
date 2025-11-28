@@ -114,3 +114,4 @@ Pour un utilisateur **sans progression**, le calcul fonctionne correctement:
 
 **Prochaine étape:** Tester avec un utilisateur ayant de la progression pour valider le calcul dans tous les cas.
 
+
