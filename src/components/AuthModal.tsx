@@ -419,7 +419,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
                     Inscription en cours...
                   </>
                 ) : (
-                  "S'inscrire"
+                  "Rejoindre"
                 )}
               </button>
             </form>
