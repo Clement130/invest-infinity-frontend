@@ -72,21 +72,25 @@ export default function ProgressPage() {
 
   // Calculer la progression globale à partir des données réelles de progression
   const globalProgress = useMemo(() => {
-    if (!progressSummary || progressSummary.modules.length === 0) return 0;
+    if (!progressSummary || !modules.length) return 0;
     
-    // Calculer le total de leçons complétées et le total de leçons
-    const totalCompleted = progressSummary.modules.reduce(
-      (sum, module) => sum + module.completedLessons,
-      0
-    );
+    // Utiliser directement completedLessonIds pour être sûr d'avoir le bon nombre
+    const totalCompleted = progressSummary.completedLessonIds.length;
+    
+    // Calculer le total de leçons depuis tous les modules (même ceux sans leçons)
+    // Utiliser progressSummary.modules qui contient déjà le bon total par module
     const totalLessons = progressSummary.modules.reduce(
-      (sum, module) => sum + module.totalLessons,
+      (sum, module) => sum + (module.totalLessons || 0),
       0
     );
     
+    // Si aucun module n'a de leçons, retourner 0
     if (totalLessons === 0) return 0;
-    return Math.round((totalCompleted / totalLessons) * 100);
-  }, [progressSummary]);
+    
+    // Calculer le pourcentage arrondi
+    const percentage = (totalCompleted / totalLessons) * 100;
+    return Math.round(percentage);
+  }, [progressSummary, modules]);
 
   const xpTracks = stats?.xpTracks ?? [];
 
@@ -209,7 +213,7 @@ export default function ProgressPage() {
                     </div>
                     <p className="text-2xl font-bold text-white">
                       {progressSummary 
-                        ? progressSummary.modules.reduce((sum, m) => sum + m.completedLessons, 0)
+                        ? progressSummary.completedLessonIds.length
                         : stats?.completedLessons || 0}/{progressSummary 
                         ? progressSummary.modules.reduce((sum, m) => sum + m.totalLessons, 0)
                         : stats?.totalLessons || 0}
