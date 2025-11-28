@@ -9,20 +9,16 @@ import XpTrackMeter from '../components/member/XpTrackMeter';
 import EmptyState from '../components/common/EmptyState';
 import { StatCardSkeleton } from '../components/common/Skeleton';
 import GlassCard from '../components/ui/GlassCard';
-import StatCard from '../components/ui/StatCard';
 import AnimatedProgress from '../components/ui/AnimatedProgress';
 import { getModules } from '../services/trainingService';
 import {
   TrendingUp,
   Award,
-  Target,
   BookOpen,
   Clock,
-  Flame,
   Trophy,
   CheckCircle2,
 } from 'lucide-react';
-import clsx from 'clsx';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -77,7 +73,6 @@ export default function ProgressPage() {
     ? Math.round((stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100)
     : 0;
 
-  const streak = stats?.streak || 7;
   const xpTracks = stats?.xpTracks ?? [];
 
   const isLoading = statsQuery.isLoading || progressSummaryQuery.isLoading || modulesQuery.isLoading;
@@ -212,11 +207,9 @@ export default function ProgressPage() {
                   </div>
 
                   <div className="text-center p-4 rounded-xl bg-white/5">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Flame className="w-5 h-5 text-orange-400" />
-                    </div>
-                    <p className="text-2xl font-bold text-white">{streak}</p>
-                    <p className="text-xs text-gray-400">Jours de streak</p>
+                    <p className="text-2xl font-bold text-white">{stats?.level || 1}</p>
+                    <p className="text-xs text-gray-400">Niveau actuel</p>
+                    <p className="text-sm text-gray-500 mt-1">{stats?.xp || 0} XP</p>
                   </div>
                 </div>
               </div>
@@ -226,35 +219,29 @@ export default function ProgressPage() {
           {/* Stats Cards */}
           <motion.section variants={itemVariants}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
-                icon={TrendingUp}
-                label="Progression Globale"
-                value={`${globalProgress}%`}
-                color="green"
-                delay={0}
-              />
-              <StatCard
-                icon={Award}
-                label="Niveau actuel"
-                value={stats?.level || 1}
-                subValue={`${stats?.xp || 0} XP`}
-                color="yellow"
-                delay={0.1}
-              />
-              <StatCard
-                icon={Target}
-                label="Modules Complétés"
-                value={`${stats?.completedModules || 0}/${stats?.totalModules || 0}`}
-                color="purple"
-                delay={0.2}
-              />
-              <StatCard
-                icon={Trophy}
-                label="XP Total"
-                value={stats?.xp || 0}
-                color="cyan"
-                delay={0.3}
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:shadow-xl p-5"
+              >
+                <div className="relative space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Niveau actuel</p>
+                    <div className="flex items-baseline gap-2">
+                      <motion.p
+                        initial={{ scale: 0.5 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.3 }}
+                        className="text-2xl font-bold text-yellow-400"
+                      >
+                        {stats?.level || 1}
+                      </motion.p>
+                      <span className="text-sm text-gray-500">{stats?.xp || 0} XP</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.section>
 
