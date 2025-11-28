@@ -28,7 +28,7 @@ const faqCategories = [
     questions: [
       {
         question: "Comment rejoindre Invest Infinity ?",
-        answer: "C'est simple et rapide :\n\n1️⃣ Crée ton compte sur notre site\n2️⃣ Ouvre un compte chez notre broker partenaire RaiseFX\n3️⃣ Accède immédiatement au Discord VIP\n\nTout le processus prend moins de 10 minutes !"
+        answer: "C'est simple et rapide :\n\n1️⃣ Sélectionne ton offre dans tarif\n2️⃣ Active ton espace membre\n3️⃣ Accède à la formation"
       },
       {
         question: "Je suis déjà chez RaiseFX avec un autre affilié, comment faire ?",
