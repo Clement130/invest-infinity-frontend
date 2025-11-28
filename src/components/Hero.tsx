@@ -76,10 +76,10 @@ export default function Hero({ onOpenRegister }: HeroProps) {
             Rejoins Invest Infinity et accède à nos analyses, à des stratégies structurées et à une formation complète, avec un accompagnement réel pour progresser chaque jour.
           </p>
 
-          {/* Boutons avec effets néon */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          {/* Bouton avec effets néon */}
+          <div className="flex justify-center">
             <button 
-              onClick={onOpenRegister}
+              onClick={() => navigate('/pricing')}
               className="group relative px-8 py-4 bg-gradient-to-r from-pink-500 to-pink-500 text-white rounded-xl overflow-hidden"
             >
               {/* Effet de brillance */}
@@ -87,29 +87,12 @@ export default function Hero({ onOpenRegister }: HeroProps) {
               
               {/* Contenu du bouton */}
               <div className="relative flex items-center justify-center gap-2">
-                <span className="font-semibold">Rejoindre le discord</span>
+                <span className="font-semibold">Forme-toi dès maintenant</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </div>
 
               {/* Effet de glow */}
               <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-pink-500 blur-xl -z-10" />
-            </button>
-
-            <button 
-              onClick={() => navigate('/pricing')}
-              className="group relative px-8 py-4 bg-transparent text-white rounded-xl overflow-hidden border border-pink-500/30"
-            >
-              {/* Effet de hover */}
-              <div className="absolute inset-0 bg-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              
-              {/* Contenu du bouton */}
-              <span className="relative font-semibold">Forme-toi dès maintenant</span>
-
-              {/* Coins lumineux */}
-              <div className="absolute top-0 left-0 w-2 h-2 bg-pink-500/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute top-0 right-0 w-2 h-2 bg-pink-500/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute bottom-0 left-0 w-2 h-2 bg-pink-500/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute bottom-0 right-0 w-2 h-2 bg-pink-500/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </div>
         </div>
