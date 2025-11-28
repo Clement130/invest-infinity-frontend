@@ -41,7 +41,7 @@ const services = [
   },
   {
     icon: BookOpen,
-    title: 'Formation Complète',
+    title: 'Formation et Accompagnement',
     description: 'Formation et accompagnement détaillés pour maîtriser les stratégies qui fonctionnent vraiment.',
     image: 'https://i.postimg.cc/zXNhcQqG/image.png',
     stats: [],
