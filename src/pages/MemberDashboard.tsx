@@ -26,7 +26,6 @@ import {
   BookOpen,
   Clock,
   Award,
-  Target,
   Rocket,
   Play,
   ChevronRight,
@@ -264,18 +263,6 @@ export default function MemberDashboard() {
   }, [progressSummary]);
 
   const continueLearning = progressSummary?.continueLearning;
-
-  const recommendedModules = useMemo(() => {
-    return modules
-      .map((module) => ({
-        module,
-        completion: moduleProgressMap[module.id]?.completionRate ?? 0,
-        nextLesson: moduleProgressMap[module.id]?.nextLessonTitle,
-      }))
-      .filter((item) => item.completion < 100)
-      .sort((a, b) => b.completion - a.completion)
-      .slice(0, 3);
-  }, [modules, moduleProgressMap]);
 
   const isLoading =
     statsQuery.isLoading ||
@@ -556,71 +543,6 @@ export default function MemberDashboard() {
                 </div>
               </GlassCard>
             </motion.section>
-            )}
-
-            {/* Modules recommandés - Simplifié */}
-            {recommendedModules.length > 0 ? (
-            <motion.section variants={itemVariants} className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                  <Target className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Continue ta progression</h3>
-                  <p className="text-sm text-gray-400">Modules recommandés</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {recommendedModules.slice(0, 2).map(({ module, completion, nextLesson }, index) => (
-                  <motion.div
-                      key={module.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ y: -2 }}
-                    onClick={() => navigate(`/app/modules/${module.id}`)}
-                    className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-4 cursor-pointer group hover:border-pink-500/30 transition-all"
-                  >
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition" />
-
-                    <div className="relative">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="px-2 py-1 rounded-full bg-pink-500/20 text-pink-400 text-xs font-medium">
-                          {completion}%
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-pink-400 group-hover:translate-x-0.5 transition-all" />
-                      </div>
-
-                      <h4 className="font-semibold text-white group-hover:text-pink-200 transition-colors line-clamp-1 mb-1">
-                        {module.title}
-                      </h4>
-                      {nextLesson && (
-                        <p className="text-xs text-gray-400 line-clamp-1">
-                          Prochaine: {nextLesson}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                  ))}
-              </div>
-            </motion.section>
-            ) : (
-              modules.length > 0 && (
-              <motion.section variants={itemVariants}>
-                <GlassCard hover={false} glow="none">
-                  <EmptyState
-                    icon={Rocket}
-                    title="Tous tes modules sont complétés !"
-                    description="Félicitations ! Tu as terminé tous tes modules. De nouveaux contenus seront bientôt disponibles."
-                    action={{
-                      label: 'Voir mes statistiques',
-                      onClick: () => navigate('/app/progress'),
-                    }}
-                  />
-                </GlassCard>
-              </motion.section>
-              )
             )}
 
             {/* Section détaillée - Masquée sur mobile */}
