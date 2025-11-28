@@ -7,7 +7,7 @@ interface FAQProps {
 }
 
 // Catégories de FAQ avec icônes
-// Dernière mise à jour: FAQ mise à jour - questions brokers modifiées et supprimées
+// Dernière mise à jour: FAQ mise à jour - organisation formation et positions 1-2 par jour
 const faqCategories = [
   {
     icon: HelpCircle,
