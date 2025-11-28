@@ -29,12 +29,10 @@ interface FormData {
   prenom: string;
   email: string;
   phone: string;
-  budget: string;
 }
 
 interface FormErrors {
   phone?: string;
-  budget?: string;
 }
 
 export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client' }: AuthModalProps) {
@@ -48,7 +46,6 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
     prenom: '',
     email: '',
     phone: '',
-    budget: '',
   });
   const [loginData, setLoginData] = useState({
     email: '',
@@ -58,12 +55,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    let newValue = value;
-    if (name === 'budget') {
-      // n’accepter que les chiffres
-      newValue = value.replace(/[^0-9]/g, '');
-    }
-    setFormData(prev => ({ ...prev, [name]: newValue }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -97,19 +89,6 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
       }
     }
 
-    // === Validation du budget ===
-    if (!formData.budget) {
-      newErrors.budget = 'Le capital prévu est requis';
-    } else {
-      const budgetNumber = parseInt(formData.budget, 10);
-      if (isNaN(budgetNumber)) {
-        newErrors.budget = 'Format de montant invalide';
-      } else if (budgetNumber < 200) {
-        newErrors.budget = 'Le dépôt minimum est de 200€ (nous conseillons 500€ ou plus).';
-      } else if (budgetNumber > 100000) {
-        newErrors.budget = 'Merci d’indiquer un montant réaliste pour démarrer.';
-      }
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -190,7 +169,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
         email: formData.email,
         telephone: formData.phone,
         statut: 'Lead',
-        capital: parseInt(formData.budget, 10),
+        capital: 0,
         newsLetter: true,
       });
 
@@ -204,7 +183,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
           data: {
             prenom: formData.prenom,
             phone: formData.phone,
-            capital: parseInt(formData.budget, 10),
+            capital: 0,
           },
         },
       });
@@ -426,24 +405,6 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
                   )}
                 </div>
 
-                {/* Budget */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Capital actuel prévu pour le trading <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="budget"
-                    value={formData.budget}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    placeholder="Montant en €"
-                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  {errors.budget && (
-                    <p className="text-red-500 text-sm mt-1">{errors.budget}</p>
-                  )}
-                </div>
               </div>
 
               {/* Bouton */}

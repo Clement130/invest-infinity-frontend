@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, CreditCard, Sparkles, Info } from 'lucide-react';
-import Tooltip from '@mui/material/Tooltip';
+import { User, Mail, Phone, Sparkles } from 'lucide-react';
 import { CustomMuiTelInput } from '../CustomMuiTelInput';
 import { matchIsValidTel } from 'mui-tel-input';
 import TradingAccountCard from './TradingAccountCard';
@@ -11,14 +10,12 @@ interface FormData {
   prenom: string;
   email: string;
   phone: string;
-  budget: string;
 }
 
 interface FormErrors {
   prenom?: string;
   email?: string;
   phone?: string;
-  budget?: string;
 }
 
 const LeadForm: React.FC = () => {
@@ -28,7 +25,6 @@ const LeadForm: React.FC = () => {
     prenom: '',
     email: '',
     phone: '',
-    budget: '',
   });
   const [telTouched, setTelTouched] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -77,16 +73,6 @@ const LeadForm: React.FC = () => {
       }
     }
 
-    const budgetNumber = parseInt(formData.budget, 10);
-    if (!formData.budget) {
-      newErrors.budget = 'Le capital prévu est requis';
-    } else if (isNaN(budgetNumber)) {
-      newErrors.budget = 'Format de montant invalide';
-    } else if (budgetNumber < 200) {
-      newErrors.budget = 'Le dépôt minimum chez RaiseFX est de 200€ pour démarrer le trading, mais nous conseillons 500€ ou plus.';
-    } else if (budgetNumber > 100000) {
-      newErrors.budget = 'Ce formulaire est destiné aux personnes prêtes à se lancer sérieusement dans le trading. Merci d’indiquer un montant réaliste.';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -112,7 +98,7 @@ const LeadForm: React.FC = () => {
         telephone: formData.phone,
         statut: 'Lead',
         newsLetter: true,
-        capital: parseInt(formData.budget, 10),
+        capital: 0,
       });
 
       localStorage.setItem('userEmail', formData.email);
@@ -120,7 +106,7 @@ const LeadForm: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       setErrors({
-        budget:
+        email:
           err?.message ??
           "Erreur lors de l'enregistrement, merci de réessayer.",
       });
@@ -217,37 +203,6 @@ const LeadForm: React.FC = () => {
           {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
         </div>
 
-        {/* Capital prévu */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <CreditCard className="inline w-4 h-4 mr-2" />
-            Capital actuel prévu pour le trading  <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.budget}
-            onChange={e => handleInputChange('budget', e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="Montant en €"
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none text-gray-900 placeholder-gray-400 ${
-              errors.budget
-                ? 'border-red-300 focus:border-red-500'
-                : 'border-gray-200 focus:border-pink-500'
-            }`}
-          />
-          {errors.budget && (
-            <p className="text-red-500 text-sm mt-1 flex items-center">
-              {errors.budget}
-              {formData.budget && parseInt(formData.budget, 10) < 200 && (
-                <Tooltip
-                  title="Plus votre capital de départ est élevé, meilleur est le money management, les risques sont minimisés et les profits potentiels augmentent."
-                  arrow
-                >
-                  <Info className="w-4 h-4 text-red-500 ml-1 cursor-pointer" />
-                </Tooltip>
-              )}
-            </p>
-          )}
-        </div>
 
         {/* CTA */}
         <button
