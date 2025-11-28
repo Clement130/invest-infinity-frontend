@@ -10,7 +10,7 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
     {
       icon: UserPlus,
       title: "INSCRIS TOI",
-      description: "Crée ton compte en quelques minutes et rejoins notre communauté de traders",
+      description: "Sélectionne l'offre qui te correspond pour rejoindre notre communauté et progresser avec nous",
       gradient: "from-pink-400 to-pink-500"
     },
     {
