@@ -71,7 +71,7 @@ const faqCategories = [
     questions: [
       {
         question: "Comment contacter le support ?",
-        answer: "Plusieurs options :\n\n💬 Sur Discord : mentionne @investinfinity\n📧 Par email : via le formulaire de contact\n🎥 En live : pose tes questions directement à nos experts\n\nOn répond généralement sous 24h, souvent beaucoup plus vite !"
+        answer: "Plusieurs options :\n\n💬 Sur Discord : mentionne @investinfinity\n🤖 Via le chatbot : disponible sur le site\n🎥 En live : pose tes questions directement à nos experts\n\nOn répond généralement sous 24h, souvent beaucoup plus vite !"
       },
       {
         question: "Y a-t-il des lives réguliers ?",
