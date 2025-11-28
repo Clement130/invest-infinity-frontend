@@ -7,6 +7,7 @@ interface FAQProps {
 }
 
 // Catégories de FAQ avec icônes
+// Dernière mise à jour: FAQ mise à jour avec nouvelles étapes et temps réduit à 5 minutes
 const faqCategories = [
   {
     icon: HelpCircle,
