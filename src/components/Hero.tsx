@@ -77,7 +77,7 @@ export default function Hero({ onOpenRegister }: HeroProps) {
           </p>
 
           {/* Bouton avec effets néon */}
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-3">
             <button 
               onClick={() => navigate('/pricing')}
               className="group relative px-8 py-4 bg-gradient-to-r from-pink-500 to-pink-500 text-white rounded-xl overflow-hidden"
@@ -94,6 +94,13 @@ export default function Hero({ onOpenRegister }: HeroProps) {
               {/* Effet de glow */}
               <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-pink-500 blur-xl -z-10" />
             </button>
+            
+            {/* Réassurance */}
+            <p className="text-sm text-gray-400 flex items-center gap-2">
+              <span>✓ Garantie 14 jours</span>
+              <span className="text-gray-600">•</span>
+              <span>Accès à vie</span>
+            </p>
           </div>
         </div>
 
