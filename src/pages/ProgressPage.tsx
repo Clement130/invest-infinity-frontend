@@ -5,7 +5,6 @@ import { useSession } from '../hooks/useSession';
 import { getUserStats } from '../services/memberStatsService';
 import { getUserProgressSummary } from '../services/progressService';
 import ProgressChecklist from '../components/member/ProgressChecklist';
-import ActivityHeatmap from '../components/member/ActivityHeatmap';
 import XpTrackMeter from '../components/member/XpTrackMeter';
 import EmptyState from '../components/common/EmptyState';
 import { StatCardSkeleton } from '../components/common/Skeleton';
@@ -21,28 +20,9 @@ import {
   Clock,
   Flame,
   Trophy,
-  Calendar,
   CheckCircle2,
-  BarChart3,
 } from 'lucide-react';
 import clsx from 'clsx';
-
-// Mock activity data for heatmap
-const generateMockActivityData = () => {
-  const data = [];
-  const today = new Date();
-  for (let i = 364; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const count = Math.random() > 0.4 ? Math.floor(Math.random() * 8) : 0;
-    data.push({
-      date: date.toISOString().split('T')[0],
-      count,
-      lessonsCompleted: Math.floor(count * 0.6),
-    });
-  }
-  return data;
-};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -93,15 +73,12 @@ export default function ProgressPage() {
     );
   }, [progressSummaryQuery.data]);
 
-  const activityData = useMemo(() => generateMockActivityData(), []);
-
   const globalProgress = stats
     ? Math.round((stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100)
     : 0;
 
   const streak = stats?.streak || 7;
   const xpTracks = stats?.xpTracks ?? [];
-  const activeDays = activityData.filter((d) => d.count > 0).length;
 
   const isLoading = statsQuery.isLoading || progressSummaryQuery.isLoading || modulesQuery.isLoading;
 
@@ -272,10 +249,9 @@ export default function ProgressPage() {
                 delay={0.2}
               />
               <StatCard
-                icon={Calendar}
-                label="Jours d'activité"
-                value={activeDays}
-                subValue="sur 365"
+                icon={Trophy}
+                label="XP Total"
+                value={stats?.xp || 0}
                 color="cyan"
                 delay={0.3}
               />
@@ -300,22 +276,6 @@ export default function ProgressPage() {
               </GlassCard>
             </motion.section>
           )}
-
-          {/* Activity Heatmap */}
-          <motion.section variants={itemVariants}>
-            <GlassCard hover={false} glow="none">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">Activité</h2>
-                  <p className="text-sm text-gray-400">Ton activité sur les 12 derniers mois</p>
-                </div>
-              </div>
-              <ActivityHeatmap data={activityData} />
-            </GlassCard>
-          </motion.section>
 
           {/* Level Progress */}
           {stats && (
