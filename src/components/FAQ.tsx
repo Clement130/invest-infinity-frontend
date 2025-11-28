@@ -56,8 +56,8 @@ const faqCategories = [
     title: "Sécurité & Brokers",
     questions: [
       {
-        question: "Puis-je utiliser un autre broker ?",
-        answer: "Pour accéder au contenu VIP (alertes, formations, lives), il faut avoir un compte actif chez RaiseFX. C'est ce partenariat qui nous permet de t'offrir tout gratuitement. Tu peux bien sûr garder d'autres comptes ailleurs pour ton trading perso."
+        question: "Puis-je rejoindre la formation avec n'importe quel broker ?",
+        answer: "Oui, pas de souci.\n\nPour ça, vous pouvez rejoindre la communauté avec votre broker actuel.\n\nEt si vous n'en avez pas, nous avons des partenaires de confiance chez lesquels vous pouvez faire un dépôt."
       },
       {
         question: "Mes données sont-elles sécurisées ?",
