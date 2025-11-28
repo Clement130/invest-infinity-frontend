@@ -7,6 +7,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Test files temporaires
+*-check-*.png
+TEST-PRODUCTION-*.json
+test-result.txt
+
 node_modules
 dist
 dist-ssr

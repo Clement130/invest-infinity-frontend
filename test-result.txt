@@ -1,4 +1,0 @@
-{
-  "success": true,
-  "emailId": "ed0bca43-2879-44f1-a895-127d46ff1615"
-}
