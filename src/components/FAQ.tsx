@@ -75,7 +75,7 @@ const faqCategories = [
       },
       {
         question: "Y a-t-il des lives réguliers ?",
-        answer: "Oui ! Nos experts animent des lives hebdomadaires où ils analysent les marchés en temps réel, répondent à vos questions et partagent leurs setups. C'est le moment idéal pour apprendre et interagir directement avec eux."
+        answer: "Oui, Les lives trading sont le lundi & Mardi de 16h à 17h30 et de mercredi à vendredi de 15h à 17h30"
       }
     ]
   },
