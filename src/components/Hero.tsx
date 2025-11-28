@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface HeroProps {
   onOpenRegister?: () => void;
@@ -7,6 +8,7 @@ interface HeroProps {
 
 export default function Hero({ onOpenRegister }: HeroProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const scrollToServices = () => {
     const servicesSection = document.getElementById("services");
@@ -94,14 +96,14 @@ export default function Hero({ onOpenRegister }: HeroProps) {
             </button>
 
             <button 
-              onClick={scrollToServices}
+              onClick={() => navigate('/pricing')}
               className="group relative px-8 py-4 bg-transparent text-white rounded-xl overflow-hidden border border-pink-500/30"
             >
               {/* Effet de hover */}
               <div className="absolute inset-0 bg-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               
               {/* Contenu du bouton */}
-              <span className="relative font-semibold">En savoir plus</span>
+              <span className="relative font-semibold">Forme-toi dès maintenant</span>
 
               {/* Coins lumineux */}
               <div className="absolute top-0 left-0 w-2 h-2 bg-pink-500/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
