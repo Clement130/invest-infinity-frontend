@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useSession } from '../hooks/useSession';
 import { getUserStats } from '../services/memberStatsService';
-import { getUserProgressSummary } from '../services/progressService';
+import { useUserProgressSummary } from '../hooks/useTraining';
 import ProgressChecklist from '../components/member/ProgressChecklist';
 import XpTrackMeter from '../components/member/XpTrackMeter';
 import EmptyState from '../components/common/EmptyState';
@@ -49,11 +49,7 @@ export default function ProgressPage() {
     queryFn: () => getModules(),
   });
 
-  const progressSummaryQuery = useQuery({
-    queryKey: ['member-progress', user?.id],
-    queryFn: () => getUserProgressSummary(user?.id || ''),
-    enabled: !!user?.id,
-  });
+  const progressSummaryQuery = useUserProgressSummary(user?.id);
 
   const stats = statsQuery.data;
   const modules = modulesQuery.data || [];

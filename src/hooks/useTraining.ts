@@ -8,6 +8,8 @@ import {
   createOrUpdateLesson,
   deleteLesson,
 } from '../services/trainingService';
+import { getUserProgressSummary } from '../services/progressService';
+import { markLessonAsViewed, markLessonAsCompleted } from '../services/progressTrackingService';
 import type { TrainingModule, TrainingLesson } from '../types/training';
 
 export const TRAINING_KEYS = {
@@ -81,5 +83,43 @@ export function useLessonMutations(moduleId: string) {
   });
 
   return { createUpdateLesson, removeLesson };
+}
+
+// Clés de cache pour la progression
+export const PROGRESS_KEYS = {
+  all: ['progress'] as const,
+  summary: (userId: string) => [...PROGRESS_KEYS.all, 'summary', userId] as const,
+};
+
+export function useUserProgressSummary(userId: string | undefined) {
+  return useQuery({
+    queryKey: PROGRESS_KEYS.summary(userId!),
+    queryFn: () => getUserProgressSummary(userId!),
+    enabled: !!userId,
+  });
+}
+
+export function useProgressMutations(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  const markViewed = useMutation({
+    mutationFn: ({ lessonId }: { lessonId: string }) =>
+      markLessonAsViewed(userId!, lessonId),
+    onSuccess: () => {
+      // Invalider le cache de progression après marquage comme vue
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.summary(userId!) });
+    },
+  });
+
+  const markCompleted = useMutation({
+    mutationFn: ({ lessonId }: { lessonId: string }) =>
+      markLessonAsCompleted(userId!, lessonId),
+    onSuccess: () => {
+      // Invalider le cache de progression après complétion
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.summary(userId!) });
+    },
+  });
+
+  return { markViewed, markCompleted };
 }
 

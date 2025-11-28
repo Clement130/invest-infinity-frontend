@@ -101,28 +101,95 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
 
   // Fonction pour vérifier la progression de la vidéo
   const checkVideoProgress = useCallback(async () => {
-    if (!iframeRef.current || !videoId || !baseUrl) return;
-    // Placeholder pour l'API BunnyStream
-  }, [videoId, baseUrl]);
+    if (!playerRef.current || !videoId) return;
+
+    try {
+      // Obtenir la durée totale
+      playerRef.current.getDuration((duration: number) => {
+        // Obtenir le temps actuel
+        playerRef.current?.getCurrentTime((currentTime: number) => {
+          if (duration > 0) {
+            const percentage = (currentTime / duration) * 100;
+            console.log('[BunnyPlayer] Progression détectée:', {
+              currentTime,
+              duration,
+              percentage: Math.round(percentage)
+            });
+
+            // Créer l'événement de progression
+            const event: VideoProgressEvent = {
+              currentTime,
+              duration,
+              percentage,
+            };
+
+            // Notifier le tracker si disponible
+            if (trackerRef.current) {
+              trackerRef.current.handleProgress(event);
+            }
+
+            // Notifier le parent
+            if (onProgress) {
+              onProgress(event);
+            }
+          }
+        });
+      });
+    } catch (error) {
+      console.error('[BunnyPlayer] Erreur lors de la vérification de progression:', error);
+    }
+  }, [videoId, onProgress]);
 
   const handleIframeLoad = useCallback(() => {
     setIsLoading(false);
-    
-    // Démarrer le suivi de progression si userId et lessonId sont fournis
-    if (userId && lessonId && trackerRef.current) {
-      setTimeout(async () => {
-        if (trackerRef.current) {
-          const event: VideoProgressEvent = {
-            currentTime: 30,
-            duration: 100,
-            percentage: 30,
-          };
-          await trackerRef.current.handleProgress(event);
-          if (onProgress) onProgress(event);
-        }
-      }, 30000);
+
+    // Initialiser Player.js si disponible
+    if (iframeRef.current && window.playerjs && userId && lessonId) {
+      try {
+        playerRef.current = new window.playerjs.Player(iframeRef.current);
+
+        // Attendre que le player soit prêt
+        playerRef.current.on('ready', () => {
+          console.log('[BunnyPlayer] Player.js prêt');
+
+          // Écouter les événements de progression
+          playerRef.current?.on('timeupdate', () => {
+            checkVideoProgress();
+          });
+
+          // Écouter la fin de la vidéo
+          playerRef.current?.on('ended', () => {
+            console.log('[BunnyPlayer] Vidéo terminée');
+            if (trackerRef.current) {
+              // Marquer comme complétée à 100%
+              const event: VideoProgressEvent = {
+                currentTime: 100,
+                duration: 100,
+                percentage: 100,
+              };
+              trackerRef.current.handleProgress(event);
+              if (onProgress) onProgress(event);
+            }
+          });
+
+          // Démarrer le suivi périodique pour les mises à jour de last_viewed
+          if (trackerRef.current && progressCheckIntervalRef.current === null) {
+            progressCheckIntervalRef.current = window.setInterval(() => {
+              trackerRef.current?.updateLastViewed();
+            }, 30000); // Toutes les 30 secondes
+          }
+        });
+
+        // Démarrer une vérification initiale après un court délai
+        setTimeout(() => {
+          checkVideoProgress();
+        }, 2000);
+
+      } catch (error) {
+        console.error('[BunnyPlayer] Erreur lors de l\'initialisation de Player.js:', error);
+      }
     }
-  }, [userId, lessonId, onProgress]);
+  }, [userId, lessonId, onProgress, checkVideoProgress]);
 
   const handleIframeError = useCallback(() => {
     setHasError(true);
@@ -148,10 +215,18 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   if (isMissingVideoId) {
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-yellow-500/30 bg-black/50 flex items-center justify-center">
-        <div className="text-center space-y-2 px-4">
-          <p className="text-yellow-400 font-medium">Vidéo non configurée</p>
+        <div className="text-center space-y-3 px-4">
+          <p className="text-yellow-400 font-medium text-lg">Vidéo non configurée</p>
           <p className="text-sm text-gray-400">
             Aucun identifiant vidéo n'est associé à cette leçon.
+          </p>
+          {lessonId && (
+            <p className="text-xs text-gray-500 mt-2">
+              ID Leçon: {lessonId}
+            </p>
+          )}
+          <p className="text-xs text-gray-500 mt-4 pt-4 border-t border-white/10">
+            💡 Contactez un administrateur pour associer une vidéo à cette leçon.
           </p>
         </div>
       </div>
