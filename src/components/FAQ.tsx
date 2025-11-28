@@ -56,10 +56,6 @@ const faqCategories = [
     title: "Sécurité & Brokers",
     questions: [
       {
-        question: "RaiseFX est-il un broker fiable ?",
-        answer: "Oui ! RaiseFX est un broker régulé que nous avons sélectionné après des mois de tests. Il offre des spreads compétitifs, une exécution rapide et un support client réactif. On ne recommande que des partenaires en qui on a confiance à 100%."
-      },
-      {
         question: "Puis-je utiliser un autre broker ?",
         answer: "Pour accéder au contenu VIP (alertes, formations, lives), il faut avoir un compte actif chez RaiseFX. C'est ce partenariat qui nous permet de t'offrir tout gratuitement. Tu peux bien sûr garder d'autres comptes ailleurs pour ton trading perso."
       },
