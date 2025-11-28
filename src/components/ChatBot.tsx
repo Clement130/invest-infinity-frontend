@@ -115,6 +115,18 @@ export default function ChatBot() {
     }
   }, [isOpen]);
 
+  // Écouter l'événement personnalisé pour ouvrir le chatbot depuis d'autres composants
+  useEffect(() => {
+    const handleOpenChatbot = () => {
+      setIsOpen(true);
+    };
+
+    window.addEventListener('openChatbot', handleOpenChatbot);
+    return () => {
+      window.removeEventListener('openChatbot', handleOpenChatbot);
+    };
+  }, []);
+
   // Animation du badge de notification
   useEffect(() => {
     if (!isOpen) {

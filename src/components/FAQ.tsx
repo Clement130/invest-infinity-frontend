@@ -149,7 +149,7 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
               </span>
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Tu as des questions ? On a les réponses. Si tu ne trouves pas ce que tu cherches, contacte-nous sur Discord !
+              Tu as des questions ? On a les réponses. Si tu ne trouves pas ce que tu cherches, pose ta question au chatbot !
             </p>
           </div>
         </AnimatedSection>
@@ -240,15 +240,16 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
             <p className="text-gray-400 mb-4">
               Tu n'as pas trouvé ta réponse ?
             </p>
-            <a 
-              href="https://discord.gg/investinfinity" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 font-medium transition-colors"
+            <button
+              onClick={() => {
+                // Déclencher un événement personnalisé pour ouvrir le chatbot
+                window.dispatchEvent(new CustomEvent('openChatbot'));
+              }}
+              className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 font-medium transition-colors cursor-pointer"
             >
               <MessageCircle className="w-5 h-5" />
-              Pose ta question sur Discord
-            </a>
+              Pose ta question au chatbot
+            </button>
           </div>
         </AnimatedSection>
       </div>
