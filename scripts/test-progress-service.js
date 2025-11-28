@@ -123,7 +123,17 @@ async function getUserProgressSummary(userId) {
   const progressByLessonId = new Map();
   progressEntries.forEach((entry) => progressByLessonId.set(entry.lesson_id, entry));
 
-  const completedLessonIds = progressEntries.filter((entry) => entry.done).map((entry) => entry.lesson_id);
+  // Créer un Set des IDs de modules actifs pour filtrer les leçons
+  const activeModuleIds = new Set(modules.map(m => m.id));
+  
+  // Filtrer les leçons complétées pour ne garder que celles des modules actifs
+  const completedLessonIds = progressEntries
+    .filter((entry) => {
+      if (!entry.done) return false;
+      const lesson = lessonsById.get(entry.lesson_id);
+      return lesson && activeModuleIds.has(lesson.module_id);
+    })
+    .map((entry) => entry.lesson_id);
 
   const moduleDetails = modules.map((module) => {
     const moduleLessons = lessonsByModule.get(module.id) || [];
@@ -253,9 +263,26 @@ async function main() {
         console.log(`\n⚠️  Aucune progression trouvée. L'utilisateur peut commencer n'importe quel module.`);
       }
 
-      console.log(`\n✅ Leçons complétées: ${result.completedLessonIds.length}`);
+      const totalLessons = result.modules.reduce((sum, m) => sum + m.totalLessons, 0);
+      const globalProgress = totalLessons > 0 
+        ? Math.round((result.completedLessonIds.length / totalLessons) * 100)
+        : 0;
+      
+      console.log(`\n✅ Leçons complétées: ${result.completedLessonIds.length}/${totalLessons}`);
+      console.log(`📈 Progression globale: ${globalProgress}%`);
+      console.log(`\n📋 Détails du calcul:`);
+      console.log(`   - Leçons complétées (modules actifs uniquement): ${result.completedLessonIds.length}`);
+      console.log(`   - Total de leçons (modules actifs uniquement): ${totalLessons}`);
+      console.log(`   - Calcul: (${result.completedLessonIds.length} / ${totalLessons}) * 100 = ${globalProgress}%`);
     } else {
       const result = await getUserProgressSummary(userId);
+      const totalLessons = result.modules.reduce((sum, m) => sum + m.totalLessons, 0);
+      const globalProgress = totalLessons > 0 
+        ? Math.round((result.completedLessonIds.length / totalLessons) * 100)
+        : 0;
+      
+      console.log(`📈 Progression globale: ${globalProgress}%`);
+      console.log(`📊 Leçons complétées: ${result.completedLessonIds.length}/${totalLessons}`);
       console.log(JSON.stringify(result, null, 2));
     }
   } catch (error) {

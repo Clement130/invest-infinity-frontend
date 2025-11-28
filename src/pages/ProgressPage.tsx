@@ -72,7 +72,23 @@ export default function ProgressPage() {
 
   // Calculer la progression globale à partir des données réelles de progression
   const globalProgress = useMemo(() => {
-    if (!progressSummary || !modules.length) return 0;
+    // Logs de débogage
+    console.log('[ProgressPage] Calcul de la progression globale:', {
+      hasProgressSummary: !!progressSummary,
+      modulesLength: modules.length,
+      progressSummaryModules: progressSummary?.modules?.length || 0,
+      completedLessonIds: progressSummary?.completedLessonIds?.length || 0,
+    });
+
+    if (!progressSummary) {
+      console.log('[ProgressPage] Pas de progressSummary, retour 0');
+      return 0;
+    }
+
+    if (!modules.length) {
+      console.log('[ProgressPage] Pas de modules, retour 0');
+      return 0;
+    }
     
     // Utiliser directement completedLessonIds pour être sûr d'avoir le bon nombre
     const totalCompleted = progressSummary.completedLessonIds.length;
@@ -84,12 +100,28 @@ export default function ProgressPage() {
       0
     );
     
+    console.log('[ProgressPage] Détails du calcul:', {
+      totalCompleted,
+      totalLessons,
+      modulesDetails: progressSummary.modules.map(m => ({
+        moduleId: m.moduleId,
+        moduleTitle: m.moduleTitle,
+        totalLessons: m.totalLessons,
+        completedLessons: m.completedLessons,
+      })),
+    });
+    
     // Si aucun module n'a de leçons, retourner 0
-    if (totalLessons === 0) return 0;
+    if (totalLessons === 0) {
+      console.log('[ProgressPage] Aucune leçon trouvée, retour 0');
+      return 0;
+    }
     
     // Calculer le pourcentage arrondi
     const percentage = (totalCompleted / totalLessons) * 100;
-    return Math.round(percentage);
+    const rounded = Math.round(percentage);
+    console.log('[ProgressPage] Progression calculée:', { percentage, rounded });
+    return rounded;
   }, [progressSummary, modules]);
 
   const xpTracks = stats?.xpTracks ?? [];

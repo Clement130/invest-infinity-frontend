@@ -61,6 +61,13 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
   const lessons = (lessonsResponse.data ?? []) as TrainingLesson[];
   const progressEntries = (progressResponse.data ?? []) as TrainingProgress[];
 
+  console.log('[progressService] getUserProgressSummary:', {
+    userId,
+    modulesCount: modules.length,
+    lessonsCount: lessons.length,
+    progressEntriesCount: progressEntries.length,
+  });
+
   const moduleById = new Map<string, TrainingModule>();
   modules.forEach((module) => moduleById.set(module.id, module));
 
@@ -76,7 +83,22 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
   const progressByLessonId = new Map<string, TrainingProgress>();
   progressEntries.forEach((entry) => progressByLessonId.set(entry.lesson_id, entry));
 
-  const completedLessonIds = progressEntries.filter((entry) => entry.done).map((entry) => entry.lesson_id);
+  // Créer un Set des IDs de modules actifs pour filtrer les leçons
+  const activeModuleIds = new Set(modules.map(m => m.id));
+  
+  // Filtrer les leçons complétées pour ne garder que celles des modules actifs
+  const completedLessonIds = progressEntries
+    .filter((entry) => {
+      if (!entry.done) return false;
+      const lesson = lessonsById.get(entry.lesson_id);
+      return lesson && activeModuleIds.has(lesson.module_id);
+    })
+    .map((entry) => entry.lesson_id);
+
+  console.log('[progressService] completedLessonIds:', {
+    total: completedLessonIds.length,
+    ids: completedLessonIds,
+  });
 
   const moduleDetails: ModuleProgressDetail[] = modules.map((module) => {
     const moduleLessons = lessonsByModule.get(module.id) ?? [];
@@ -159,11 +181,25 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
     }
   }
 
-  return {
+  const result = {
     modules: moduleDetails,
     completedLessonIds,
     continueLearning,
   };
+
+  console.log('[progressService] getUserProgressSummary result:', {
+    modulesCount: result.modules.length,
+    completedLessonIdsCount: result.completedLessonIds.length,
+    totalLessons: result.modules.reduce((sum, m) => sum + m.totalLessons, 0),
+    modulesDetails: result.modules.map(m => ({
+      moduleId: m.moduleId,
+      moduleTitle: m.moduleTitle,
+      totalLessons: m.totalLessons,
+      completedLessons: m.completedLessons,
+    })),
+  });
+
+  return result;
 }
 
 // Alias pour compatibilité avec l'import existant
