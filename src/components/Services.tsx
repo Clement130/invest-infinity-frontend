@@ -32,9 +32,9 @@ const services = [
     image: 'https://i.postimg.cc/qRRrq4cv/image.png',
     stats: [],
     features: [
-      'Analyse en direct du contexte et du biais directionnel',
-      'Identification des zones clés (OB, Breaker, FVG, VI…)',
-      'Plan complet : entrée, stop-loss et take profit expliqués',
+      'Analyse et identification de la tendance en direct',
+      'Identification des zones clés',
+      'Plan complet : point d'entrée, stop-loss et take profit expliqué',
       'Questions/réponses en live pour clarifier chaque décision',
     ],
     color: '#fb7185',
