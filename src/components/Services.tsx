@@ -42,7 +42,7 @@ const services = [
   {
     icon: BookOpen,
     title: 'Formation Complète',
-    description: 'Accédez à une formation détaillée pour maîtriser les stratégies qui fonctionnent vraiment.',
+    description: 'Formation et accompagnement détaillés pour maîtriser les stratégies qui fonctionnent vraiment.',
     image: 'https://i.postimg.cc/zXNhcQqG/image.png',
     stats: [],
     features: ['Mise en pratique avec Micka', 'Analyse technique'],
