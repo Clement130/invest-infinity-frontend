@@ -29,7 +29,7 @@ const services = [
     title: "Live Trading",
     description:
       "Chaque semaine, on trade en direct devant toi. Tu vois exactement comment on analyse le marché, quand on entre, et pourquoi. L'objectif : que tu deviennes autonome rapidement.",
-    image: 'https://i.postimg.cc/qRRrq4cv/image.png',
+    image: 'https://i.postimg.cc/0zjVSY2k/image.png',
     stats: [],
     features: [
       'Analyse et identification de la tendance en direct',
