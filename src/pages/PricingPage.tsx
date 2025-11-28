@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone } from 'lucide-react';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
 import { useToast } from '../hooks/useToast';
@@ -12,9 +12,23 @@ export default function PricingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
 
-  // Scroller vers le haut de la page au chargement
+  // Scroller vers le haut de la page au chargement (useLayoutEffect pour exécuter avant le rendu)
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
+  // Double vérification avec useEffect pour être sûr
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+    };
+    
+    scrollToTop();
+    
+    // Essayer aussi après un court délai
+    const timeout = setTimeout(scrollToTop, 50);
+    
+    return () => clearTimeout(timeout);
   }, []);
 
   // Paiement direct sans inscription - Stripe collecte l'email
