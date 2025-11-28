@@ -121,7 +121,10 @@ export default function LessonPlayerPage() {
   const handleProgress = async (event: VideoProgressEvent) => {
     // Invalider les queries de progression pour mettre à jour l'UI
     if (user?.id) {
+      // Invalider la progression détaillée
       queryClient.invalidateQueries({ queryKey: ['member-progress', user.id] });
+      // Invalider les statistiques pour mettre à jour les cartes
+      queryClient.invalidateQueries({ queryKey: ['member-stats', user.id] });
       
       // Feedback visuel pour la progression
       if (event.percentage >= 90) {
