@@ -133,7 +133,7 @@ serve(async (req) => {
 
     // Créer la session Stripe Checkout
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'klarna'],
       line_items: [
         {
           price: priceId,

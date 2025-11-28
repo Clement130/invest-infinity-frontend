@@ -1,0 +1,33 @@
+[1mdiff --git a/src/pages/MemberDashboard.tsx b/src/pages/MemberDashboard.tsx[m
+[1mindex c24f1a6..cb68c69 100644[m
+[1m--- a/src/pages/MemberDashboard.tsx[m
+[1m+++ b/src/pages/MemberDashboard.tsx[m
+[36m@@ -573,28 +573,6 @@[m [mexport default function MemberDashboard() {[m
+                   )}[m
+                 </GlassCard>[m
+               </div>[m
+[31m-            </motion.section>[m
+[31m-          )}[m
+[31m-[m
+[31m-          {/* Section activité - Masquée sur mobile */}[m
+[31m-          <motion.section variants={itemVariants} className="hidden md:block">[m
+[31m-            <GlassCard hover={false} glow="none">[m
+[31m-              <div className="flex items-center gap-3 mb-4">[m
+[31m-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">[m
+[31m-                  <Coins className="w-4 h-4 text-white" />[m
+[31m-                </div>[m
+[31m-                <div>[m
+[31m-                  <h3 className="text-base font-bold text-white">Activité récente</h3>[m
+[31m-                  <p className="text-xs text-gray-400">Tes derniers gains</p>[m
+[31m-                </div>[m
+[31m-              </div>[m
+[31m-              <div className="text-center py-6">[m
+[31m-                <Coins className="w-8 h-8 mx-auto mb-2 text-yellow-400/50" />[m
+[31m-                <p className="text-sm text-gray-400">Aucune activité récente</p>[m
+[31m-                <p className="text-xs text-gray-500 mt-1">Termine des leçons pour gagner des coins !</p>[m
+[31m-              </div>[m
+[31m-            </GlassCard>[m
+[31m-          </motion.section>[m
+ [m
+           {/* Level & XP Section - Simplifié */}[m
+           {stats && ([m

@@ -6,6 +6,7 @@
 $PROJECT_REF = $env:SUPABASE_PROJECT_REF
 $BUNNY_LIBRARY_ID = $env:BUNNY_STREAM_LIBRARY_ID
 $BUNNY_API_KEY = $env:BUNNY_STREAM_API_KEY
+$BUNNY_EMBED_TOKEN_KEY = $env:BUNNY_EMBED_TOKEN_KEY
 
 # Vérifier que les variables sont définies
 if ([string]::IsNullOrWhiteSpace($PROJECT_REF)) {
@@ -24,6 +25,13 @@ if ([string]::IsNullOrWhiteSpace($BUNNY_API_KEY)) {
     Write-Host "❌ Erreur: BUNNY_STREAM_API_KEY doit être défini dans les variables d'environnement" -ForegroundColor Red
     Write-Host "   Définissez: `$env:BUNNY_STREAM_API_KEY = 'votre_api_key'" -ForegroundColor Yellow
     Write-Host "   ⚠️  Ne partagez JAMAIS cette clé publiquement!" -ForegroundColor Red
+    exit 1
+}
+
+if ([string]::IsNullOrWhiteSpace($BUNNY_EMBED_TOKEN_KEY)) {
+    Write-Host "❌ Erreur: BUNNY_EMBED_TOKEN_KEY doit être défini dans les variables d'environnement" -ForegroundColor Red
+    Write-Host "   Définissez: `$env:BUNNY_EMBED_TOKEN_KEY = 'votre_embed_token_key'" -ForegroundColor Yellow
+    Write-Host "   ⚠️  Cette clé est utilisée pour sécuriser les embeds vidéo!" -ForegroundColor Red
     exit 1
 }
 
@@ -49,6 +57,7 @@ if ([string]::IsNullOrWhiteSpace($ACCESS_TOKEN)) {
     Write-Host "3. Ajoutez:" -ForegroundColor Gray
     Write-Host "   - BUNNY_STREAM_LIBRARY_ID = $BUNNY_LIBRARY_ID" -ForegroundColor White
     Write-Host "   - BUNNY_STREAM_API_KEY = $BUNNY_API_KEY" -ForegroundColor White
+    Write-Host "   - BUNNY_EMBED_TOKEN_KEY = $BUNNY_EMBED_TOKEN_KEY" -ForegroundColor White
     exit 0
 }
 
@@ -124,8 +133,43 @@ try {
     }
 }
 
+# Configurer BUNNY_EMBED_TOKEN_KEY
+Write-Host "📝 Configuration de BUNNY_EMBED_TOKEN_KEY..." -ForegroundColor Cyan
+$body3 = @{
+    name = "BUNNY_EMBED_TOKEN_KEY"
+    value = $BUNNY_EMBED_TOKEN_KEY
+} | ConvertTo-Json
+
+try {
+    $response3 = Invoke-RestMethod -Uri $baseUrl -Method POST -Headers $headers -Body $body3 -ErrorAction Stop
+    Write-Host "   ✅ BUNNY_EMBED_TOKEN_KEY configuré" -ForegroundColor Green
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    if ($statusCode -eq 409) {
+        Write-Host "   ℹ️  Secret existe déjà, mise à jour..." -ForegroundColor Yellow
+        try {
+            # Supprimer puis recréer
+            Invoke-RestMethod -Uri "$baseUrl/BUNNY_EMBED_TOKEN_KEY" -Method DELETE -Headers $headers -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 500
+            Invoke-RestMethod -Uri $baseUrl -Method POST -Headers $headers -Body $body3 -ErrorAction Stop
+            Write-Host "   ✅ BUNNY_EMBED_TOKEN_KEY mis à jour" -ForegroundColor Green
+        } catch {
+            Write-Host "   ❌ Erreur lors de la mise à jour: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "   ❌ Erreur ($statusCode): $($_.Exception.Message)" -ForegroundColor Red
+        if ($_.Exception.Response) {
+            $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+            $responseBody = $reader.ReadToEnd()
+            Write-Host "   Détails: $responseBody" -ForegroundColor Red
+        }
+    }
+}
+
 Write-Host ""
 Write-Host "✨ Configuration terminée!" -ForegroundColor Green
 Write-Host ""
-Write-Host "Les secrets sont maintenant disponibles pour l'Edge Function upload-bunny-video." -ForegroundColor Cyan
+Write-Host "Les secrets sont maintenant disponibles pour les Edge Functions:" -ForegroundColor Cyan
+Write-Host "- upload-bunny-video (upload des vidéos)" -ForegroundColor Gray
+Write-Host "- generate-bunny-token (sécurisation des embeds)" -ForegroundColor Gray
 

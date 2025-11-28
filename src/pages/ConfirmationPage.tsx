@@ -330,7 +330,10 @@ export default function ConfirmationPage() {
                 <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">-70%</span>
               </div>
               <span className="text-gray-300 text-sm">paiement unique • accès à vie</span>
-              <p className="text-yellow-400/80 text-xs mt-1">ou 3x 166€/mois sans frais</p>
+              <p className="text-yellow-400/80 text-xs mt-1 flex items-center gap-1">
+                <span>ou 3x 166€/mois sans frais</span>
+                <span className="text-gray-500">(via Klarna)</span>
+              </p>
             </div>
             
             <ul className="space-y-3 mb-4 flex-grow">

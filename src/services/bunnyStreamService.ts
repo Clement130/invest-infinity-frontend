@@ -240,6 +240,62 @@ export async function deleteBunnyVideo(videoId: string): Promise<void> {
 }
 
 /**
+ * Génère une URL d'embed sécurisée avec token d'authentification
+ * ⚠️ SÉCURITÉ: Utilise une Edge Function pour générer les tokens côté serveur
+ */
+export async function getSecureEmbedUrl(
+  videoId: string,
+  expiryHours: number = 24
+): Promise<string> {
+  // Récupérer le token d'authentification
+  const { supabase } = await import('../lib/supabaseClient');
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('Vous devez être connecté pour accéder aux vidéos');
+  }
+
+  const functionsBaseUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL ??
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
+  const url = `${functionsBaseUrl}/generate-bunny-token`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      videoId,
+      expiryHours,
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Erreur génération token sécurisé (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+        // Si c'est une erreur de configuration, utiliser un message plus clair
+        if (errorMessage.includes('BUNNY_EMBED_TOKEN_KEY')) {
+          errorMessage = 'Clé de sécurité Bunny Stream non configurée. Veuillez contacter l\'administrateur.';
+        }
+      }
+    } catch {
+      // Si la réponse n'est pas du JSON, utiliser le texte brut
+      const errorText = await response.text();
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const result = await response.json();
+  return result.embedUrl;
+}
+
+/**
  * Met à jour les métadonnées d'une vidéo
  * ⚠️ SÉCURITÉ: Cette fonction doit être implémentée via une Edge Function
  */

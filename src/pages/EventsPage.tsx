@@ -24,6 +24,7 @@ const itemVariants = {
 
 export default function EventsPage() {
   const { user } = useSession();
+  const discordInviteUrl = 'https://discord.gg/NBrgHzaK';
 
   const eventsQuery = useQuery({
     queryKey: ['member-events', user?.id],
@@ -149,13 +150,16 @@ export default function EventsPage() {
                     </div>
 
                     {nextEvent.registrationRequired && !nextEvent.registered && (
-                      <motion.button
+                      <motion.a
+                        href={discordInviteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-violet-600 text-white font-semibold shadow-lg shadow-purple-500/25"
                       >
-                        S'inscrire
-                      </motion.button>
+                        Rejoindre le Discord
+                      </motion.a>
                     )}
 
                     {nextEvent.registered && (
