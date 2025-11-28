@@ -4,7 +4,6 @@ import { useSession } from '../hooks/useSession';
 import { getUpcomingEvents } from '../services/memberStatsService';
 import EventsCalendar from '../components/member/EventsCalendar';
 import GlassCard from '../components/ui/GlassCard';
-import StatCard from '../components/ui/StatCard';
 import { Calendar, Clock, Users, Star, Video, Mic, GraduationCap } from 'lucide-react';
 
 const containerVariants = {
@@ -172,89 +171,6 @@ export default function EventsPage() {
               </GlassCard>
             </motion.section>
           )}
-
-          {/* Stats */}
-          <motion.section variants={itemVariants}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <StatCard
-                icon={Calendar}
-                label="Événements à Venir"
-                value={upcomingEvents.length}
-                color="purple"
-                delay={0}
-              />
-              <StatCard
-                icon={Users}
-                label="Inscriptions"
-                value={registeredEvents.length}
-                color="pink"
-                delay={0.1}
-              />
-              <StatCard
-                icon={Clock}
-                label="Heures de contenu"
-                value={`${Math.round(events.reduce((sum, e) => sum + e.duration, 0) / 60)}h`}
-                color="blue"
-                delay={0.2}
-              />
-            </div>
-          </motion.section>
-
-          {/* Event Types */}
-          <motion.section variants={itemVariants}>
-            <GlassCard hover={false} glow="none">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Types d'événements</h3>
-                  <p className="text-sm text-gray-400">Découvre les différents formats disponibles</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
-                    <Video className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-white">Sessions Live</h4>
-                    <p className="text-sm text-gray-400">
-                      Analyse en direct des marchés avec Q&A
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-                    <Mic className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-white">Ateliers</h4>
-                    <p className="text-sm text-gray-400">
-                      Sessions pratiques sur des thèmes spécifiques
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center">
-                    <GraduationCap className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-yellow-300">Masterclass</h4>
-                    <p className="text-sm text-yellow-400/70">
-                      Contenu premium avec des experts invités
-                    </p>
-                  </div>
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">
-                    ⭐ Exclusif
-                  </span>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.section>
 
           {/* Events Calendar */}
           <motion.section variants={itemVariants}>
