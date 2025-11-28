@@ -30,10 +30,6 @@ const faqCategories = [
       {
         question: "Comment rejoindre Invest Infinity ?",
         answer: "C'est simple et rapide :\n\n1️⃣ Sélectionne ton offre dans tarif\n2️⃣ Active ton espace membre\n3️⃣ Accède à la formation\n\nTout le processus prend moins de 5 minutes !"
-      },
-      {
-        question: "Je suis déjà chez RaiseFX avec un autre affilié, comment faire ?",
-        answer: "Pas de souci ! Tu peux transférer ton affiliation vers Invest Infinity. Il suffit d'envoyer un email à RaiseFX (le modèle est disponible sur notre Discord). Le transfert est généralement traité sous 24-48h, et tu gardes ton compte et ton historique."
       }
     ]
   },
