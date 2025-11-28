@@ -207,6 +207,9 @@ export default function ProgressPage() {
                   </div>
 
                   <div className="text-center p-4 rounded-xl bg-white/5">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Award className="w-5 h-5 text-yellow-400" />
+                    </div>
                     <p className="text-2xl font-bold text-white">{stats?.level || 1}</p>
                     <p className="text-xs text-gray-400">Niveau actuel</p>
                     <p className="text-sm text-gray-500 mt-1">{stats?.xp || 0} XP</p>
