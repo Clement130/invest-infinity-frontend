@@ -42,10 +42,14 @@ const services = [
   {
     icon: BookOpen,
     title: 'Formation et Accompagnement',
-    description: 'Formation et accompagnement détaillés pour maîtriser les stratégies qui fonctionnent vraiment.',
+    description: 'Accédez à une formation claire et structurée pour comprendre et appliquer une stratégie qui fonctionne réellement, tout en étant accompagné étape par étape pour progresser efficacement.',
     image: 'https://i.postimg.cc/zXNhcQqG/image.png',
     stats: [],
-    features: ['Mise en pratique avec Micka', 'Analyse technique'],
+    features: [
+      'Modules expliqués simplement, accessibles à tous',
+      'Accompagnement complet pour répondre à toutes vos questions',
+      'Un Salon exclusif qui vous est dédiez pour partager vos plans, poser vos questions et obtenir toutes les validations dont vous avez besoin',
+    ],
     color: '#f472b6',
   },
   {
