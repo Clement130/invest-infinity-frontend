@@ -14,7 +14,7 @@ const faqCategories = [
     questions: [
       {
         question: "Qu'est-ce qu'Invest Infinity ?",
-        answer: "Invest Infinity est une communauté premium dédiée aux traders qui veulent progresser sérieusement. Tu accèdes à des analyses quotidiennes de Mickaël, des formations complètes, des lives hebdomadaires et une communauté Discord active de +100 membres motivés. Notre mission : t'accompagner pour devenir un trader autonome et rentable."
+        answer: "Invest Infinity est une communauté premium dédiée aux traders qui veulent progresser sérieusement. Tu accèdes à des analyses quotidiennes de nos experts, des formations complètes, des lives hebdomadaires et une communauté Discord active de +100 membres motivés. Notre mission : t'accompagner pour devenir un trader autonome et rentable."
       },
       {
         question: "À qui s'adresse Invest Infinity ?",
@@ -42,15 +42,15 @@ const faqCategories = [
     questions: [
       {
         question: "Que contient le Discord exactement ?",
-        answer: "Le Discord Invest Infinity, c'est :\n\n📊 Alertes trading quotidiennes de Mickaël\n📚 Formations vidéo complètes (débutant → avancé)\n🎥 Lives hebdomadaires avec analyse de marché\n💬 Salons d'entraide entre membres\n📈 Reviews détaillées de chaque position\n🏆 Challenges et événements exclusifs"
+        answer: "Le Discord Invest Infinity, c'est :\n\n📊 Alertes trading quotidiennes de nos experts\n📚 Formations vidéo complètes (débutant → avancé)\n🎥 Lives hebdomadaires avec analyse de marché\n💬 Salons d'entraide entre membres\n📈 Reviews détaillées de chaque position\n🏆 Challenges et événements exclusifs"
       },
       {
         question: "Donnez-vous des signaux de trading ?",
-        answer: "Non, et c'est volontaire ! On ne donne pas de \"signaux\" à copier bêtement. Mickaël partage ses positions avec une analyse complète : point d'entrée, stop-loss, take profit, et surtout le POURQUOI derrière chaque trade. L'objectif est de te rendre autonome, pas dépendant."
+        answer: "Non, et c'est volontaire ! On ne donne pas de \"signaux\" à copier bêtement. Nos experts partagent leurs positions avec une analyse complète : point d'entrée, stop-loss, take profit, et surtout le POURQUOI derrière chaque trade. L'objectif est de te rendre autonome, pas dépendant."
       },
       {
-        question: "Quels sont les résultats de Mickaël ?",
-        answer: "Mickaël partage ses résultats en toute transparence sur le Discord. Tu peux consulter son track record complet avec les gains ET les pertes. En moyenne, il vise un Risk/Reward de 3:1 avec 2-3 positions par jour. Les lives permettent de voir son analyse en temps réel."
+        question: "Quels sont les résultats de nos experts ?",
+        answer: "Nos experts partagent leurs résultats en toute transparence sur le Discord. Tu peux consulter leur track record complet avec les gains ET les pertes. En moyenne, ils visent un Risk/Reward de 3:1 avec 2-3 positions par jour. Les lives permettent de voir leur analyse en temps réel."
       }
     ]
   },
@@ -78,11 +78,11 @@ const faqCategories = [
     questions: [
       {
         question: "Comment contacter le support ?",
-        answer: "Plusieurs options :\n\n💬 Sur Discord : mentionne @investinfinity\n📧 Par email : via le formulaire de contact\n🎥 En live : pose tes questions directement à Mickaël\n\nOn répond généralement sous 24h, souvent beaucoup plus vite !"
+        answer: "Plusieurs options :\n\n💬 Sur Discord : mentionne @investinfinity\n📧 Par email : via le formulaire de contact\n🎥 En live : pose tes questions directement à nos experts\n\nOn répond généralement sous 24h, souvent beaucoup plus vite !"
       },
       {
         question: "Y a-t-il des lives réguliers ?",
-        answer: "Oui ! Mickaël anime des lives hebdomadaires où il analyse les marchés en temps réel, répond à vos questions et partage ses setups. C'est le moment idéal pour apprendre et interagir directement avec lui."
+        answer: "Oui ! Nos experts animent des lives hebdomadaires où ils analysent les marchés en temps réel, répondent à vos questions et partagent leurs setups. C'est le moment idéal pour apprendre et interagir directement avec eux."
       }
     ]
   },
