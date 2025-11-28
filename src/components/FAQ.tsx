@@ -38,8 +38,8 @@ const faqCategories = [
     title: "Trading & Alertes",
     questions: [
       {
-        question: "Que contient le Discord exactement ?",
-        answer: "Le Discord Invest Infinity, c'est :\n\n📊 Alertes trading quotidiennes de nos experts\n📚 Formations vidéo complètes (débutant → avancé)\n🎥 Lives hebdomadaires avec analyse de marché\n💬 Salons d'entraide entre membres\n📈 Reviews détaillées de chaque position\n🏆 Challenges et événements exclusifs"
+        question: "Comment est organisée la formation ?",
+        answer: "Vous avez une partie sur notre Discord qui englobe :\n\nles lives trading, la zone chill, et la zone premium pour échanger avec nous et les élèves actuels.\n\nEt vous avez une autre partie sur le site, dans votre espace membre dédié, avec toute la formation incluse."
       },
       {
         question: "Donnez-vous des signaux de trading ?",
