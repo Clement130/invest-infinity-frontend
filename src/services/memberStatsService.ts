@@ -115,7 +115,13 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     .eq('user_id', userId);
 
   const completedLessons = progress?.filter((p) => p.done).length || 0;
-  const totalLessons = modules.reduce((sum, m) => sum + (m as any).lessons_count || 0, 0);
+  
+  // Récupérer le nombre réel de leçons depuis la base de données
+  const { data: allLessons } = await supabase
+    .from('training_lessons')
+    .select('id, module_id');
+  
+  const totalLessons = allLessons?.length || 0;
 
   // Calculer les modules complétés (toutes les leçons complétées)
   const { data: moduleProgress } = await supabase

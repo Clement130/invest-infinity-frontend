@@ -57,21 +57,36 @@ export default function ProgressPage() {
 
   const stats = statsQuery.data;
   const modules = modulesQuery.data || [];
+  const progressSummary = progressSummaryQuery.data;
+  
   const moduleProgressMap = useMemo(() => {
-    const summary = progressSummaryQuery.data;
-    if (!summary) return {};
-    return summary.modules.reduce<Record<string, (typeof summary.modules)[number]>>(
+    if (!progressSummary) return {};
+    return progressSummary.modules.reduce<Record<string, (typeof progressSummary.modules)[number]>>(
       (acc, detail) => {
         acc[detail.moduleId] = detail;
         return acc;
       },
       {},
     );
-  }, [progressSummaryQuery.data]);
+  }, [progressSummary]);
 
-  const globalProgress = stats
-    ? Math.round((stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100)
-    : 0;
+  // Calculer la progression globale à partir des données réelles de progression
+  const globalProgress = useMemo(() => {
+    if (!progressSummary || progressSummary.modules.length === 0) return 0;
+    
+    // Calculer le total de leçons complétées et le total de leçons
+    const totalCompleted = progressSummary.modules.reduce(
+      (sum, module) => sum + module.completedLessons,
+      0
+    );
+    const totalLessons = progressSummary.modules.reduce(
+      (sum, module) => sum + module.totalLessons,
+      0
+    );
+    
+    if (totalLessons === 0) return 0;
+    return Math.round((totalCompleted / totalLessons) * 100);
+  }, [progressSummary]);
 
   const xpTracks = stats?.xpTracks ?? [];
 
@@ -181,7 +196,9 @@ export default function ProgressPage() {
                       <BookOpen className="w-5 h-5 text-blue-400" />
                     </div>
                     <p className="text-2xl font-bold text-white">
-                      {stats?.completedModules || 0}/{stats?.totalModules || 0}
+                      {progressSummary 
+                        ? progressSummary.modules.filter(m => m.isCompleted).length 
+                        : stats?.completedModules || 0}/{modules.length}
                     </p>
                     <p className="text-xs text-gray-400">Modules</p>
                   </div>
@@ -191,7 +208,11 @@ export default function ProgressPage() {
                       <CheckCircle2 className="w-5 h-5 text-green-400" />
                     </div>
                     <p className="text-2xl font-bold text-white">
-                      {stats?.completedLessons || 0}/{stats?.totalLessons || 0}
+                      {progressSummary 
+                        ? progressSummary.modules.reduce((sum, m) => sum + m.completedLessons, 0)
+                        : stats?.completedLessons || 0}/{progressSummary 
+                        ? progressSummary.modules.reduce((sum, m) => sum + m.totalLessons, 0)
+                        : stats?.totalLessons || 0}
                     </p>
                     <p className="text-xs text-gray-400">Leçons</p>
                   </div>
