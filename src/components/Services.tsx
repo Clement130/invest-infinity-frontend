@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, BookOpen, Brain, Users, ArrowRight } from 'lucide-react';
 
 interface ServicesProps {
@@ -67,6 +68,7 @@ const services = [
 ];
 
 export default function Services({ onOpenRegister }: ServicesProps) {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [visibleCards, setVisibleCards] = useState<number[]>([]);
@@ -314,7 +316,7 @@ export default function Services({ onOpenRegister }: ServicesProps) {
 
         {/* CTA Button */}
         <div className="mt-20 text-center">
-          <button onClick={onOpenRegister} className="group relative inline-flex items-center">
+          <button onClick={() => navigate('/pricing')} className="group relative inline-flex items-center">
             <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-pink-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
 
             <div className="relative px-8 py-4 bg-[#1f1f23] rounded-full flex items-center space-x-2 transform hover:scale-105 transition-all duration-500 border border-pink-500/20">
