@@ -31,10 +31,6 @@ const faqCategories = [
         answer: "C'est simple et rapide :\n\n1️⃣ Crée ton compte sur notre site\n2️⃣ Ouvre un compte chez notre broker partenaire RaiseFX\n3️⃣ Accède immédiatement au Discord VIP\n\nTout le processus prend moins de 10 minutes !"
       },
       {
-        question: "L'accès est-il vraiment gratuit ?",
-        answer: "Oui, 100% gratuit ! Pas d'abonnement, pas de frais cachés. Tu accèdes à l'intégralité du contenu : formations, alertes, lives, communauté. Notre modèle est simple : on est rémunéré par nos partenaires brokers, ce qui nous permet de t'offrir tout gratuitement."
-      },
-      {
         question: "Je suis déjà chez RaiseFX avec un autre affilié, comment faire ?",
         answer: "Pas de souci ! Tu peux transférer ton affiliation vers Invest Infinity. Il suffit d'envoyer un email à RaiseFX (le modèle est disponible sur notre Discord). Le transfert est généralement traité sous 24-48h, et tu gardes ton compte et ton historique."
       }

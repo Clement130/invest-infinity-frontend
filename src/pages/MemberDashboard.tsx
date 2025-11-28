@@ -486,114 +486,34 @@ export default function MemberDashboard() {
                 color="purple"
                 delay={isMobile ? 0 : 0.1}
               />
+              {/* Discord Card - Desktop */}
+              {!isMobile && (
+                <motion.a
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  whileHover={{ y: -4 }}
+                  href="https://discord.gg/Y9RvKDCrWH"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative overflow-hidden rounded-2xl border border-[#5865F2]/30 bg-gradient-to-br from-[#5865F2]/20 to-[#5865F2]/5 p-4 group"
+                >
+                  <div className="absolute -top-8 -right-8 w-20 h-20 bg-[#5865F2]/20 rounded-full blur-2xl group-hover:bg-[#5865F2]/30 transition" />
+                  <div className="relative flex flex-col items-center text-center space-y-2">
+                    <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-lg shadow-[#5865F2]/30">
+                      <img src="/discord-icon.webp" alt="Discord" className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Communauté</p>
+                      <p className="text-sm font-bold text-[#5865F2] flex items-center justify-center gap-1">
+                        Discord
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </p>
+                    </div>
+                  </div>
+                </motion.a>
+              )}
             </div>
-          </motion.section>
-
-          {/* Section compétences et quêtes - Masquée sur mobile */}
-          {stats && (
-            <motion.section variants={itemVariants} className="hidden md:block">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <GlassCard hover={false} glow="none">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-purple-500 flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-white">Compétences</h3>
-                      <p className="text-xs text-gray-400">Tes progrès principaux</p>
-                    </div>
-                  </div>
-                  {/* Version simplifiée - seulement les 2 premières compétences */}
-                  <div className="space-y-3">
-                    {xpTracks.slice(0, 2).map((track) => (
-                      <div key={track.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
-                            <span className="text-xs font-bold text-pink-400">L{track.level}</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-white">{track.name}</p>
-                            <p className="text-xs text-gray-400">{track.xp} XP</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full transition-all duration-500"
-                              style={{ width: `${Math.min((track.xp / track.nextLevelXp) * 100, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </GlassCard>
-
-                <GlassCard hover={false} glow="none">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-white">Quêtes du jour</h3>
-                      <p className="text-xs text-gray-400">Objectifs quotidiens</p>
-                    </div>
-                  </div>
-                  {dailyQuests.length > 0 ? (
-                    <div className="space-y-2">
-                      {dailyQuests.slice(0, 3).map((quest) => (
-                        <div key={quest.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                              quest.completed ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {quest.completed ? '✓' : quest.progress + '/' + quest.target}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-white">{quest.title}</p>
-                              <p className="text-xs text-gray-400">+{quest.reward} coins</p>
-                            </div>
-                          </div>
-                          {quest.completed && !quest.claimed && (
-                            <button
-                              onClick={() => claimQuestMutation.mutateAsync(quest.id)}
-                              disabled={claimQuestMutation.isPending}
-                              className="px-3 py-1 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-medium hover:shadow-lg transition-all"
-                            >
-                              {claimingQuestId === quest.id ? '...' : 'Claim'}
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 text-center py-4">
-                      Les quêtes arrivent bientôt !
-                    </p>
-                  )}
-                </GlassCard>
-              </div>
-            </motion.section>
-          )}
-
-          {/* Section activité - Masquée sur mobile */}
-          <motion.section variants={itemVariants} className="hidden md:block">
-            <GlassCard hover={false} glow="none">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
-                  <Coins className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">Activité récente</h3>
-                  <p className="text-xs text-gray-400">Tes derniers gains</p>
-                </div>
-              </div>
-              <div className="text-center py-6">
-                <Coins className="w-8 h-8 mx-auto mb-2 text-yellow-400/50" />
-                <p className="text-sm text-gray-400">Aucune activité récente</p>
-                <p className="text-xs text-gray-500 mt-1">Termine des leçons pour gagner des coins !</p>
-              </div>
-            </GlassCard>
           </motion.section>
 
           {/* Level & XP Section - Simplifié */}
