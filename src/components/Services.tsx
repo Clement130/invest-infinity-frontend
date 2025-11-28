@@ -48,7 +48,7 @@ const services = [
     features: [
       'Modules expliqués simplement, accessibles à tous',
       'Accompagnement complet pour répondre à toutes vos questions',
-      'Un Salon exclusif qui vous est dédiez pour partager vos plans, poser vos questions et obtenir toutes les validations dont vous avez besoin',
+      'Un Salon exclusif qui vous est dédié pour partager vos plans, poser vos questions et obtenir toutes les validations dont vous avez besoin',
     ],
     color: '#f472b6',
   },
