@@ -26,7 +26,7 @@ const services = [
   },
   {
     icon: Brain,
-    title: "Review d'alertes",
+    title: "Live Trading",
     description:
       "Mickael analyse chaque position envoyée en détail, expliquant l'approche derrière chaque trade pour que tu puisses reproduire la même logique en toute autonomie.",
     image: 'https://i.postimg.cc/qRRrq4cv/image.png',
