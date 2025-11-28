@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { VideoProgressTracker, type VideoProgressEvent } from '../../services/progressTrackingService';
-import { getSecureEmbedUrl } from '../../services/bunnyStreamService';
 
 // Déclaration du type Player.js pour TypeScript
 declare global {
@@ -65,35 +64,26 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     };
   }, [userId, lessonId]);
 
-  // Charger l'URL sécurisée quand le videoId change
+  // Construire l'URL d'embed directement (sans token de sécurité)
   useEffect(() => {
-    const loadSecureUrl = async () => {
-      setHasError(false);
-      setIsLoading(true);
-      setEmbedUrl('');
+    setHasError(false);
+    setIsLoading(true);
+    setEmbedUrl('');
 
-      // Vérifier si c'est un ID de test (qui ne fonctionnera pas)
-      if (videoId && videoId.startsWith('test-')) {
-        setHasError(true);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const secureUrl = await getSecureEmbedUrl(videoId);
-        setEmbedUrl(secureUrl);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('[BunnyPlayer] Erreur génération URL sécurisée:', error);
-        setHasError(true);
-        setIsLoading(false);
-      }
-    };
-
-    if (videoId) {
-      loadSecureUrl();
+    // Vérifier si c'est un ID de test (qui ne fonctionnera pas)
+    if (videoId && videoId.startsWith('test-')) {
+      setHasError(true);
+      setIsLoading(false);
+      return;
     }
-  }, [videoId]);
+
+    if (videoId && baseUrl) {
+      // URL simple sans token (l'authentification Bunny.net doit être désactivée)
+      const url = `${baseUrl}/${videoId}?autoplay=false&preload=true`;
+      setEmbedUrl(url);
+      setIsLoading(false);
+    }
+  }, [videoId, baseUrl]);
 
   // Timeout pour détecter les vidéos qui ne chargent pas
   useEffect(() => {
@@ -202,15 +192,14 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     );
   }
 
-  // Ne rendre que si l'URL sécurisée est chargée
+  // Ne rendre que si l'URL est chargée
   if (isLoading) {
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
         <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-10">
           <div className="text-center space-y-3">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto" />
-            <p className="text-gray-400 text-sm">Sécurisation de la vidéo...</p>
-            <p className="text-gray-500 text-xs">Génération du token d'accès</p>
+            <p className="text-gray-400 text-sm">Chargement de la vidéo...</p>
           </div>
         </div>
       </div>

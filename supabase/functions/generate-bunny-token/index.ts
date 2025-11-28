@@ -9,6 +9,8 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     'http://localhost:5174',
     'https://invest-infinity-frontend.vercel.app',
     'https://invest-infinity-frontend-*.vercel.app',
+    'https://www.investinfinity.fr',
+    'https://investinfinity.fr',
   ];
 
   // Vérifier si l'origine est autorisée
@@ -37,7 +39,9 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const bunnyEmbedTokenKey = Deno.env.get('BUNNY_EMBED_TOKEN_KEY') || '';
-const bunnyEmbedBaseUrl = Deno.env.get('VITE_BUNNY_EMBED_BASE_URL') || '';
+const bunnyLibraryId = Deno.env.get('BUNNY_STREAM_LIBRARY_ID') || '';
+// URL de base pour les embeds Bunny Stream
+const BUNNY_EMBED_BASE_URL = 'https://iframe.mediadelivery.net/embed';
 
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
@@ -84,6 +88,15 @@ serve(async (req) => {
     );
   }
 
+  if (!bunnyLibraryId) {
+    return new Response(
+      JSON.stringify({
+        error: 'Bunny Stream library ID not configured. Please configure BUNNY_STREAM_LIBRARY_ID in Supabase secrets.',
+      }),
+      { status: 500, headers: corsHeaders },
+    );
+  }
+
   if (req.method === 'POST') {
     try {
       const { videoId, expiryHours = 24 }: TokenRequest = await req.json();
@@ -106,8 +119,8 @@ serve(async (req) => {
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
-      // Construire l'URL sécurisée
-      const secureEmbedUrl = `${bunnyEmbedBaseUrl}/${videoId}?token=${tokenHex}&expires=${expires}`;
+      // Construire l'URL sécurisée avec library ID
+      const secureEmbedUrl = `${BUNNY_EMBED_BASE_URL}/${bunnyLibraryId}/${videoId}?token=${tokenHex}&expires=${expires}`;
 
       return new Response(
         JSON.stringify({
