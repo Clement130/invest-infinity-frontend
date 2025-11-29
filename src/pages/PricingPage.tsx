@@ -48,9 +48,13 @@ export default function PricingPage() {
       // TOUJOURS récupérer le Price ID depuis la DB pour être sûr qu'il est à jour
       let priceId = await getStripePriceId(plan);
       
+      console.log('Price ID récupéré depuis DB:', priceId, 'plan:', plan);
+      
       // Si la récupération échoue, essayer le cache
       if (!priceId || priceId.includes('PLACEHOLDER')) {
+        console.warn('Price ID depuis DB invalide, utilisation du cache');
         priceId = STRIPE_PRICE_IDS[plan];
+        console.log('Price ID depuis cache:', priceId);
       }
       
       // Si c'est toujours un placeholder, erreur
@@ -60,6 +64,8 @@ export default function PricingPage() {
         setLoading(null);
         return;
       }
+      
+      console.log('Price ID final utilisé:', priceId);
 
       const response = await fetch(CHECKOUT_PUBLIC_URL, {
         method: 'POST',
