@@ -31,7 +31,6 @@ export default function AppRouter() {
           const {
             header: showHeader = true,
             footer: showFooter = true,
-            leadbooster: showLeadbooster = true,
           } = layout ?? {};
 
           return (
@@ -42,7 +41,6 @@ export default function AppRouter() {
                 <MarketingLayout
                   showHeader={showHeader}
                   showFooter={showFooter}
-                  showLeadbooster={showLeadbooster}
                 >
                   {element}
                 </MarketingLayout>

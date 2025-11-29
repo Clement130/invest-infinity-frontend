@@ -43,7 +43,6 @@ export type MarketingRouteConfig = {
   layout?: {
     header?: boolean;
     footer?: boolean;
-    leadbooster?: boolean;
   };
 };
 
@@ -59,57 +58,55 @@ export type AdminRouteConfig = {
 };
 
 export const marketingRoutes: MarketingRouteConfig[] = [
-  { path: '/', element: <Home />, layout: { leadbooster: true } },
-  { path: '/welcome', element: <Welcome />, layout: { leadbooster: false } },
+  { path: '/', element: <Home /> },
+  { path: '/welcome', element: <Welcome /> },
   {
     path: '/trading-account',
     element: <TradingAccount />,
-    layout: { header: false, footer: true, leadbooster: false },
+    layout: { header: false, footer: true },
   },
   {
     path: '/propfirm-challenge',
     element: <PropFirmChallenge />,
-    layout: { leadbooster: true },
   },
   {
     path: '/start',
     element: <UpgradeOffer />,
-    layout: { leadbooster: false },
   },
   {
     path: '/discord',
     element: <LandingForm />,
-    layout: { header: false, footer: false, leadbooster: false },
+    layout: { header: false, footer: false },
   },
   {
     path: '/login',
     element: <Login />,
-    layout: { header: false, footer: false, leadbooster: false },
+    layout: { header: false, footer: false },
   },
   {
     path: '/pricing',
     element: <PricingPage />,
-    layout: { header: true, footer: true, leadbooster: false },
+    layout: { header: true, footer: true },
   },
   {
     path: '/immersion-elite',
     element: <ImmersionElitePage />,
-    layout: { header: true, footer: true, leadbooster: false },
+    layout: { header: true, footer: true },
   },
   {
     path: '/success',
     element: <SuccessPage />,
-    layout: { header: false, footer: false, leadbooster: false },
+    layout: { header: false, footer: false },
   },
   {
     path: '/confirmation',
     element: <ConfirmationPage />,
-    layout: { header: false, footer: true, leadbooster: false },
+    layout: { header: false, footer: true },
   },
   {
     path: '/create-password',
     element: <CreatePasswordPage />,
-    layout: { header: false, footer: false, leadbooster: false },
+    layout: { header: false, footer: false },
   },
 ];
 
