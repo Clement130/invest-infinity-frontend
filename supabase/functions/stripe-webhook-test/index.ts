@@ -1,15 +1,15 @@
 /**
  * ============================================================================
- * STRIPE WEBHOOK - MODE LIVE (Production)
+ * STRIPE WEBHOOK - MODE TEST (Développement)
  * ============================================================================
  * 
- * URL de l'endpoint LIVE :
- * https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook
+ * URL de l'endpoint TEST :
+ * https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook-test
  * 
  * VARIABLES D'ENVIRONNEMENT REQUISES :
  * ------------------------------------
- * - STRIPE_SECRET_KEY_LIVE    : sk_live_xxxxxxxxxxxxxxxx
- * - STRIPE_WEBHOOK_SECRET_LIVE: whsec_xxxxxxxxxxxxxxxx (du webhook LIVE)
+ * - STRIPE_SECRET_KEY_TEST    : sk_test_xxxxxxxxxxxxxxxx
+ * - STRIPE_WEBHOOK_SECRET_TEST: whsec_xxxxxxxxxxxxxxxx (du webhook TEST)
  * - SUPABASE_URL              : (auto-injecté par Supabase)
  * - SUPABASE_SERVICE_ROLE_KEY : (auto-injecté par Supabase)
  * 
@@ -23,6 +23,12 @@
  * - payment_intent.succeeded
  * - payment_intent.payment_failed
  * 
+ * COMMENT TESTER AVEC STRIPE CLI :
+ * --------------------------------
+ * 1. stripe login
+ * 2. stripe listen --forward-to https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook-test
+ * 3. Dans un autre terminal : stripe trigger checkout.session.completed
+ * 
  * ============================================================================
  */
 
@@ -30,12 +36,12 @@ import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 // ============================================================================
-// CONFIGURATION - MODE LIVE
+// CONFIGURATION - MODE TEST
 // ============================================================================
 
-const MODE = 'LIVE';
-const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY_LIVE');
-const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET_LIVE');
+const MODE = 'TEST';
+const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY_TEST');
+const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET_TEST');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -89,11 +95,12 @@ const LICENSE_HIERARCHY: Record<string, number> = {
   'immersion': 3
 };
 
-// Fallback LIVE prices
+// Fallback TEST prices (à adapter avec vos price IDs de test)
 const FALLBACK_PRICE_TO_LICENSE: Record<string, string> = {
-  'price_1SYkswKaUb6KDbNFvH1x4v0V': 'entree',
-  'price_1SYloMKaUb6KDbNFAF6XfNvI': 'transformation',
-  'price_1SYkswKaUb6KDbNFvwoV35RW': 'immersion',
+  // Prix de TEST Stripe - à remplacer par vos vrais IDs de test
+  'price_test_entree': 'entree',
+  'price_test_transformation': 'transformation',
+  'price_test_immersion': 'immersion',
 };
 
 // ============================================================================
@@ -462,12 +469,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Vérification des dépendances
   if (!stripe) {
-    secureLog(`STRIPE_SECRET_KEY_LIVE not configured [${requestId}]`);
+    secureLog(`STRIPE_SECRET_KEY_TEST not configured [${requestId}]`);
     return jsonResponse({ error: 'Server configuration error: missing Stripe key' }, 500);
   }
 
   if (!STRIPE_WEBHOOK_SECRET) {
-    secureLog(`STRIPE_WEBHOOK_SECRET_LIVE not configured [${requestId}]`);
+    secureLog(`STRIPE_WEBHOOK_SECRET_TEST not configured [${requestId}]`);
     return jsonResponse({ error: 'Server configuration error: missing webhook secret' }, 500);
   }
 
@@ -585,3 +592,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }, 200);
   }
 });
+

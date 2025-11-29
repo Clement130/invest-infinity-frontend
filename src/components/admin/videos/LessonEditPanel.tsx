@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Save, X, Upload, Trash2, ExternalLink } from 'lucide-react';
-import { getBunnyThumbnail, formatDuration } from '../../../utils/admin/bunnyStreamAPI';
+import { Save, X, Upload, Trash2, ExternalLink, Play, Eye } from 'lucide-react';
+import { getThumbnailUrl, formatDuration } from '../../../lib/bunny';
+import { SecureVideoPreview } from './SecureVideoPreview';
 import type { TrainingLesson } from '../../../types/training';
 import toast from 'react-hot-toast';
 
@@ -31,6 +32,7 @@ export function LessonEditPanel({
   });
   const [isSaving, setIsSaving] = useState(false);
   const [videoMetadata, setVideoMetadata] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (lesson) {
@@ -86,7 +88,7 @@ export function LessonEditPanel({
   }
 
   const hasVideo = Boolean(formData.bunny_video_id);
-  const thumbnailUrl = hasVideo ? getBunnyThumbnail(formData.bunny_video_id) : null;
+  const thumbnailUrl = hasVideo ? getThumbnailUrl(formData.bunny_video_id) : null;
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-6">
@@ -138,16 +140,34 @@ export function LessonEditPanel({
         {hasVideo ? (
           <div className="space-y-3">
             <div className="rounded-lg border border-white/10 bg-black/40 p-4">
-              {thumbnailUrl && (
-                <img
-                  src={thumbnailUrl}
-                  alt="Thumbnail"
-                  className="w-full h-32 object-cover rounded mb-2"
-                />
-              )}
+              {/* Miniature cliquable pour prévisualisation */}
+              <div className="relative group cursor-pointer mb-3" onClick={() => setShowPreview(true)}>
+                {thumbnailUrl ? (
+                  <img
+                    src={thumbnailUrl}
+                    alt="Thumbnail"
+                    className="w-full h-32 object-cover rounded"
+                  />
+                ) : (
+                  <div className="w-full h-32 bg-slate-700 rounded flex items-center justify-center">
+                    <Play className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+                {/* Overlay au hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 rounded-full text-white text-sm">
+                    <Eye className="w-4 h-4" />
+                    Prévisualiser
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-white font-medium">Vidéo assignée</div>
+                  <div className="text-xs text-gray-400 font-mono mt-0.5">
+                    ID: {formData.bunny_video_id.slice(0, 8)}...
+                  </div>
                   {videoMetadata && (
                     <div className="text-xs text-gray-400">
                       Durée: {formatDuration(videoMetadata.length)}
@@ -155,16 +175,24 @@ export function LessonEditPanel({
                   )}
                 </div>
                 <a
-                  href={`https://bunny.net/stream/library/videos/${formData.bunny_video_id}`}
+                  href={`https://dash.bunny.net/stream/library/videos/${formData.bunny_video_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded hover:bg-white/10 transition"
+                  title="Ouvrir dans Bunny Dashboard"
                 >
                   <ExternalLink className="w-4 h-4 text-purple-400" />
                 </a>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowPreview(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 transition text-sm"
+              >
+                <Play className="w-4 h-4" />
+                Prévisualiser
+              </button>
               {onReplaceVideo && (
                 <button
                   onClick={onReplaceVideo}
@@ -200,6 +228,16 @@ export function LessonEditPanel({
           </div>
         )}
       </div>
+
+      {/* Modal de prévisualisation sécurisée */}
+      {showPreview && hasVideo && (
+        <SecureVideoPreview
+          videoId={formData.bunny_video_id}
+          title={formData.title || 'Prévisualisation'}
+          mode="modal"
+          onClose={() => setShowPreview(false)}
+        />
+      )}
 
       {/* ID vidéo (manuel) */}
       <div className="space-y-2">

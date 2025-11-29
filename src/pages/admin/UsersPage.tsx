@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, X } from 'lucide-react';
+import { Eye, X, Users, Crown, RefreshCw, Ban, ExternalLink, Mail } from 'lucide-react';
 import { listProfiles } from '../../services/profilesService';
 import { getAccessList, revokeAccess } from '../../services/trainingService';
 import { getPurchasesForAdmin } from '../../services/purchasesService';
@@ -50,12 +50,39 @@ export default function UsersPage() {
       key: 'email',
       label: 'Email',
       sortable: true,
+      render: (value, row) => (
+        <div className="min-w-0">
+          <p className="text-white truncate">{value}</p>
+          {row.full_name && (
+            <p className="text-xs text-gray-400 truncate">{row.full_name}</p>
+          )}
+        </div>
+      ),
     },
     {
-      key: 'full_name',
-      label: 'Nom',
+      key: 'license',
+      label: 'Abonnement',
       sortable: true,
-      render: (value) => value || '-',
+      render: (value) => {
+        const licenseColors: Record<string, string> = {
+          none: 'bg-gray-500/20 text-gray-400',
+          starter: 'bg-blue-500/20 text-blue-400',
+          pro: 'bg-purple-500/20 text-purple-400',
+          elite: 'bg-amber-500/20 text-amber-400',
+        };
+        const licenseLabels: Record<string, string> = {
+          none: 'Aucun',
+          starter: 'Starter',
+          pro: 'Pro',
+          elite: 'Elite',
+        };
+        return (
+          <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${licenseColors[value as string] || licenseColors.none}`}>
+            {value === 'elite' && <Crown className="w-3 h-3" />}
+            {licenseLabels[value as string] || 'Aucun'}
+          </span>
+        );
+      },
     },
     {
       key: 'role',
@@ -64,18 +91,18 @@ export default function UsersPage() {
       render: (value) => (
         <span
           className={`px-2 py-1 text-xs rounded-full ${
-            value === 'admin'
+            value === 'admin' || value === 'developer'
               ? 'bg-purple-500/20 text-purple-400'
               : 'bg-blue-500/20 text-blue-400'
           }`}
         >
-          {value}
+          {value === 'developer' ? 'Dev' : value}
         </span>
       ),
     },
     {
       key: 'created_at',
-      label: 'Date d\'inscription',
+      label: 'Inscription',
       sortable: true,
       render: (value) =>
         value ? new Date(value).toLocaleDateString('fr-FR') : '-',
@@ -84,21 +111,25 @@ export default function UsersPage() {
       key: 'accessCount',
       label: 'Accès',
       sortable: true,
-      render: (value) => `${value} formation${Number(value) > 1 ? 's' : ''}`,
+      render: (value) => (
+        <span className="text-gray-400">
+          {value} formation{Number(value) > 1 ? 's' : ''}
+        </span>
+      ),
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: '',
       render: (_, row) => (
         <button
           onClick={(e) => {
             e.stopPropagation();
             setSelectedUser(row);
           }}
-          className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition text-sm"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition text-sm min-h-[36px]"
         >
           <Eye className="w-4 h-4" />
-          Voir
+          <span className="hidden sm:inline">Détails</span>
         </button>
       ),
     },
@@ -112,12 +143,23 @@ export default function UsersPage() {
     };
   });
 
+  // Stats
+  const totalUsers = profiles.length;
+  const admins = profiles.filter((p) => p.role === 'admin' || p.role === 'developer').length;
+  const clients = profiles.filter((p) => p.role === 'client').length;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Utilisateurs</h1>
-          <p className="text-gray-400">Gérez les utilisateurs de votre plateforme</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <Users className="w-7 h-7 sm:w-8 sm:h-8 text-purple-400" />
+            Utilisateurs
+          </h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">
+            {totalUsers} utilisateur{totalUsers > 1 ? 's' : ''} • {clients} client{clients > 1 ? 's' : ''} • {admins} admin{admins > 1 ? 's' : ''}
+          </p>
         </div>
       </div>
 

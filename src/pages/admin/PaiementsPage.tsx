@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Euro } from 'lucide-react';
+import { Euro, CreditCard, ExternalLink, TrendingUp, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { getPurchasesForAdmin } from '../../services/purchasesService';
 import { getModules } from '../../services/trainingService';
 import { listProfiles } from '../../services/profilesService';
@@ -120,23 +120,69 @@ export default function PaiementsPage() {
     },
   ];
 
+  // Stats
+  const completedCount = purchasesWithDetails.filter((p) => p.status === 'completed').length;
+  const pendingCount = purchasesWithDetails.filter((p) => p.status === 'pending').length;
+  const failedCount = purchasesWithDetails.filter((p) => p.status === 'failed').length;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Paiements</h1>
-          <p className="text-gray-400">Gérez les transactions et paiements</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-purple-400" />
+            Paiements
+          </h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">
+            {purchasesWithDetails.length} transaction{purchasesWithDetails.length > 1 ? 's' : ''}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-2">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Stats cards */}
+          <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2">
             <div className="flex items-center gap-2">
-              <Euro className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-gray-400">Total:</span>
-              <span className="text-lg font-semibold text-white">
+              <TrendingUp className="w-4 h-4 text-green-400" />
+              <span className="text-lg font-semibold text-green-400">
                 {(totalRevenue / 100).toFixed(2)} €
               </span>
             </div>
           </div>
+          {/* Lien Stripe */}
+          <a
+            href="https://dashboard.stripe.com/payments"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition text-sm text-gray-300 hover:text-white"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="hidden sm:inline">Stripe</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Mini stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-center">
+          <div className="flex items-center justify-center gap-1 text-green-400 mb-1">
+            <CheckCircle className="w-4 h-4" />
+            <span className="text-lg font-semibold">{completedCount}</span>
+          </div>
+          <p className="text-xs text-gray-400">Complétés</p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-center">
+          <div className="flex items-center justify-center gap-1 text-yellow-400 mb-1">
+            <Clock className="w-4 h-4" />
+            <span className="text-lg font-semibold">{pendingCount}</span>
+          </div>
+          <p className="text-xs text-gray-400">En attente</p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-center">
+          <div className="flex items-center justify-center gap-1 text-red-400 mb-1">
+            <XCircle className="w-4 h-4" />
+            <span className="text-lg font-semibold">{failedCount}</span>
+          </div>
+          <p className="text-xs text-gray-400">Échoués</p>
         </div>
       </div>
 

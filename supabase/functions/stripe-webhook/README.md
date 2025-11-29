@@ -1,71 +1,169 @@
-# Stripe Webhook - Edge Function Supabase
+# Stripe Webhooks - Configuration InvestInfinity
 
-## URL de l'endpoint
+## 📋 Vue d'ensemble
 
-```
-https://yjbyermyfbugfyzmidsp.supabase.co/functions/v1/stripe-webhook
-```
+Deux fonctions Edge séparées pour gérer les webhooks Stripe :
 
-## Variables d'environnement requises
+| Fonction | Mode | URL |
+|----------|------|-----|
+| `stripe-webhook` | **LIVE** (Production) | `https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook` |
+| `stripe-webhook-test` | **TEST** (Développement) | `https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook-test` |
 
-Ces variables doivent être configurées dans **Supabase Dashboard > Project Settings > Edge Functions > Secrets** :
+---
 
-| Variable | Description | Où la trouver |
-|----------|-------------|---------------|
-| `STRIPE_SECRET_KEY` | Clé secrète Stripe (sk_live_xxx ou sk_test_xxx) | [Stripe Dashboard > API Keys](https://dashboard.stripe.com/apikeys) |
-| `STRIPE_WEBHOOK_SECRET` | Secret de signature du webhook (whsec_xxx) | [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/webhooks) > Votre webhook > Signing secret |
+## 🔐 Variables d'environnement requises
 
-> ⚠️ **IMPORTANT** : Chaque endpoint webhook Stripe a son propre `Signing secret`. Assurez-vous de copier le bon !
-
-## Événements Stripe gérés
-
-Configurez ces événements dans votre webhook Stripe :
-
-- ✅ `checkout.session.completed` - Paiement one-time réussi
-- ✅ `invoice.paid` - Facture payée (abonnements)
-- ✅ `customer.subscription.created` - Nouvel abonnement
-- ✅ `customer.subscription.updated` - Abonnement modifié
-- ✅ `customer.subscription.deleted` - Abonnement annulé
-- ✅ `payment_intent.succeeded` - Paiement réussi
-- ✅ `payment_intent.payment_failed` - Paiement échoué
-
-## Configuration du webhook Stripe
-
-1. Aller sur [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/webhooks)
-2. Cliquer sur **Add endpoint**
-3. URL : `https://yjbyermyfbugfyzmidsp.supabase.co/functions/v1/stripe-webhook`
-4. Sélectionner les événements listés ci-dessus
-5. Copier le **Signing secret** (whsec_xxx)
-6. Configurer `STRIPE_WEBHOOK_SECRET` dans Supabase
-
-## Déploiement
+### Dans Supabase Dashboard > Edge Functions > Secrets :
 
 ```bash
-# Depuis la racine du projet
-supabase functions deploy stripe-webhook --project-ref yjbyermyfbugfyzmidsp
+# MODE LIVE (Production)
+STRIPE_SECRET_KEY_LIVE=<votre_cle_live>
+STRIPE_WEBHOOK_SECRET_LIVE=<votre_webhook_secret_live>
+
+# MODE TEST (Développement)
+STRIPE_SECRET_KEY_TEST=<votre_cle_test>
+STRIPE_WEBHOOK_SECRET_TEST=<votre_webhook_secret_test>
 ```
 
-## Debugging
+### Où récupérer ces valeurs ?
 
-Les logs sont disponibles dans :
-- **Supabase Dashboard** > Edge Functions > stripe-webhook > Logs
-- **CLI** : `supabase functions logs stripe-webhook --project-ref yjbyermyfbugfyzmidsp`
+| Variable | Où la trouver |
+|----------|---------------|
+| `STRIPE_SECRET_KEY_LIVE` | [Stripe Dashboard > API Keys](https://dashboard.stripe.com/apikeys) (mode Live) |
+| `STRIPE_SECRET_KEY_TEST` | [Stripe Dashboard > API Keys](https://dashboard.stripe.com/test/apikeys) (mode Test) |
+| `STRIPE_WEBHOOK_SECRET_LIVE` | [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/webhooks) > Webhook LIVE > Signing secret |
+| `STRIPE_WEBHOOK_SECRET_TEST` | [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/test/webhooks) > Webhook TEST > Signing secret |
 
-## Résumé des corrections (29 Nov 2025)
+> ⚠️ **IMPORTANT** : Chaque endpoint webhook Stripe a son propre Signing secret !
 
-### Problèmes corrigés
+---
 
-1. **`serve()` obsolète** → Remplacé par `Deno.serve()` moderne
-2. **Variables d'environnement non vérifiées** → Vérification explicite au démarrage avec logs
-3. **Erreurs de signature non distinguées** → Séparation claire 400 (signature) vs 500 (interne)
-4. **Pas de logs de debugging** → Ajout de logs détaillés à chaque étape
-5. **Événements manquants** → Ajout de `invoice.paid`, `customer.subscription.*`
-6. **Gestion d'erreurs fragile** → Try/catch à chaque niveau avec réponses appropriées
+## 🎯 Configuration Stripe Dashboard
 
-### Ce qu'il faut faire côté Stripe
+### Webhook LIVE (Production)
 
-1. ✅ Vérifier que le webhook pointe vers la bonne URL
-2. ✅ Copier le **Signing secret** et le configurer dans Supabase
-3. ✅ Activer les événements listés ci-dessus
-4. ✅ Cliquer sur **Réessayer** pour les événements en échec
+1. Aller sur [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/webhooks) (mode Live)
+2. Cliquer sur **Add endpoint**
+3. URL : `https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook`
+4. Sélectionner les événements :
+   - ✅ `checkout.session.completed`
+   - ✅ `invoice.paid`
+   - ✅ `customer.subscription.created`
+   - ✅ `customer.subscription.updated`
+   - ✅ `customer.subscription.deleted`
+   - ✅ `payment_intent.succeeded`
+   - ✅ `payment_intent.payment_failed`
+5. Copier le **Signing secret** → configurer `STRIPE_WEBHOOK_SECRET_LIVE`
 
+### Webhook TEST (Développement)
+
+1. Aller sur [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/test/webhooks) (mode Test)
+2. Cliquer sur **Add endpoint**
+3. URL : `https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook-test`
+4. Sélectionner les mêmes événements
+5. Copier le **Signing secret** → configurer `STRIPE_WEBHOOK_SECRET_TEST`
+
+---
+
+## 🚀 Déploiement
+
+### Via CLI Supabase
+
+```bash
+# Déployer les deux fonctions
+supabase functions deploy stripe-webhook --project-ref vveswlmcgmizmjsriezw
+supabase functions deploy stripe-webhook-test --project-ref vveswlmcgmizmjsriezw
+
+# Configurer les secrets
+supabase secrets set STRIPE_SECRET_KEY_LIVE=sk_live_xxx --project-ref vveswlmcgmizmjsriezw
+supabase secrets set STRIPE_WEBHOOK_SECRET_LIVE=whsec_xxx --project-ref vveswlmcgmizmjsriezw
+supabase secrets set STRIPE_SECRET_KEY_TEST=sk_test_xxx --project-ref vveswlmcgmizmjsriezw
+supabase secrets set STRIPE_WEBHOOK_SECRET_TEST=whsec_xxx --project-ref vveswlmcgmizmjsriezw
+```
+
+---
+
+## 🧪 Tester avec Stripe CLI
+
+### Installation Stripe CLI
+
+```bash
+# Windows (avec scoop)
+scoop install stripe
+
+# macOS
+brew install stripe/stripe-cli/stripe
+
+# Ou télécharger depuis https://stripe.com/docs/stripe-cli
+```
+
+### Tester en local
+
+```bash
+# 1. Se connecter à Stripe
+stripe login
+
+# 2. Écouter les webhooks et les forwarder vers la fonction TEST
+stripe listen --forward-to https://vveswlmcgmizmjsriezw.supabase.co/functions/v1/stripe-webhook-test
+
+# 3. Dans un autre terminal, déclencher un événement de test
+stripe trigger checkout.session.completed
+stripe trigger invoice.paid
+stripe trigger payment_intent.succeeded
+```
+
+---
+
+## 📊 Monitoring
+
+### Logs Supabase
+
+```bash
+# Voir les logs en temps réel
+supabase functions logs stripe-webhook --project-ref vveswlmcgmizmjsriezw
+supabase functions logs stripe-webhook-test --project-ref vveswlmcgmizmjsriezw
+```
+
+### Dashboard Supabase
+
+- [Edge Functions > stripe-webhook](https://supabase.com/dashboard/project/vveswlmcgmizmjsriezw/functions)
+
+### Dashboard Stripe
+
+- [Webhooks > Événements](https://dashboard.stripe.com/webhooks) - voir le statut de chaque événement
+
+---
+
+## 🔧 Troubleshooting
+
+### Erreur 400 - Invalid signature
+
+- Vérifier que le `STRIPE_WEBHOOK_SECRET_*` correspond au bon endpoint
+- Chaque webhook a son propre signing secret !
+
+### Erreur 500 - Server configuration error
+
+- Vérifier que toutes les variables d'environnement sont configurées
+- Voir les logs : `supabase functions logs stripe-webhook`
+
+### Événements en échec dans Stripe
+
+1. Vérifier les logs Supabase
+2. Corriger le problème
+3. Cliquer sur "Réessayer" dans le dashboard Stripe
+
+---
+
+## 📁 Structure des fichiers
+
+```
+supabase/functions/
+├── stripe-webhook/           # MODE LIVE
+│   ├── index.ts
+│   └── README.md
+├── stripe-webhook-test/      # MODE TEST
+│   └── index.ts
+└── _shared/
+    ├── cors.ts
+    └── security.ts
+```

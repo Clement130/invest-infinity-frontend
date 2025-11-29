@@ -11,6 +11,10 @@ import {
   X,
   Video,
   Clock,
+  BookOpen,
+  ChevronUp,
+  ChevronDown,
+  Shield,
 } from 'lucide-react';
 import {
   DndContext,
@@ -117,49 +121,59 @@ export default function FormationsPage() {
     }
   };
 
+  // Stats globales
+  const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+  const activeModules = modules.filter((m) => m.is_active).length;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Formations</h1>
-          <p className="text-gray-400">Gérez vos modules de formation</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-purple-400" />
+            Formations
+          </h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">
+            {modules.length} module{modules.length > 1 ? 's' : ''} • {activeModules} actif{activeModules > 1 ? 's' : ''}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => setPreviewMode(!previewMode)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition ${
+            className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border transition text-sm ${
               previewMode
                 ? 'bg-purple-500/20 border-purple-500/30 text-purple-400'
                 : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
             }`}
           >
             {previewMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {previewMode ? 'Mode édition' : 'Prévisualisation'}
+            <span className="hidden sm:inline">{previewMode ? 'Mode édition' : 'Prévisualisation'}</span>
           </button>
           <button
             onClick={() => {
               setEditingModule(null);
               setModuleModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition text-sm sm:text-base"
           >
             <Plus className="w-4 h-4" />
-            Nouvelle formation
+            <span className="hidden sm:inline">Nouvelle formation</span>
+            <span className="sm:hidden">Créer</span>
           </button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un module..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400/50 text-white"
-          />
-        </div>
+      {/* Barre de recherche */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Rechercher un module..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400/50 text-white placeholder-gray-500"
+        />
       </div>
 
       {isLoading ? (
@@ -174,7 +188,7 @@ export default function FormationsPage() {
             items={filteredModules.map((m) => m.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredModules.map((module) => (
                 <SortableModuleCard
                   key={module.id}
@@ -287,7 +301,8 @@ function SortableModuleCard({
         </span>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-gray-500">
+      {/* Stats du module */}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
         <div className="flex items-center gap-1">
           <Video className="w-3 h-3" />
           <span>{lessons.length} leçon{lessons.length > 1 ? 's' : ''}</span>
@@ -295,6 +310,10 @@ function SortableModuleCard({
         <div className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
           <span>~{lessons.length * 10} min</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Shield className="w-3 h-3" />
+          <span className="capitalize">{module.required_license || 'starter'}</span>
         </div>
       </div>
 
