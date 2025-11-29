@@ -1,6 +1,7 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { Check, Loader2, Shield, MapPin, Calendar, Users, Clock, UtensilsCrossed, Award, ArrowLeft } from 'lucide-react';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
+import { getStripePriceId } from '../services/stripePriceService';
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,6 +35,29 @@ export default function ImmersionElitePage() {
     setLoading(true);
 
     try {
+      // Récupérer le Price ID depuis la base de données (s'assurer qu'il est à jour)
+      let priceId = STRIPE_PRICE_IDS.immersion;
+      
+      // Si c'est un placeholder, essayer de récupérer depuis la DB
+      if (!priceId || priceId.includes('PLACEHOLDER')) {
+        const fetchedPriceId = await getStripePriceId('immersion');
+        if (fetchedPriceId && !fetchedPriceId.includes('PLACEHOLDER')) {
+          priceId = fetchedPriceId;
+        } else {
+          console.error('Price ID invalide ou placeholder:', priceId);
+          toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (!priceId || priceId.includes('PLACEHOLDER')) {
+        console.error('Price ID invalide ou placeholder:', priceId);
+        toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(CHECKOUT_PUBLIC_URL, {
         method: 'POST',
         headers: {
@@ -42,7 +66,7 @@ export default function ImmersionElitePage() {
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
-          priceId: STRIPE_PRICE_IDS.immersion,
+          priceId: priceId,
           successUrl: getStripeSuccessUrl(),
           cancelUrl: getStripeCancelUrl(),
           metadata: {

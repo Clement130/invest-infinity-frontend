@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone, MapPin, Calendar } from 'lucide-react';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
+import { getStripePriceId } from '../services/stripePriceService';
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import SocialProofBanner from '../components/SocialProofBanner';
@@ -44,6 +45,29 @@ export default function PricingPage() {
     setLoading(plan);
 
     try {
+      // Récupérer le Price ID depuis la base de données (s'assurer qu'il est à jour)
+      let priceId = STRIPE_PRICE_IDS[plan];
+      
+      // Si c'est un placeholder, essayer de récupérer depuis la DB
+      if (!priceId || priceId.includes('PLACEHOLDER')) {
+        const fetchedPriceId = await getStripePriceId(plan);
+        if (fetchedPriceId && !fetchedPriceId.includes('PLACEHOLDER')) {
+          priceId = fetchedPriceId;
+        } else {
+          console.error('Price ID invalide ou placeholder:', priceId);
+          toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
+          setLoading(null);
+          return;
+        }
+      }
+
+      if (!priceId || priceId.includes('PLACEHOLDER')) {
+        console.error('Price ID invalide ou placeholder:', priceId);
+        toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
+        setLoading(null);
+        return;
+      }
+
       const response = await fetch(CHECKOUT_PUBLIC_URL, {
         method: 'POST',
         headers: {
@@ -52,7 +76,7 @@ export default function PricingPage() {
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
-          priceId: STRIPE_PRICE_IDS[plan],
+          priceId: priceId,
           successUrl: getStripeSuccessUrl(),
           cancelUrl: getStripeCancelUrl(),
         }),
