@@ -29,6 +29,7 @@ const ClientChallengesPage = lazy(() => import('../pages/ChallengesPage'));
 const EventsPage = lazy(() => import('../pages/EventsPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
+const ImmersionElitePage = lazy(() => import('../pages/ImmersionElitePage'));
 const SuccessPage = lazy(() => import('../pages/SuccessPage'));
 const ConfirmationPage = lazy(() => import('../pages/ConfirmationPage'));
 const CreatePasswordPage = lazy(() => import('../pages/CreatePasswordPage'));
@@ -87,6 +88,11 @@ export const marketingRoutes: MarketingRouteConfig[] = [
   {
     path: '/pricing',
     element: <PricingPage />,
+    layout: { header: true, footer: true, leadbooster: false },
+  },
+  {
+    path: '/immersion-elite',
+    element: <ImmersionElitePage />,
     layout: { header: true, footer: true, leadbooster: false },
   },
   {

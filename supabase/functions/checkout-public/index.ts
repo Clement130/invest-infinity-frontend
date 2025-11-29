@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import {
   checkRateLimit,
   getClientIP,
@@ -13,12 +14,60 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   httpClient: Stripe.createFetchHttpClient()
 });
 
-// Liste des priceId autorisés (protection contre manipulation)
-const ALLOWED_PRICE_IDS = [
-  'price_1SXfwzKaUb6KDbNF81uubunw', // starter
-  'price_1SXfxaKaUb6KDbNFRgl7y7I5', // pro
-  'price_1SXfyUKaUb6KDbNFYjpa57JP', // elite
-];
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+);
+
+// Cache pour les Price IDs autorisés (mis à jour à chaque requête si nécessaire)
+let ALLOWED_PRICE_IDS_CACHE: string[] | null = null;
+let CACHE_TIMESTAMP = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Récupère les Price IDs autorisés depuis la base de données
+ */
+async function getAllowedPriceIds(): Promise<string[]> {
+  const now = Date.now();
+  
+  // Utiliser le cache si encore valide
+  if (ALLOWED_PRICE_IDS_CACHE && (now - CACHE_TIMESTAMP) < CACHE_TTL) {
+    return ALLOWED_PRICE_IDS_CACHE;
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('stripe_prices')
+      .select('stripe_price_id')
+      .eq('is_active', true);
+
+    if (error || !data) {
+      secureLog('checkout-public', 'Error fetching allowed price IDs', { error: error?.message });
+      // Fallback vers les valeurs par défaut
+      return [
+        'price_ENTREE_PLACEHOLDER',
+        'price_1SXfxaKaUb6KDbNFRgl7y7I5',
+        'price_IMMERSION_PLACEHOLDER',
+      ];
+    }
+
+    const priceIds = data.map((p) => p.stripe_price_id);
+    ALLOWED_PRICE_IDS_CACHE = priceIds;
+    CACHE_TIMESTAMP = now;
+    
+    return priceIds;
+  } catch (error) {
+    secureLog('checkout-public', 'Exception fetching allowed price IDs', { 
+      error: error instanceof Error ? error.message : 'Unknown' 
+    });
+    // Fallback
+    return [
+      'price_ENTREE_PLACEHOLDER',
+      'price_1SXfxaKaUb6KDbNFRgl7y7I5',
+      'price_IMMERSION_PLACEHOLDER',
+    ];
+  }
+}
 
 // Helper CORS sécurisé
 function getCorsHeaders(origin: string | null): Record<string, string> {
@@ -91,9 +140,10 @@ serve(async (req) => {
       ? userEmail.toLowerCase().trim() 
       : null;
 
-    // Vérifier que le priceId est dans la liste autorisée
-    if (!ALLOWED_PRICE_IDS.includes(priceId)) {
-      secureLog('checkout-public', 'Invalid priceId attempted', { priceId, ip: clientIP });
+    // Vérifier que le priceId est dans la liste autorisée (récupérée depuis la DB)
+    const allowedPriceIds = await getAllowedPriceIds();
+    if (!allowedPriceIds.includes(priceId)) {
+      secureLog('checkout-public', 'Invalid priceId attempted', { priceId, ip: clientIP, allowedIds: allowedPriceIds });
       return new Response(
         JSON.stringify({ error: 'Invalid price selection' }),
         { status: 400, headers: addSecurityHeaders(corsHeaders) }

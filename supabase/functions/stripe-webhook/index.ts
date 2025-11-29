@@ -15,12 +15,59 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-// Mapping priceId → licence
-const PRICE_TO_LICENSE: Record<string, string> = {
-  'price_1SXfwzKaUb6KDbNF81uubunw': 'starter',
-  'price_1SXfxaKaUb6KDbNFRgl7y7I5': 'pro',
-  'price_1SXfyUKaUb6KDbNFYjpa57JP': 'elite'
-};
+// Cache pour le mapping priceId → licence (récupéré depuis la DB)
+let PRICE_TO_LICENSE_CACHE: Record<string, string> | null = null;
+let LICENSE_CACHE_TIMESTAMP = 0;
+const LICENSE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Récupère le mapping priceId → licence depuis la base de données
+ */
+async function getPriceToLicenseMapping(): Promise<Record<string, string>> {
+  const now = Date.now();
+  
+  // Utiliser le cache si encore valide
+  if (PRICE_TO_LICENSE_CACHE && (now - LICENSE_CACHE_TIMESTAMP) < LICENSE_CACHE_TTL) {
+    return PRICE_TO_LICENSE_CACHE;
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('stripe_prices')
+      .select('stripe_price_id, plan_type')
+      .eq('is_active', true);
+
+    if (error || !data) {
+      secureLog('stripe-webhook', 'Error fetching price to license mapping', { error: error?.message });
+      // Fallback
+      return {
+        'price_ENTREE_PLACEHOLDER': 'entree',
+        'price_1SXfxaKaUb6KDbNFRgl7y7I5': 'transformation',
+        'price_IMMERSION_PLACEHOLDER': 'immersion',
+      };
+    }
+
+    const mapping: Record<string, string> = {};
+    data.forEach((price) => {
+      mapping[price.stripe_price_id] = price.plan_type;
+    });
+
+    PRICE_TO_LICENSE_CACHE = mapping;
+    LICENSE_CACHE_TIMESTAMP = now;
+    
+    return mapping;
+  } catch (error) {
+    secureLog('stripe-webhook', 'Exception fetching price to license mapping', { 
+      error: error instanceof Error ? error.message : 'Unknown' 
+    });
+    // Fallback
+    return {
+      'price_ENTREE_PLACEHOLDER': 'entree',
+      'price_1SXfxaKaUb6KDbNFRgl7y7I5': 'transformation',
+      'price_IMMERSION_PLACEHOLDER': 'immersion',
+    };
+  }
+}
 
 // Types d'événements autorisés
 const ALLOWED_EVENT_TYPES = [
@@ -173,8 +220,9 @@ serve(async (req) => {
         }
       }
 
-      // Attribuer la licence selon le plan acheté
-      const license = PRICE_TO_LICENSE[priceId || ''] || 'starter';
+      // Attribuer la licence selon le plan acheté (récupéré depuis la DB)
+      const priceToLicense = await getPriceToLicenseMapping();
+      const license = priceToLicense[priceId || ''] || 'entree';
       
       // Mettre à jour le profil AVEC la licence
       const { error: profileError } = await supabaseAdmin
@@ -194,17 +242,17 @@ serve(async (req) => {
         secureLog('stripe-webhook', 'Error updating profile', { error: profileError.message });
       }
 
-      // Hiérarchie des licences : starter < pro < elite
+      // Hiérarchie des licences : entree < transformation < immersion
       const LICENSE_HIERARCHY: Record<string, number> = {
-        'starter': 1,
-        'pro': 2,
-        'elite': 3
+        'entree': 1,
+        'transformation': 2,
+        'immersion': 3
       };
       
       const userLicenseLevel = LICENSE_HIERARCHY[license] || 1;
 
       // Récupérer les modules accessibles selon la licence
-      // Si pas de required_license défini, on considère que c'est 'starter' (accessible à tous)
+      // Si pas de required_license défini, on considère que c'est 'entree' (accessible à tous)
       const { data: modules } = await supabaseAdmin
         .from('training_modules')
         .select('id, required_license');
@@ -212,7 +260,7 @@ serve(async (req) => {
       if (modules && modules.length > 0) {
         // Filtrer les modules selon la licence de l'utilisateur
         const accessibleModules = modules.filter(m => {
-          const requiredLicense = m.required_license || 'starter';
+          const requiredLicense = m.required_license || 'entree';
           const requiredLevel = LICENSE_HIERARCHY[requiredLicense] || 1;
           return userLicenseLevel >= requiredLevel;
         });

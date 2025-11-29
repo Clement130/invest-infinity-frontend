@@ -7,6 +7,10 @@ import './index.css';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { queryClient } from './lib/react-query.ts';
+import { initStripePriceIds } from './config/stripe.ts';
+
+// Initialiser les Price IDs Stripe au démarrage
+initStripePriceIds().catch(console.error);
 
 const rootElement = document.getElementById('root');
 
