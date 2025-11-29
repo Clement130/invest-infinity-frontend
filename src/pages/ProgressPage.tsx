@@ -126,7 +126,11 @@ export default function ProgressPage() {
 
   const xpTracks = stats?.xpTracks ?? [];
 
-  const isLoading = statsQuery.isLoading || progressSummaryQuery.isLoading || modulesQuery.isLoading;
+  // Vérifier si les queries sont en chargement
+  // Si user n'est pas défini, les queries dépendantes de user ne sont pas activées
+  // donc on ne doit pas les considérer comme "loading"
+  const isLoading = modulesQuery.isLoading || 
+    (!!user?.id && (statsQuery.isLoading || progressSummaryQuery.isLoading));
 
   return (
     <div className="space-y-8 pb-8">

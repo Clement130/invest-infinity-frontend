@@ -52,39 +52,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .maybeSingle();
       
-      const { data, error } = await Promise.race([profilePromise, timeoutPromise]);
+      let data, error;
+      try {
+        const result = await Promise.race([profilePromise, timeoutPromise]);
+        data = result.data;
+        error = result.error;
+      } catch (raceError: any) {
+        // Gérer le timeout ou autres erreurs de Promise.race
+        console.error('[AuthContext] Erreur lors du chargement du profil:', raceError);
+        // Créer un profil par défaut basé sur l'utilisateur auth
+        const { data: authUser } = await supabase.auth.getUser();
+        if (authUser?.user) {
+          const defaultProfile = {
+            id: userId,
+            email: authUser.user.email || '',
+            role: 'client' as const,
+            license: 'none' as const,
+            full_name: null,
+            license_valid_until: null,
+            stripe_customer_id: null,
+            created_at: new Date().toISOString(),
+            updated_at: null,
+          };
+          console.log('[AuthContext] Utilisation du profil par défaut:', defaultProfile);
+          setProfile(defaultProfile as ProfileRow);
+          profileRef.current = defaultProfile as ProfileRow;
+        } else {
+          setProfile(null);
+        }
+        return;
+      }
 
       if (error && error.code !== 'PGRST116') {
         console.error('[AuthContext] Erreur profil:', error);
         console.error('[AuthContext] Code:', error.code, 'Message:', error.message);
         
-        // Si le profil n'existe pas, on le crée automatiquement avec le rôle 'client' par défaut
-        if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
-          console.log('[AuthContext] Profil non trouvé, tentative de création...');
-          
-          // Récupérer l'email de l'utilisateur auth
-          const { data: authUser } = await supabase.auth.getUser();
-          if (authUser?.user?.email) {
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert({
-                id: userId,
-                email: authUser.user.email,
-                role: 'client',
-              })
-              .select()
-              .single();
-
-            if (createError) {
-              console.error('[AuthContext] Erreur lors de la création du profil:', createError);
-              setProfile(null);
-              return;
-            }
-
-            console.log('[AuthContext] Profil créé automatiquement:', { id: newProfile.id, email: newProfile.email, role: newProfile.role });
-            setProfile(newProfile);
-            return;
-          }
+        // Pour les erreurs 400 ou autres erreurs réseau, créer un profil par défaut
+        // pour ne pas bloquer l'application
+        const { data: authUser } = await supabase.auth.getUser();
+        if (authUser?.user) {
+          const defaultProfile = {
+            id: userId,
+            email: authUser.user.email || '',
+            role: 'client' as const,
+            license: 'none' as const,
+            full_name: null,
+            license_valid_until: null,
+            stripe_customer_id: null,
+            created_at: new Date().toISOString(),
+            updated_at: null,
+          };
+          console.log('[AuthContext] Erreur Supabase, utilisation du profil par défaut:', defaultProfile);
+          setProfile(defaultProfile as ProfileRow);
+          profileRef.current = defaultProfile as ProfileRow;
+          return;
         }
         
         setProfile(null);
