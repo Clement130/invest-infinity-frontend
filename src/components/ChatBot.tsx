@@ -248,6 +248,61 @@ export default function ChatBot() {
     }
   }, [isOpen]);
 
+  // Masquer l'iframe Pipedrive pour éviter les conflits avec le bouton ChatBot
+  useEffect(() => {
+    const hidePipedriveIframe = () => {
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        if (iframe.id.includes('Leadbooster') ||
+            iframe.title.includes('Chatbot') ||
+            iframe.src.includes('pipedrive') ||
+            iframe.src.includes('leadbooster')) {
+          iframe.style.display = 'none';
+          console.log('Iframe Pipedrive masqué:', iframe.id || iframe.title);
+        }
+      });
+    };
+
+    // Masquer immédiatement
+    hidePipedriveIframe();
+
+    // Et masquer aussi après un délai au cas où l'iframe se charge plus tard
+    const timeoutId = setTimeout(hidePipedriveIframe, 1000);
+    const timeoutId2 = setTimeout(hidePipedriveIframe, 3000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(timeoutId2);
+    };
+  }, []);
+
+  // Forcer le z-index du bouton ChatBot au runtime
+  useEffect(() => {
+    const forceButtonZIndex = () => {
+      const button = document.querySelector('[aria-label*="Ouvrir le chat"]');
+      if (button) {
+        button.style.zIndex = '2147483647';
+        button.style.position = 'relative';
+
+        // Forcer aussi le conteneur parent
+        const container = button.closest('[class*="fixed"]');
+        if (container) {
+          container.style.zIndex = '2147483647';
+        }
+
+        console.log('Z-index du bouton ChatBot forcé');
+      }
+    };
+
+    // Appliquer immédiatement
+    forceButtonZIndex();
+
+    // Et réappliquer après un délai
+    const timeoutId = setTimeout(forceButtonZIndex, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [isOpen]); // Réappliquer quand l'état d'ouverture change
+
   // Écouter l'événement personnalisé pour ouvrir le chatbot depuis d'autres composants
   useEffect(() => {
     const handleOpenChatbot = () => {
