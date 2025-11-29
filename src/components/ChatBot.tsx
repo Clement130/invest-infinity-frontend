@@ -78,7 +78,7 @@ function useMobileOptimization() {
     };
   }, []);
 
-  return { isMobile, reducedMotion, isKeyboardOpen };
+  return { isMobile, reducedMotion, isKeyboardOpen, setIsKeyboardOpen };
 }
 
 // Suggestions rapides pour mobile selon le mode
@@ -132,7 +132,7 @@ const getInitialMessage = (mode: 'cta' | 'support'): Message => {
 export default function ChatBot() {
   const { user } = useAuth();
   const location = useLocation();
-  const { isMobile, reducedMotion, isKeyboardOpen } = useMobileOptimization();
+  const { isMobile, reducedMotion, isKeyboardOpen, setIsKeyboardOpen } = useMobileOptimization();
 
   // Détecter le contexte : page d'accueil (CTA) vs espace client (Support)
   const isLandingPage = location.pathname === '/' || location.pathname.startsWith('/landing');
