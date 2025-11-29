@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ArrowLeft
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { chatbotService, type ChatAction, type ChatMessage } from '../services/chatbotService';
 
@@ -81,34 +82,68 @@ function useMobileOptimization() {
   return { isMobile, reducedMotion, isKeyboardOpen };
 }
 
-// Suggestions rapides pour mobile (plus courtes)
-const mobileQuickReplies = [
-  { icon: '📊', text: 'Mon progrès', query: 'Mon progrès dans les formations' },
-  { icon: '🏆', text: 'Challenges', query: 'Quels challenges sont actifs ?' },
-  { icon: '▶️', text: 'Continuer', query: 'Continuer ma formation' },
-  { icon: '💬', text: 'Discord', query: 'Comment rejoindre Discord ?' },
-  { icon: '❓', text: 'Comment ça marche', query: 'Comment ça fonctionne ?' },
-  { icon: '📞', text: 'Contact', query: 'Comment contacter le support ?' },
-];
+// Suggestions rapides pour mobile selon le mode
+const getMobileQuickReplies = (mode: 'cta' | 'support') => {
+  if (mode === 'cta') {
+    return [
+      { icon: '🚀', text: 'Rejoindre', query: 'Comment rejoindre ?' },
+      { icon: '❓', text: 'Comment ça marche', query: 'Comment ça fonctionne ?' },
+      { icon: '🎯', text: 'Avantages', query: 'Quels sont les avantages ?' },
+      { icon: '🏦', text: 'RaiseFX', query: 'Pourquoi RaiseFX ?' },
+      { icon: '💬', text: 'Discord', query: 'Comment rejoindre Discord ?' },
+      { icon: '📞', text: 'Contact', query: 'Comment contacter le support ?' },
+    ];
+  }
+  return [
+    { icon: '📊', text: 'Mon progrès', query: 'Mon progrès dans les formations' },
+    { icon: '🏆', text: 'Challenges', query: 'Quels challenges sont actifs ?' },
+    { icon: '▶️', text: 'Continuer', query: 'Continuer ma formation' },
+    { icon: '💬', text: 'Discord', query: 'Comment rejoindre Discord ?' },
+    { icon: '❓', text: 'Comment ça marche', query: 'Comment ça fonctionne ?' },
+    { icon: '📞', text: 'Contact', query: 'Comment contacter le support ?' },
+  ];
+};
+
+// Fonction pour obtenir le message initial selon le mode
+const getInitialMessage = (mode: 'cta' | 'support'): Message => {
+  if (mode === 'cta') {
+    return {
+      id: '1',
+      content: "Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. Je suis là pour t'aider à découvrir notre communauté de traders performants ! 🚀\n\nTu veux en savoir plus sur comment rejoindre Invest Infinity ?",
+      sender: 'bot',
+      timestamp: new Date(),
+      type: 'text',
+      suggestions: [
+        "Comment ça fonctionne ?",
+        "Comment rejoindre ?",
+        "Quels sont les avantages ?"
+      ]
+    };
+  }
+  return {
+    id: '1',
+    content: "Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. Comment puis-je t'aider aujourd'hui ?",
+    sender: 'bot',
+    timestamp: new Date(),
+    type: 'text'
+  };
+};
 
 export default function ChatBot() {
   const { user } = useAuth();
+  const location = useLocation();
   const { isMobile, reducedMotion, isKeyboardOpen } = useMobileOptimization();
+
+  // Détecter le contexte : page d'accueil (CTA) vs espace client (Support)
+  const isLandingPage = location.pathname === '/' || location.pathname.startsWith('/landing');
+  const isClientArea = location.pathname.startsWith('/app');
+  const chatbotMode = isLandingPage && !user ? 'cta' : 'support';
   const [isOpen, setIsOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: "Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. Comment puis-je t'aider aujourd'hui ?",
-      sender: 'bot',
-      timestamp: new Date(),
-      type: 'text'
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage(chatbotMode)]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [hasNewMessage, setHasNewMessage] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -118,39 +153,49 @@ export default function ChatBot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Initialisation du contexte utilisateur
+  // Mettre à jour le mode quand le contexte change
   useEffect(() => {
+    chatbotService.setMode(chatbotMode);
+    // Réinitialiser les messages si on change de mode
+    if (messages.length === 1 && messages[0].id === '1') {
+      setMessages([getInitialMessage(chatbotMode)]);
+    }
+  }, [chatbotMode, location.pathname]);
+
+  // Initialisation du contexte utilisateur et définition du mode
+  useEffect(() => {
+    // Définir le mode du chatbot selon le contexte
+    chatbotService.setMode(chatbotMode);
+
     const initializeChatbot = async () => {
       if (user?.id && !isInitialized) {
         await chatbotService.initializeContext(user.id);
         setIsInitialized(true);
 
-        // Ouvrir automatiquement le chat pour les nouveaux utilisateurs
-        const isNewUser = !localStorage.getItem(`chatbot-welcome-${user.id}`);
-        if (isNewUser) {
-          setIsOpen(true);
-          localStorage.setItem(`chatbot-welcome-${user.id}`, 'shown');
-        }
+        // Ne plus ouvrir automatiquement - moins intrusif
+        // L'utilisateur peut ouvrir le chat s'il le souhaite
 
         // Message de bienvenue personnalisé avec plus de contexte
         const userName = user.user_metadata?.full_name?.split(' ')[0] || 'Trader';
         let welcomeContent = `Salut ${userName} ! 👋 **Bienvenue dans Invest Infinity !**\n\n`;
 
-        // Personnaliser selon le contexte
-        if (chatbotService.generateProactiveSuggestions()) {
-          welcomeContent += `Je vois que tu as déjà commencé ton parcours ! Je peux t'aider avec :\n\n`;
-          welcomeContent += `• 📊 Ton progrès dans les formations\n`;
-          welcomeContent += `• 🏆 Les challenges et quêtes actifs\n`;
-          welcomeContent += `• 🎯 Des recommandations personnalisées\n`;
-          welcomeContent += `• 💬 Réponses à toutes tes questions\n\n`;
-          welcomeContent += `Que veux-tu savoir ou faire aujourd'hui ?`;
-        } else {
-          welcomeContent += `Je suis ton assistant IA personnel ! Je peux t'aider avec :\n\n`;
-          welcomeContent += `• 🚀 **Commencer** tes formations de trading\n`;
-          welcomeContent += `• 🏆 **Découvrir** les challenges disponibles\n`;
-          welcomeContent += `• 📈 **Comprendre** comment devenir rentable\n`;
-          welcomeContent += `• 💰 **Tout savoir** sur notre modèle\n\n`;
-          welcomeContent += `Par quoi veux-tu commencer ?`;
+        // Personnaliser selon le contexte (mode support uniquement)
+        if (chatbotMode === 'support') {
+          if (chatbotService.generateProactiveSuggestions()) {
+            welcomeContent += `Je vois que tu as déjà commencé ton parcours ! Je peux t'aider avec :\n\n`;
+            welcomeContent += `• 📊 Ton progrès dans les formations\n`;
+            welcomeContent += `• 🏆 Les challenges et quêtes actifs\n`;
+            welcomeContent += `• 🎯 Des recommandations personnalisées\n`;
+            welcomeContent += `• 💬 Réponses à toutes tes questions\n\n`;
+            welcomeContent += `Que veux-tu savoir ou faire aujourd'hui ?`;
+          } else {
+            welcomeContent += `Je suis ton assistant IA personnel ! Je peux t'aider avec :\n\n`;
+            welcomeContent += `• 🚀 **Commencer** tes formations de trading\n`;
+            welcomeContent += `• 🏆 **Découvrir** les challenges disponibles\n`;
+            welcomeContent += `• 📈 **Comprendre** comment devenir rentable\n`;
+            welcomeContent += `• 💰 **Tout savoir** sur notre modèle\n\n`;
+            welcomeContent += `Par quoi veux-tu commencer ?`;
+          }
         }
 
         const welcomeMessage: Message = {
@@ -171,18 +216,25 @@ export default function ChatBot() {
         // Utilisateur déconnecté, réinitialiser
         await chatbotService.initializeContext();
         setIsInitialized(false);
-        setMessages([{
-          id: '1',
-          content: "Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. Comment puis-je t'aider aujourd'hui ?\n\nConnecte-toi pour bénéficier d'un accompagnement personnalisé ! 🚀",
-          sender: 'bot',
-          timestamp: new Date(),
-          type: 'text'
-        }]);
+        // Adapter le message selon le mode
+        const initialMsg = chatbotMode === 'cta' 
+          ? getInitialMessage('cta')
+          : {
+              id: '1',
+              content: "Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. Comment puis-je t'aider aujourd'hui ?\n\nConnecte-toi pour bénéficier d'un accompagnement personnalisé ! 🚀",
+              sender: 'bot' as const,
+              timestamp: new Date(),
+              type: 'text' as const
+            };
+        setMessages([initialMsg]);
+      } else if (!user && !isInitialized) {
+        // Pas d'utilisateur, utiliser le message initial selon le mode
+        setMessages([getInitialMessage(chatbotMode)]);
       }
     };
 
     initializeChatbot();
-  }, [user, isInitialized]);
+  }, [user, isInitialized, chatbotMode]);
 
   useEffect(() => {
     scrollToBottom();
@@ -255,46 +307,11 @@ export default function ChatBot() {
     };
   }, [isOpen]);
 
-  // Animation du badge de notification
-  useEffect(() => {
-    if (!isOpen) {
-      const timer = setTimeout(() => {
-        setHasNewMessage(true);
-      }, 8000); // Plus long pour laisser le temps de découvrir l'interface
-      return () => clearTimeout(timer);
-    } else {
-      setHasNewMessage(false);
-    }
-  }, [isOpen]);
+  // Suppression du badge de notification automatique - moins intrusif
+  // Le badge n'apparaît plus automatiquement
 
-  // Suggestions proactives
-  useEffect(() => {
-    if (!isOpen || !user || !isInitialized) return;
-
-    const checkProactiveSuggestions = () => {
-      if (chatbotService.shouldShowProactiveSuggestion()) {
-        const suggestion = chatbotService.generateProactiveSuggestions();
-        if (suggestion) {
-          const suggestionMessage: Message = {
-            id: `proactive-${Date.now()}`,
-            content: suggestion.message,
-            sender: 'bot',
-            timestamp: new Date(),
-            type: 'suggestion',
-            actions: suggestion.actions,
-            suggestions: suggestion.suggestions
-          };
-
-          setMessages(prev => [...prev, suggestionMessage]);
-        }
-      }
-    };
-
-    // Vérifier après 2 minutes d'ouverture du chat
-    const timer = setTimeout(checkProactiveSuggestions, 120000);
-
-    return () => clearTimeout(timer);
-  }, [isOpen, user, isInitialized]);
+  // Suggestions proactives désactivées - moins intrusif
+  // Les suggestions ne s'affichent plus automatiquement
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -400,12 +417,20 @@ export default function ChatBot() {
     }
   };
 
-  const quickSuggestions = [
-    "Mon progrès dans les formations",
-    "Quels challenges sont actifs ?",
-    "Continuer ma formation",
-    "Comment contacter le support ?"
-  ];
+  // Suggestions selon le mode
+  const quickSuggestions = chatbotMode === 'cta' 
+    ? [
+        "Comment ça fonctionne ?",
+        "Comment rejoindre ?",
+        "Quels sont les avantages ?",
+        "Pourquoi RaiseFX ?"
+      ]
+    : [
+        "Mon progrès dans les formations",
+        "Quels challenges sont actifs ?",
+        "Continuer ma formation",
+        "Comment contacter le support ?"
+      ];
 
   // Fonction pour envoyer une réponse rapide
   const handleQuickReply = (query: string) => {
@@ -470,10 +495,7 @@ export default function ChatBot() {
             : 'bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-pink-500/20 border-b border-pink-500/20 overflow-hidden rounded-t-2xl'
         }`}>
           {!isMobile && (
-            <>
-              <div className="absolute inset-0 bg-[#0f0f13]/90 rounded-t-2xl" />
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-violet-500/5 animate-pulse rounded-t-2xl" />
-            </>
+            <div className="absolute inset-0 bg-[#0f0f13]/90 rounded-t-2xl" />
           )}
 
           <div className={`relative flex items-center justify-between ${isMobile ? 'px-4 py-3' : 'p-4'}`}>
@@ -493,12 +515,11 @@ export default function ChatBot() {
                 <div className={`${isMobile ? 'w-10 h-10' : 'w-11 h-11'} rounded-full bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center shadow-lg shadow-pink-500/30`}>
                   <Bot size={isMobile ? 18 : 20} className="text-white" />
                 </div>
-                <span className={`absolute bottom-0 right-0 ${isMobile ? 'w-3 h-3' : 'w-3.5 h-3.5'} bg-green-500 rounded-full border-2 border-[#0f0f13]`} />
+                <span className={`absolute bottom-0 right-0 ${isMobile ? 'w-3 h-3' : 'w-3.5 h-3.5'} bg-green-500 rounded-full border-2 border-[#0f0f13] opacity-80`} />
               </div>
               <div>
                 <h3 className={`font-bold text-white flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
                   Assistant IA
-                  {!isMobile && <Sparkles size={16} className="text-pink-400 animate-pulse" />}
                 </h3>
                 <p className="text-xs text-gray-400">
                   {user ? 'En ligne • Personnalisé' : 'Toujours disponible'}
@@ -508,10 +529,10 @@ export default function ChatBot() {
 
             {/* Actions header */}
             <div className="flex items-center gap-1">
-              {/* Badge En ligne - Desktop uniquement */}
+              {/* Badge En ligne - Desktop uniquement (moins intrusif) */}
               {user && !isMobile && (
                 <div className="flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-full border border-green-500/20 mr-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
                   <span className="text-xs text-green-400 font-medium">En ligne</span>
                 </div>
               )}
@@ -544,7 +565,7 @@ export default function ChatBot() {
           {isMobile && showQuickReplies && !isKeyboardOpen && (
             <div className="px-3 pb-3 overflow-x-auto scrollbar-none">
               <div className="flex gap-2 min-w-max">
-                {mobileQuickReplies.map((item, index) => (
+                {getMobileQuickReplies(chatbotMode).map((item, index) => (
                   <button
                     key={index}
                     onClick={() => handleQuickReply(item.query)}
@@ -816,10 +837,11 @@ export default function ChatBot() {
             className={`
               ${isMobile ? 'w-14 h-14' : 'w-16 h-16'} rounded-full
               bg-gradient-to-r from-pink-500 to-violet-500
-              text-white shadow-xl shadow-pink-500/30
+              text-white shadow-lg shadow-pink-500/20
               flex items-center justify-center
-              transition-all ${reducedMotion ? 'duration-150' : 'duration-300'} ease-out
-              active:scale-90
+              transition-all duration-200 ease-out
+              hover:shadow-xl hover:shadow-pink-500/30
+              active:scale-95
               relative overflow-hidden
               group
             `}
@@ -828,18 +850,7 @@ export default function ChatBot() {
           >
             <div className="relative z-10">
               <MessageCircle size={isMobile ? 24 : 26} className="drop-shadow-sm" />
-              {/* Notification Badge */}
-              {hasNewMessage && (
-                <span className={`absolute ${isMobile ? '-top-0.5 -right-0.5 w-3 h-3' : '-top-1 -right-1 w-4 h-4'} bg-green-500 rounded-full border-2 border-white shadow-lg`}>
-                  {!reducedMotion && <span className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />}
-                </span>
-              )}
             </div>
-
-            {/* Pulse Effect - Désactivé sur mobile pour performance */}
-            {!reducedMotion && (
-              <span className="absolute inset-0 rounded-full bg-pink-500 animate-ping opacity-15" />
-            )}
           </button>
 
           {/* Tooltip - Desktop uniquement */}

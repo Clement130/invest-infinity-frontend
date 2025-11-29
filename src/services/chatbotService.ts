@@ -40,8 +40,19 @@ export interface ChatbotResponse {
   confidence?: number;
 }
 
+export type ChatbotMode = 'cta' | 'support';
+
 class ChatbotService {
   private context: ChatbotContext = {};
+  private mode: ChatbotMode = 'support'; // Par défaut support
+
+  setMode(mode: ChatbotMode): void {
+    this.mode = mode;
+  }
+
+  getMode(): ChatbotMode {
+    return this.mode;
+  }
 
   async initializeContext(userId?: string): Promise<void> {
     if (!userId) {
@@ -400,6 +411,12 @@ class ChatbotService {
   }
 
   private handleGreeting(): ChatbotResponse {
+    // Mode CTA pour la page d'accueil
+    if (this.mode === 'cta') {
+      return this.handleCTAGreeting();
+    }
+
+    // Mode Support pour l'espace client
     const userName = this.context.userProfile?.full_name?.split(' ')[0] || 'Trader';
 
     let message = `Salut ${userName} ! 👋 Je suis ton assistant personnel Invest Infinity. `;
@@ -442,6 +459,30 @@ class ChatbotService {
       actions,
       suggestions,
       confidence: 0.9
+    };
+  }
+
+  private handleCTAGreeting(): ChatbotResponse {
+    const message = `Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. ` +
+      `Je suis là pour t'aider à découvrir notre communauté de traders performants ! 🚀\n\n` +
+      `Tu veux en savoir plus sur :\n` +
+      `• 🎯 Comment rejoindre la communauté\n` +
+      `• 💰 Notre modèle économique\n` +
+      `• 📚 Les formations disponibles\n` +
+      `• 🏆 Les avantages de devenir membre\n\n` +
+      `Par quoi veux-tu commencer ?`;
+
+    const suggestions = [
+      "Comment ça fonctionne ?",
+      "Comment rejoindre ?",
+      "Quels sont les avantages ?",
+      "Comment ouvrir un compte ?"
+    ];
+
+    return {
+      message,
+      suggestions,
+      confidence: 0.95
     };
   }
 
@@ -922,6 +963,35 @@ class ChatbotService {
   }
 
   private handleRegistration(): ChatbotResponse {
+    // Mode CTA : plus orienté conversion
+    if (this.mode === 'cta') {
+      const message = `🚀 **Rejoins Invest Infinity en 3 étapes simples !**\n\n` +
+        `1️⃣ **Crée ton compte** (30 secondes)\n` +
+        `   Clique sur "S'inscrire" en haut à droite\n` +
+        `   Remplis le formulaire avec ton email\n\n` +
+        `2️⃣ **Ouvre un compte RaiseFX** (5 minutes)\n` +
+        `   Notre broker partenaire régulé et sécurisé\n` +
+        `   C'est ce qui te donne accès à tout le contenu premium\n\n` +
+        `3️⃣ **Accède immédiatement à :**\n` +
+        `   ✅ Discord VIP avec alertes quotidiennes\n` +
+        `   ✅ Toutes les formations vidéo\n` +
+        `   ✅ Communauté de traders performants\n` +
+        `   ✅ Support et accompagnement\n\n` +
+        `⏱️ **Temps total : moins de 10 minutes !**\n\n` +
+        `🎯 **Prêt à commencer ? Clique sur "S'inscrire" maintenant !**`;
+
+      return {
+        message,
+        suggestions: [
+          "Comment ça fonctionne ?",
+          "Quels sont les avantages ?",
+          "Pourquoi RaiseFX ?"
+        ],
+        confidence: 0.95
+      };
+    }
+
+    // Mode Support : plus détaillé pour les utilisateurs connectés
     const message = `🚀 **Rejoindre Invest Infinity**\n\n` +
       `C'est simple et rapide ! Voici les étapes :\n\n` +
       `1️⃣ **Crée ton compte**\n` +
@@ -975,6 +1045,44 @@ class ChatbotService {
   }
 
   private handleHowItWorks(): ChatbotResponse {
+    // Mode CTA : plus orienté conversion avec CTA clair
+    if (this.mode === 'cta') {
+      const message = `⚙️ **Comment Invest Infinity fonctionne**\n\n` +
+        `Notre modèle est simple et transparent :\n\n` +
+        `🎯 **1. Inscription** (30 secondes)\n` +
+        `   Crée ton compte en quelques clics\n\n` +
+        `🏦 **2. Compte RaiseFX** (5 minutes)\n` +
+        `   Ouvre un compte chez notre broker partenaire régulé\n` +
+        `   C'est ce qui te donne accès à tout le contenu\n\n` +
+        `🎁 **3. Accès immédiat**\n` +
+        `   Dès que ton compte RaiseFX est ouvert :\n` +
+        `   ✅ Toutes les formations vidéo\n` +
+        `   ✅ Discord VIP avec alertes quotidiennes\n` +
+        `   ✅ Communauté de traders performants\n` +
+        `   ✅ Support et accompagnement\n\n` +
+        `💰 **Notre modèle économique**\n` +
+        `Nous travaillons en partenariat avec RaiseFX. ` +
+        `Quand tu ouvres un compte chez eux, ils nous rémunèrent. ` +
+        `C'est comme ça que nous pouvons proposer nos services !\n\n` +
+        `🚫 **Pas de piège :**\n` +
+        `• Aucun abonnement caché\n` +
+        `• Aucun frais supplémentaire\n` +
+        `• Tu peux quitter quand tu veux\n` +
+        `• Tout reste accessible tant que tu as un compte RaiseFX\n\n` +
+        `🎯 **Prêt à commencer ? Clique sur "S'inscrire" maintenant !**`;
+
+      return {
+        message,
+        suggestions: [
+          "Comment rejoindre ?",
+          "Quels sont les avantages ?",
+          "Pourquoi RaiseFX ?"
+        ],
+        confidence: 0.95
+      };
+    }
+
+    // Mode Support : version détaillée pour les utilisateurs connectés
     const message = `⚙️ **Comment Invest Infinity fonctionne**\n\n` +
       `Notre modèle est simple et transparent :\n\n` +
       `🎯 **1. Inscription**\n` +
@@ -1259,6 +1367,39 @@ class ChatbotService {
 
   private handleDefault(message: string): ChatbotResponse {
     const msg = message.toLowerCase();
+
+    // Mode CTA : réponses orientées conversion
+    if (this.mode === 'cta') {
+      const ctaKeywordPatterns = [
+        {
+          pattern: /\b(avantage|bénéfice|pourquoi|intérêt|quoi.*apporte)\b/,
+          response: "🎯 **Les avantages d'Invest Infinity :**\n\n" +
+            "✅ Discord VIP avec alertes quotidiennes de Mickaël\n" +
+            "✅ Formations vidéo complètes pour devenir rentable\n" +
+            "✅ Communauté active de traders performants\n" +
+            "✅ Support et accompagnement personnalisé\n" +
+            "✅ Transparence totale sur les résultats\n\n" +
+            "🚀 **Prêt à rejoindre ? Clique sur 'S'inscrire' maintenant !**",
+          confidence: 0.85
+        },
+        {
+          pattern: /\b(rejoindre|inscrire|commencer|démarrer|s'inscrire)\b/,
+          response: "🚀 **C'est super simple !**\n\n" +
+            "1. Clique sur 'S'inscrire' en haut à droite\n" +
+            "2. Ouvre un compte RaiseFX (notre broker partenaire)\n" +
+            "3. Accède immédiatement à tout le contenu premium\n\n" +
+            "⏱️ **Temps total : moins de 10 minutes !**\n\n" +
+            "🎯 **Prêt à commencer ?**",
+          confidence: 0.9
+        }
+      ];
+
+      for (const { pattern, response, confidence } of ctaKeywordPatterns) {
+        if (pattern.test(msg)) {
+          return { message: response, confidence };
+        }
+      }
+    }
 
     // Analyser le message pour des mots-clés spécifiques avec patterns améliorés
     const keywordPatterns = [
