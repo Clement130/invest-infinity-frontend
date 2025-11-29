@@ -45,24 +45,17 @@ export default function PricingPage() {
     setLoading(plan);
 
     try {
-      // Récupérer le Price ID depuis la base de données (s'assurer qu'il est à jour)
-      let priceId = STRIPE_PRICE_IDS[plan];
+      // TOUJOURS récupérer le Price ID depuis la DB pour être sûr qu'il est à jour
+      let priceId = await getStripePriceId(plan);
       
-      // Si c'est un placeholder, essayer de récupérer depuis la DB
+      // Si la récupération échoue, essayer le cache
       if (!priceId || priceId.includes('PLACEHOLDER')) {
-        const fetchedPriceId = await getStripePriceId(plan);
-        if (fetchedPriceId && !fetchedPriceId.includes('PLACEHOLDER')) {
-          priceId = fetchedPriceId;
-        } else {
-          console.error('Price ID invalide ou placeholder:', priceId);
-          toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
-          setLoading(null);
-          return;
-        }
+        priceId = STRIPE_PRICE_IDS[plan];
       }
-
+      
+      // Si c'est toujours un placeholder, erreur
       if (!priceId || priceId.includes('PLACEHOLDER')) {
-        console.error('Price ID invalide ou placeholder:', priceId);
+        console.error('Price ID invalide ou placeholder:', priceId, 'plan:', plan);
         toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
         setLoading(null);
         return;
