@@ -817,21 +817,35 @@ class ChatbotService {
   }
 
   private handlePricing(): ChatbotResponse {
-    const message = `💰 **Le modèle Invest Infinity**\n\n` +
-      `✅ **Ce qui est inclus :**\n` +
-      `• Accès à toutes les formations vidéo\n` +
-      `• Discord VIP avec alertes quotidiennes\n` +
-      `• Communauté de traders actifs\n` +
-      `• Analyse technique partagée par Mickaël\n` +
-      `• Support et accompagnement\n\n` +
-      `🤝 **Notre modèle :**\n` +
-      `Nous travaillons en partenariat avec RaiseFX, notre broker de confiance. ` +
-      `Pour accéder au contenu premium, tu dois ouvrir un compte chez eux.\n\n` +
-      `🚀 **Aucun abonnement caché, aucune surprise !**\n\n` +
-      `Prêt à commencer ton aventure trading ?`;
+    const message = `💰 **Invest Infinity - Valeur RÉELLE de 2500€**\n\n` +
+      `🎯 **Ce que tu obtiens IMMÉDIATEMENT :**\n` +
+      `• 📚 **Formations complètes** : 15h de vidéo pro (valeur 2000€)\n` +
+      `• 💬 **Discord VIP** : Alertes quotidiennes de Mickaël\n` +
+      `• 👥 **Communauté premium** : +100 traders actifs\n` +
+      `• 📊 **Analyses exclusives** : Setups détaillés avec explications\n` +
+      `• 🎓 **Support personnalisé** : Réponses sous 24h\n` +
+      `• 🏆 **Gamification** : Challenges et récompenses\n\n` +
+      `🤝 **Notre modèle TRANSPARENT :**\n` +
+      `Nous travaillons avec RaiseFX, broker régulé européen.\n` +
+      `Tu ouvres un compte chez eux → Accès à tout notre contenu.\n\n` +
+      `🚫 **PAS d'abonnement mensuel !**\n` +
+      `🚫 **PAS de frais cachés !**\n` +
+      `🚫 **PAS de renouvellement automatique !**\n\n` +
+      `💡 **Pourquoi ça marche ?**\n` +
+      `• Tu gardes ton compte RaiseFX pour toujours\n` +
+      `• Accès à Invest Infinity tant que tu as ce compte\n` +
+      `• Modèle durable et sans risque pour toi\n\n` +
+      `🎯 **Prêt à investir dans ton succès ?**`;
+
+    const suggestions = [
+      "🚀 Démarrer maintenant",
+      "🏦 Comment ouvrir un compte RaiseFX ?",
+      "📊 Voir les formations disponibles"
+    ];
 
     return {
       message,
+      suggestions,
       actions: [{
         type: 'view_progress',
         label: 'Commencer les formations'
@@ -1372,25 +1386,91 @@ class ChatbotService {
     if (this.mode === 'cta') {
       const ctaKeywordPatterns = [
         {
-          pattern: /\b(avantage|bénéfice|pourquoi|intérêt|quoi.*apporte)\b/,
-          response: "🎯 **Les avantages d'Invest Infinity :**\n\n" +
-            "✅ Discord VIP avec alertes quotidiennes de Mickaël\n" +
-            "✅ Formations vidéo complètes pour devenir rentable\n" +
-            "✅ Communauté active de traders performants\n" +
-            "✅ Support et accompagnement personnalisé\n" +
-            "✅ Transparence totale sur les résultats\n\n" +
-            "🚀 **Prêt à rejoindre ? Clique sur 'S'inscrire' maintenant !**",
+          pattern: /\b(avantage|bénéfice|pourquoi|intérêt|quoi.*apporte|pourquoi.*rejoindre)\b/,
+          response: "🎯 **Pourquoi Invest Infinity change TOUT :**\n\n" +
+            "💰 **VALEUR RÉELLE de 2500€** : Nos formations valent 2500€ (prix réel du marché)\n\n" +
+            "⚡ **ACCÈS IMMÉDIAT APRÈS COMPTE RAISEFX** :\n" +
+            "• Alertes trading quotidiennes de Mickaël (track record public)\n" +
+            "• Analyses complètes avec explications détaillées\n" +
+            "• Stratégies éprouvées avec Risk/Reward 3:1\n\n" +
+            "🚀 **AVANTAGES UNIQUES** :\n" +
+            "• Communauté de +100 traders motivés\n" +
+            "• Lives hebdomadaires avec Q&A\n" +
+            "• Support personnalisé 7j/7\n" +
+            "• Challenges gamifiés pour rester motivé\n\n" +
+            "📊 **TRANSPARENCE TOTALE** :\n" +
+            "• Résultats publics sur Discord\n" +
+            "• Pas de promesses miracles\n" +
+            "• Apprentissage progressif et durable\n\n" +
+            "🤝 **MODÈLE TRANSPARENT** : Inscription gratuite → Compte RaiseFX → Accès premium\n\n" +
+            "⏰ **URGENT :** Places limitées dans la communauté !\n\n" +
+            "🎯 **Prêt à investir dans ton succès ?**",
           confidence: 0.85
         },
         {
-          pattern: /\b(rejoindre|inscrire|commencer|démarrer|s'inscrire)\b/,
-          response: "🚀 **C'est super simple !**\n\n" +
-            "1. Clique sur 'S'inscrire' en haut à droite\n" +
-            "2. Ouvre un compte RaiseFX (notre broker partenaire)\n" +
-            "3. Accède immédiatement à tout le contenu premium\n\n" +
-            "⏱️ **Temps total : moins de 10 minutes !**\n\n" +
-            "🎯 **Prêt à commencer ?**",
+          pattern: /\b(résultat|résultats|gain|gains|rentable|performance)\b/,
+          response: "📈 **RÉSULTATS CONCRETS d'Invest Infinity :**\n\n" +
+            "🎯 **Ce que nos membres obtiennent :**\n" +
+            "• Apprentissage structuré du trading\n" +
+            "• Méthodologie éprouvée par Mickaël\n" +
+            "• Gestion du risque professionnelle\n" +
+            "• Mindset de trader gagnant\n\n" +
+            "📊 **TRANSPARENCE COMPLÈTE :**\n" +
+            "• Track record public sur Discord\n" +
+            "• Toutes les positions expliquées\n" +
+            "• Risk/Reward moyen de 3:1\n" +
+            "• Statistiques détaillées\n\n" +
+            "⚠️ **RÉALISME :**\n" +
+            "• Pas de gains garantis\n" +
+            "• Formation sérieuse et discipline\n" +
+            "• Résultats dépendent de ton implication\n\n" +
+            "💪 **CE QU'ON T'APPREND VRAIMENT :**\n" +
+            "• Lire les marchés comme un pro\n" +
+            "• Gérer ton capital intelligemment\n" +
+            "• Développer la patience et la rigueur\n\n" +
+            "🎯 **Prêt à devenir autonome ?**",
           confidence: 0.9
+        },
+        {
+          pattern: /\b(rejoindre|inscrire|commencer|démarrer|s'inscrire|démarrer)\b/,
+          response: "🚀 **REJOINS EN 3 ÉTAPES SIMPLES :**\n\n" +
+            "1️⃣ **INSCRIPTION GRATUITE** (30 sec)\n" +
+            "   Clique 'S'inscrire' → Remplis tes infos\n\n" +
+            "2️⃣ **COMPTE RAISEFX** (5 min)\n" +
+            "   Broker régulé → Sécurisé et fiable\n" +
+            "   Interface pro → Spreads compétitifs\n\n" +
+            "3️⃣ **ACCÈS IMMÉDIAT** (instantané)\n" +
+            "   ✅ Toutes les formations\n" +
+            "   ✅ Discord VIP\n" +
+            "   ✅ Communauté premium\n\n" +
+            "⏱️ **TOTAL : 8 minutes chrono !**\n\n" +
+            "🎯 **Pourquoi attendre ? Ton succès commence maintenant !**",
+          confidence: 0.9
+        },
+        {
+          pattern: /\b(immédiat|vite|rapide|maintenant|urgent)\b/,
+          response: "⚡ **PROCESSUS RAPIDE ET SIMPLE :**\n\n" +
+            "🚀 **ÉTAPE 1 : INSCRIPTION GRATUITE (30 sec)**\n" +
+            "• Formulaire d'inscription rapide\n" +
+            "• Création de ton compte Invest Infinity\n\n" +
+            "🏦 **ÉTAPE 2 : COMPTE RAISEFX (5 min)**\n" +
+            "• Broker partenaire régulé européen\n" +
+            "• Ouverture de compte sécurisée\n" +
+            "• Interface professionnelle\n\n" +
+            "🎁 **ÉTAPE 3 : ACCÈS IMMÉDIAT (instantané)**\n" +
+            "• Lien Discord VIP envoyé automatiquement\n" +
+            "• Accès à toutes les formations vidéo (15h)\n" +
+            "• Challenges et communauté premium\n\n" +
+            "💬 **DÈS TON ARRIVÉE SUR DISCORD :**\n" +
+            "• Accueil personnalisé par la communauté\n" +
+            "• Alertes des dernières positions de Mickaël\n" +
+            "• Présentation des membres actifs\n\n" +
+            "⏰ **POURQUOI MAINTENANT ?**\n" +
+            "• Marchés ouverts 24/5\n" +
+            "• Opportunités quotidiennes\n" +
+            "• Plus tu commences tôt, plus tu progresses\n\n" +
+            "🎯 **Commence en 8 minutes chrono !**",
+          confidence: 0.85
         }
       ];
 
@@ -1565,10 +1645,11 @@ class ChatbotService {
   // Méthodes utilitaires pour les actions
   async executeAction(action: ChatAction): Promise<string> {
     switch (action.type) {
-      case 'continue_lesson':
+      case 'continue_lesson': {
         // Logique pour rediriger vers la leçon
         const lessonData = action.data as { lessonTitle?: string } | undefined;
         return `Redirection vers la leçon "${lessonData?.lessonTitle || 'la leçon suivante'}"...`;
+      }
 
       case 'join_challenge':
         if (this.context.userId && action.data) {

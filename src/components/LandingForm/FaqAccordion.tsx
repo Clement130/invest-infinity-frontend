@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 const faqData = [
   {
-    question: "🆓 Est-ce vraiment gratuit ?",
+    question: "🤝 Comment ça fonctionne ?",
     answer:
-      "Oui, l’accès au Discord, aux formations et aux alertes est 100% gratuit. Tu dois juste créer un compte de trading via notre partenaire — c’est ce qui nous permet de financer tout ça. Le capital que tu dépose sur ce compte reste le tien et tu es libre de le retirer à tout moment.",
+      "Notre modèle est transparent : inscris-toi gratuitement sur Invest Infinity, puis ouvre un compte chez notre broker partenaire RaiseFX. C'est ce partenariat qui nous permet de te proposer l'accès à tout notre contenu premium. Aucun abonnement caché, pas de frais supplémentaires.",
   },
 {
   question: "💸 Est-ce que je peux perdre mon capital ?",
@@ -28,7 +28,7 @@ const faqData = [
 
       C’est ce qui rend nos alertes et stratégies aussi efficaces.<br /><br />
 
-      👉 En passant par ce lien, tu accèdes à <strong>tous les contenus gratuitement</strong> 
+      👉 En passant par ce lien, tu accèdes à <strong>tout notre contenu premium</strong> 
       (formations, alertes, communauté…).<br /><br />
 
       🌱 Et surtout, tu <strong>soutiens l’écosystème</strong> sans payer un centime de plus. 
@@ -39,7 +39,7 @@ const faqData = [
 {
   question: "⏳ Et si je ne suis pas dispo tout de suite ?",
   answer:
-    "Il ne faut pas attendre le bon moment… car le bon moment, c’est justement celui où tu passes à l’action. Tu peux avancer à ton rythme, mais ce premier pas est gratuit, simple, et peut tout changer.",
+    "Il ne faut pas attendre le bon moment… car le bon moment, c'est justement celui où tu passes à l'action. Tu peux avancer à ton rythme, mais ce premier pas est simple et peut tout changer.",
 },
 
 {

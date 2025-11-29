@@ -11,11 +11,10 @@ import {
   Trophy,
   BookOpen,
   Search,
-  Settings,
   ChevronRight,
   ChevronDown,
   ArrowLeft
-} from 'lucide-react';
+} from './ui/icons';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { chatbotService, type ChatAction, type ChatMessage } from '../services/chatbotService';
@@ -86,11 +85,11 @@ function useMobileOptimization() {
 const getMobileQuickReplies = (mode: 'cta' | 'support') => {
   if (mode === 'cta') {
     return [
-      { icon: '🚀', text: 'Rejoindre', query: 'Comment rejoindre ?' },
-      { icon: '❓', text: 'Comment ça marche', query: 'Comment ça fonctionne ?' },
-      { icon: '🎯', text: 'Avantages', query: 'Quels sont les avantages ?' },
+      { icon: '🚀', text: 'Commencer maintenant', query: 'Comment rejoindre ?' },
+      { icon: '💰', text: 'Prix & valeur', query: 'Quel est le prix ?' },
+      { icon: '🎯', text: 'Résultats', query: 'Quels résultats je peux attendre ?' },
+      { icon: '⚡', text: 'Avantages VIP', query: 'Quels sont les avantages immédiats ?' },
       { icon: '🏦', text: 'RaiseFX', query: 'Pourquoi RaiseFX ?' },
-      { icon: '💬', text: 'Discord', query: 'Comment rejoindre Discord ?' },
       { icon: '📞', text: 'Contact', query: 'Comment contacter le support ?' },
     ];
   }
@@ -109,14 +108,15 @@ const getInitialMessage = (mode: 'cta' | 'support'): Message => {
   if (mode === 'cta') {
     return {
       id: '1',
-      content: "Salut ! 👋 Je suis l'assistant virtuel d'Invest Infinity. Je suis là pour t'aider à découvrir notre communauté de traders performants ! 🚀\n\nTu veux en savoir plus sur comment rejoindre Invest Infinity ?",
+      content: "👋 **Salut Trader !** Je suis l'assistant IA d'Invest Infinity.\n\n🚀 **Découvre comment devenir rentable en trading avec Mickaël**\n\n💰 **VALEUR RÉELLE de 2500€ :**\n• Formations vidéo complètes (15h de contenu pro)\n• Discord VIP avec alertes quotidiennes\n• Communauté de +100 traders actifs\n• Support personnalisé 7j/7\n\n🤝 **MODÈLE TRANSPARENT :**\nInscription gratuite → Compte RaiseFX → Accès premium\n\n⏱️ **Seulement 8 minutes pour commencer !**\n\n⚠️ **LIMITÉ : 50 nouveaux membres par mois !**\n\n🎯 **Prêt à investir dans ton succès ?**\n\nPar quoi veux-tu commencer ?",
       sender: 'bot',
       timestamp: new Date(),
       type: 'text',
       suggestions: [
-        "Comment ça fonctionne ?",
-        "Comment rejoindre ?",
-        "Quels sont les avantages ?"
+        "💰 Quel est le prix réel ?",
+        "🚀 Comment rejoindre ?",
+        "🎯 Quels résultats je peux attendre ?",
+        "⚡ Avantages du modèle"
       ]
     };
   }
@@ -136,7 +136,6 @@ export default function ChatBot() {
 
   // Détecter le contexte : page d'accueil (CTA) vs espace client (Support)
   const isLandingPage = location.pathname === '/' || location.pathname.startsWith('/landing');
-  const isClientArea = location.pathname.startsWith('/app');
   const chatbotMode = isLandingPage && !user ? 'cta' : 'support';
   const [isOpen, setIsOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
@@ -145,6 +144,8 @@ export default function ChatBot() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -160,7 +161,7 @@ export default function ChatBot() {
     if (messages.length === 1 && messages[0].id === '1') {
       setMessages([getInitialMessage(chatbotMode)]);
     }
-  }, [chatbotMode, location.pathname]);
+  }, [chatbotMode, location.pathname, messages]);
 
   // Initialisation du contexte utilisateur et définition du mode
   useEffect(() => {
@@ -263,7 +264,17 @@ export default function ChatBot() {
     if (!isMobile) return;
 
     const handleResize = () => {
-      setViewportHeight(window.innerHeight);
+      const newHeight = window.innerHeight;
+      setViewportHeight(newHeight);
+
+      // Détecter si le clavier est ouvert (différence de hauteur significative)
+      const keyboardOpen = window.innerHeight < window.outerHeight * 0.8;
+      setIsKeyboardOpen(keyboardOpen);
+
+      // Cacher les suggestions quand le clavier est ouvert
+      if (keyboardOpen) {
+        setShowQuickReplies(false);
+      }
     };
 
     // Utiliser visualViewport si disponible (meilleur pour le clavier mobile)
@@ -306,6 +317,32 @@ export default function ChatBot() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
+
+  // Suggestion urgente après 2 minutes
+  useEffect(() => {
+    if (chatbotMode !== 'cta') return;
+
+    const timer = setTimeout(() => {
+      // Après 2 minutes, ajouter une suggestion plus urgente si toujours sur la page
+      if (messages.length === 1) {
+        const urgentMessage: Message = {
+          id: 'urgent',
+          content: "⏰ **Tu es encore là ? C'est le moment parfait pour commencer !**\n\n🎯 **Pourquoi attendre plus longtemps ?**\n• Les marchés n'attendent pas\n• Chaque jour compte pour ton apprentissage\n• La communauté t'attend !\n\n🚀 **Démarre ton parcours maintenant !**",
+          sender: 'bot',
+          timestamp: new Date(),
+          type: 'text',
+          suggestions: [
+            "🚀 JE COMMENCE MAINTENANT !",
+            "💰 Voir le prix détaillé",
+            "🎯 Voir les résultats possibles"
+          ]
+        };
+        setMessages(prev => [...prev, urgentMessage]);
+      }
+    }, 120000); // 2 minutes
+
+    return () => clearTimeout(timer);
+  }, [chatbotMode, messages.length]);
 
   // Suppression du badge de notification automatique - moins intrusif
   // Le badge n'apparaît plus automatiquement
@@ -418,12 +455,13 @@ export default function ChatBot() {
   };
 
   // Suggestions selon le mode
-  const quickSuggestions = chatbotMode === 'cta' 
+  const quickSuggestions = chatbotMode === 'cta'
     ? [
-        "Comment ça fonctionne ?",
-        "Comment rejoindre ?",
-        "Quels sont les avantages ?",
-        "Pourquoi RaiseFX ?"
+        "💰 Quel est le prix réel ?",
+        "🚀 Démarrer mon parcours maintenant",
+        "🎯 Voir les résultats des membres",
+        "⚡ Avantages immédiats",
+        "🏦 Pourquoi RaiseFX ?"
       ]
     : [
         "Mon progrès dans les formations",
@@ -449,6 +487,33 @@ export default function ChatBot() {
     }
   };
 
+  // Gestion des gestes tactiles sur mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    setTouchStartY(e.touches[0].clientY);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile || !touchStartY || !isDragging) return;
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - touchStartY;
+
+    // Si on swipe vers le bas depuis le haut du chat (premiers 100px)
+    if (deltaY > 50 && touchStartY < 200) {
+      handleClose();
+      setIsDragging(false);
+      setTouchStartY(null);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMobile) return;
+    setIsDragging(false);
+    setTouchStartY(null);
+  };
+
   // Scroll vers le bas quand le clavier s'ouvre
   useEffect(() => {
     if (isKeyboardOpen && isMobile) {
@@ -465,8 +530,8 @@ export default function ChatBot() {
         ref={chatContainerRef}
         className={`
           fixed z-50
-          ${isMobile 
-            ? 'inset-x-0 bottom-0 top-0 w-full rounded-none' 
+          ${isMobile
+            ? 'inset-x-0 bottom-0 top-[10%] w-full rounded-t-3xl'
             : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] rounded-2xl'
           }
           bg-[#0f0f13]
@@ -475,25 +540,33 @@ export default function ChatBot() {
           transform transition-all ${reducedMotion ? 'duration-150' : 'duration-300'} ease-out
           ${isOpen
             ? 'opacity-100 translate-y-0 scale-100'
-            : isMobile 
+            : isMobile
               ? 'opacity-0 translate-y-full pointer-events-none'
               : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
           }
+          ${isMobile && isOpen ? 'max-h-[90vh]' : ''}
           flex flex-col
         `}
-        style={isMobile ? { 
+        style={isMobile ? {
           contain: 'layout style paint',
           height: `${viewportHeight}px`,
           maxHeight: '100dvh',
           paddingTop: 'env(safe-area-inset-top)'
         } : undefined}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {/* Header Mobile - Plus compact et touch-friendly */}
+          {/* Header Mobile - Plus compact et touch-friendly */}
         <div className={`relative flex-shrink-0 ${
-          isMobile 
-            ? 'bg-[#0f0f13] border-b border-pink-500/20 safe-area-top' 
+          isMobile
+            ? 'bg-[#0f0f13] border-b border-pink-500/20 safe-area-top'
             : 'bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-pink-500/20 border-b border-pink-500/20 overflow-hidden rounded-t-2xl'
         }`}>
+          {/* Indicateur de swipe pour mobile */}
+          {isMobile && (
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gray-600 rounded-full opacity-50" />
+          )}
           {!isMobile && (
             <div className="absolute inset-0 bg-[#0f0f13]/90 rounded-t-2xl" />
           )}
@@ -561,23 +634,6 @@ export default function ChatBot() {
             </div>
           </div>
 
-          {/* Quick Replies Bar - Mobile Only */}
-          {isMobile && showQuickReplies && !isKeyboardOpen && (
-            <div className="px-3 pb-3 overflow-x-auto scrollbar-none">
-              <div className="flex gap-2 min-w-max">
-                {getMobileQuickReplies(chatbotMode).map((item, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleQuickReply(item.query)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-[#1f1f23] hover:bg-pink-500/20 rounded-full border border-pink-500/20 transition-all duration-200 active:scale-95 whitespace-nowrap"
-                  >
-                    <span className="text-base">{item.icon}</span>
-                    <span className="text-xs text-gray-300 font-medium">{item.text}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Messages */}
@@ -589,7 +645,7 @@ export default function ChatBot() {
             minHeight: 0, // Important pour flex
           } : undefined}
         >
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <div
               key={message.id}
               className={`flex items-end gap-2 ${
@@ -700,9 +756,9 @@ export default function ChatBot() {
               Suggestions :
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {(messages[messages.length - 1]?.suggestions || quickSuggestions).slice(0, 4).map((suggestion, index) => (
+              {(messages[messages.length - 1]?.suggestions || quickSuggestions).slice(0, 4).map((suggestion) => (
                 <button
-                  key={index}
+                  key={suggestion}
                   onClick={() => handleQuickReply(suggestion)}
                   className="text-xs px-3 py-2 bg-[#1f1f23] hover:bg-pink-500/10 text-gray-300 hover:text-white rounded-lg transition-all duration-200 border border-pink-500/10 hover:border-pink-500/30 text-left truncate"
                 >
@@ -716,14 +772,32 @@ export default function ChatBot() {
         {/* Mobile: Suggestions inline après message bot */}
         {isMobile && messages.length > 1 && messages[messages.length - 1]?.suggestions && messages[messages.length - 1].sender === 'bot' && !isKeyboardOpen && (
           <div className="px-3 pb-2 flex-shrink-0">
-            <div className="flex flex-wrap gap-2">
-              {messages[messages.length - 1].suggestions?.slice(0, 3).map((suggestion, index) => (
+            <div className="grid grid-cols-2 gap-2">
+              {messages[messages.length - 1].suggestions?.slice(0, 4).map((suggestion) => (
                 <button
-                  key={index}
+                  key={suggestion}
                   onClick={() => handleQuickReply(suggestion)}
-                  className="text-sm px-3 py-2 bg-[#1f1f23] active:bg-pink-500/20 text-gray-300 rounded-full transition-all duration-150 border border-pink-500/20 active:scale-95"
+                  className="text-sm px-4 py-3 bg-[#1f1f23] active:bg-pink-500/20 text-gray-300 rounded-xl transition-all duration-150 border border-pink-500/20 active:scale-95 font-medium min-h-[48px] flex items-center justify-center"
                 >
-                  {suggestion.length > 25 ? suggestion.substring(0, 25) + '...' : suggestion}
+                  {suggestion.length > 20 ? suggestion.substring(0, 20) + '...' : suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: Quick replies quand pas de suggestions contextuelles */}
+        {isMobile && messages.length === 1 && showQuickReplies && !isKeyboardOpen && (
+          <div className="px-3 pb-2 flex-shrink-0">
+            <div className="grid grid-cols-2 gap-2">
+              {getMobileQuickReplies(chatbotMode).slice(0, 4).map((item) => (
+                <button
+                  key={item.query}
+                  onClick={() => handleQuickReply(item.query)}
+                  className="flex flex-col items-center gap-2 px-4 py-4 bg-[#1f1f23] hover:bg-pink-500/20 rounded-xl border border-pink-500/20 transition-all duration-200 active:scale-95 min-h-[64px]"
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-xs text-gray-300 font-medium text-center leading-tight">{item.text}</span>
                 </button>
               ))}
             </div>
@@ -731,12 +805,14 @@ export default function ChatBot() {
         )}
 
         {/* Input - Optimisé pour mobile */}
-        <div 
+        <div
           className={`flex-shrink-0 border-t border-pink-500/10 bg-[#0f0f13] ${
-            isMobile ? 'px-3 py-2' : 'p-4'
+            isMobile ? 'px-4 py-3' : 'p-4'
           }`}
           style={isMobile ? {
-            paddingBottom: `max(8px, env(safe-area-inset-bottom))`
+            paddingBottom: `max(12px, env(safe-area-inset-bottom))`,
+            position: 'sticky',
+            bottom: 0
           } : undefined}
         >
           <div className={`flex items-end ${isMobile ? 'gap-2' : 'gap-3'}`}>
@@ -747,9 +823,10 @@ export default function ChatBot() {
                 onChange={(e) => {
                   setInputValue(e.target.value);
                   setShowQuickReplies(false);
-                  // Auto-resize
+                  // Auto-resize amélioré pour mobile
                   e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, isMobile ? 80 : 120) + 'px';
+                  const newHeight = Math.min(e.target.scrollHeight, isMobile ? 120 : 120);
+                  e.target.style.height = newHeight + 'px';
                 }}
                 onKeyPress={handleKeyPress}
                 onFocus={() => {
@@ -758,20 +835,34 @@ export default function ChatBot() {
                     // Scroll vers le bas après un petit délai
                     setTimeout(() => {
                       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      // Scroll aussi le container si nécessaire
+                      setTimeout(() => {
+                        chatContainerRef.current?.scrollTo({
+                          top: chatContainerRef.current.scrollHeight,
+                          behavior: 'smooth'
+                        });
+                      }, 100);
                     }, 300);
                   }
                 }}
-                placeholder={isMobile 
-                  ? "Message..." 
-                  : user 
-                    ? "Pose-moi une question sur ton parcours..." 
+                onBlur={() => {
+                  // Réafficher les suggestions quand on quitte l'input
+                  if (isMobile && !inputValue.trim()) {
+                    setShowQuickReplies(true);
+                  }
+                }}
+                placeholder={isMobile
+                  ? "Tapez votre message..."
+                  : user
+                    ? "Pose-moi une question sur ton parcours..."
                     : "Écris ton message..."
                 }
                 className={`
-                  w-full bg-[#1f1f23] text-white placeholder-gray-500 
-                  ${isMobile ? 'px-4 py-2.5 text-base rounded-2xl min-h-[44px] max-h-[80px]' : 'px-4 py-3 rounded-xl min-h-[48px] max-h-[120px]'}
-                  border border-pink-500/10 focus:border-pink-500/30 focus:outline-none 
+                  w-full bg-[#1f1f23] text-white placeholder-gray-500
+                  ${isMobile ? 'px-4 py-3 text-base rounded-2xl min-h-[52px] max-h-[120px]' : 'px-4 py-3 rounded-xl min-h-[48px] max-h-[120px]'}
+                  border border-pink-500/10 focus:border-pink-500/30 focus:outline-none
                   transition-all duration-200 resize-none scrollbar-thin
+                  ${isMobile ? 'touch-manipulation' : ''}
                 `}
                 rows={1}
               />
@@ -787,19 +878,20 @@ export default function ChatBot() {
               onClick={handleSend}
               disabled={!inputValue.trim() || isTyping}
               className={`
-                ${isMobile ? 'p-3 rounded-2xl' : 'p-3 rounded-xl'} 
-                transition-all duration-200 flex-shrink-0
+                ${isMobile ? 'p-4 rounded-2xl min-w-[52px] min-h-[52px]' : 'p-3 rounded-xl'}
+                transition-all duration-200 flex-shrink-0 flex items-center justify-center
                 ${inputValue.trim() && !isTyping
                   ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white active:scale-90 shadow-lg shadow-pink-500/20'
                   : 'bg-[#1f1f23] text-gray-500 cursor-not-allowed'
                 }
+                ${isMobile ? 'touch-manipulation' : ''}
               `}
               aria-label="Envoyer le message"
             >
               {isTyping ? (
-                <Loader2 size={isMobile ? 22 : 20} className="animate-spin" />
+                <Loader2 size={isMobile ? 24 : 20} className="animate-spin" />
               ) : (
-                <Send size={isMobile ? 22 : 18} />
+                <Send size={isMobile ? 24 : 18} />
               )}
             </button>
           </div>

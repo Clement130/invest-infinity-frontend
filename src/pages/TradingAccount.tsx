@@ -62,7 +62,7 @@ export default function TradingAccount() {
                   <ul className="space-y-3 ml-8">
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
-                      <span className="text-gray-100 text-base">Accès à la formation gratuite</span>
+                      <span className="text-gray-100 text-base">Accès aux formations complètes</span>
                     </li>
                     <li className="flex items-center gap-3">
                       <XCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
@@ -104,7 +104,7 @@ export default function TradingAccount() {
                     "
                   >
                     <img src="/discord-icon.png" alt="Icone Discord" className="w-5 h-5" />
-                    Rejoindre la partie gratuite du Discord
+                    Rejoindre la communauté VIP Discord
                   </a>
                 </div>
               </div>
@@ -128,7 +128,7 @@ export default function TradingAccount() {
                   </h2>
                   <p className="text-gray-100 text-base mt-1 max-w-3xl">
                     Profite de l’accès complet : formation vidéo avancée + alertes en temps réel,
-                    le tout gratuitement. Idéal aussi bien pour les débutants que pour les traders expérimentés.
+                    grâce à notre modèle transparent. Idéal aussi bien pour les débutants que pour les traders expérimentés.
                   </p>
                   <div className="mt-2 flex items-center gap-2">
                     <p className="text-yellow-300 text-sm font-semibold">
@@ -157,7 +157,7 @@ export default function TradingAccount() {
                   <ul className="space-y-3 ml-8">
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
-                      <span className="text-gray-100 text-base">Accès à la formation gratuite</span>
+                      <span className="text-gray-100 text-base">Accès aux formations complètes</span>
                     </li>
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />

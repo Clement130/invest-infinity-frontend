@@ -14,6 +14,11 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   containerClassName?: string;
   onLoad?: () => void;
   onError?: () => void;
+  // Nouvelles props pour images responsives
+  srcSet?: string;
+  webpSrcSet?: string;
+  avifSrcSet?: string;
+  breakpoints?: { [key: string]: string }; // { '480w': 'image-480.jpg', '768w': 'image-768.jpg' }
 }
 
 export default function OptimizedImage({
@@ -29,6 +34,10 @@ export default function OptimizedImage({
   containerClassName,
   onLoad,
   onError,
+  srcSet,
+  webpSrcSet,
+  avifSrcSet,
+  breakpoints,
   ...props
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -77,24 +86,33 @@ export default function OptimizedImage({
   const generateSources = () => {
     const sources = [];
 
-    if (avifSrc) {
+    // Générer automatiquement srcset depuis breakpoints si fourni
+    const generateSrcSet = (baseSrc?: string, providedSrcSet?: string) => {
+      if (providedSrcSet) return providedSrcSet;
+      if (!breakpoints) return baseSrc;
+
+      const srcSetParts = Object.entries(breakpoints).map(([width, url]) => `${url} ${width}`);
+      return srcSetParts.join(', ');
+    };
+
+    if (avifSrc || avifSrcSet || (breakpoints && Object.keys(breakpoints).length > 0)) {
       sources.push(
         <source
           key="avif"
-          srcSet={avifSrc}
+          srcSet={generateSrcSet(avifSrc, avifSrcSet)}
           type="image/avif"
-          sizes={sizes}
+          sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
         />
       );
     }
 
-    if (webpSrc) {
+    if (webpSrc || webpSrcSet || (breakpoints && Object.keys(breakpoints).length > 0)) {
       sources.push(
         <source
           key="webp"
-          srcSet={webpSrc}
+          srcSet={generateSrcSet(webpSrc, webpSrcSet)}
           type="image/webp"
-          sizes={sizes}
+          sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
         />
       );
     }
@@ -127,6 +145,7 @@ export default function OptimizedImage({
           <img
             ref={imgRef}
             src={currentSrc}
+            srcSet={srcSet}
             alt={alt}
             className={clsx(
               'transition-opacity duration-300',
@@ -137,7 +156,7 @@ export default function OptimizedImage({
             decoding="async"
             onLoad={handleLoad}
             onError={handleError}
-            sizes={sizes}
+            sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
             {...props}
           />
         </picture>

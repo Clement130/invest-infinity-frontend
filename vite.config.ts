@@ -68,14 +68,62 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Séparer les bibliothèques lourdes
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@mui/material', '@mui/system', '@emotion/react', '@emotion/styled'],
-          'animation-vendor': ['framer-motion'],
-          'query-vendor': ['@tanstack/react-query'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'icons-vendor': ['lucide-react'],
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            // React ecosystem
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            // UI libraries
+            if (id.includes('@mui') || id.includes('@emotion') || id.includes('framer-motion')) {
+              return 'ui-vendor';
+            }
+            // Data fetching
+            if (id.includes('@tanstack/react-query') || id.includes('@supabase')) {
+              return 'data-vendor';
+            }
+            // Icons
+            if (id.includes('lucide-react') || id.includes('@dnd-kit')) {
+              return 'icons-vendor';
+            }
+            // Forms and validation
+            if (id.includes('react-hook-form') || id.includes('zod') || id.includes('yup')) {
+              return 'forms-vendor';
+            }
+            // Charts and heavy components
+            if (id.includes('recharts') || id.includes('chart.js') || id.includes('react-window')) {
+              return 'charts-vendor';
+            }
+            // Utils and helpers
+            if (id.includes('clsx') || id.includes('date-fns') || id.includes('lodash')) {
+              return 'utils-vendor';
+            }
+            // HTTP clients
+            if (id.includes('axios') || id.includes('ky') || id.includes('swr')) {
+              return 'http-vendor';
+            }
+          }
+
+          // Application chunks
+          if (id.includes('src/pages/admin')) {
+            return 'admin-pages';
+          }
+          if (id.includes('src/components/admin')) {
+            return 'admin-components';
+          }
+          if (id.includes('src/components/training')) {
+            return 'training-components';
+          }
+          if (id.includes('src/components/member')) {
+            return 'member-components';
+          }
+          if (id.includes('src/services')) {
+            return 'services';
+          }
+          if (id.includes('src/hooks')) {
+            return 'hooks';
+          }
         },
         // Optimiser pour mobile - plus petits chunks
         chunkFileNames: 'assets/[name]-[hash].js',

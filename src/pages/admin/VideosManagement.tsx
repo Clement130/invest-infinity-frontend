@@ -1,19 +1,24 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, Suspense, lazy } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { VideosDashboard } from '../../components/admin/videos/VideosDashboard';
-import { FormationTreeView } from '../../components/admin/videos/FormationTreeView';
-import { RealTimeGuide, type GuideState } from '../../components/admin/videos/RealTimeGuide';
-import { BunnyUploadZone } from '../../components/admin/videos/BunnyUploadZone';
-import { VideoAssignmentWizard } from '../../components/admin/videos/VideoAssignmentWizard';
-import { LessonEditPanel } from '../../components/admin/videos/LessonEditPanel';
-import { BunnyLibraryModal } from '../../components/admin/videos/BunnyLibraryModal';
-import { ModuleModal } from '../../components/admin/videos/ModuleModal';
-import { LessonModal } from '../../components/admin/videos/LessonModal';
-import { ConfirmDeleteModal } from '../../components/admin/videos/ConfirmDeleteModal';
-import { EnvironmentCheck } from '../../components/admin/videos/EnvironmentCheck';
-import { EnvDebug } from '../../components/admin/videos/EnvDebug';
-import { VideoTutorial } from '../../components/admin/videos/VideoTutorial';
+
+// Lazy load des composants lourds
+const VideosDashboard = lazy(() => import('../../components/admin/videos/VideosDashboard').then(module => ({ default: module.VideosDashboard })));
+const FormationTreeView = lazy(() => import('../../components/admin/videos/FormationTreeView').then(module => ({ default: module.FormationTreeView })));
+const RealTimeGuide = lazy(() => import('../../components/admin/videos/RealTimeGuide').then(module => ({ default: module.RealTimeGuide })));
+const BunnyUploadZone = lazy(() => import('../../components/admin/videos/BunnyUploadZone').then(module => ({ default: module.BunnyUploadZone })));
+const VideoAssignmentWizard = lazy(() => import('../../components/admin/videos/VideoAssignmentWizard').then(module => ({ default: module.VideoAssignmentWizard })));
+const LessonEditPanel = lazy(() => import('../../components/admin/videos/LessonEditPanel').then(module => ({ default: module.LessonEditPanel })));
+const BunnyLibraryModal = lazy(() => import('../../components/admin/videos/BunnyLibraryModal').then(module => ({ default: module.BunnyLibraryModal })));
+const ModuleModal = lazy(() => import('../../components/admin/videos/ModuleModal').then(module => ({ default: module.ModuleModal })));
+const LessonModal = lazy(() => import('../../components/admin/videos/LessonModal').then(module => ({ default: module.LessonModal })));
+const ConfirmDeleteModal = lazy(() => import('../../components/admin/videos/ConfirmDeleteModal').then(module => ({ default: module.ConfirmDeleteModal })));
+const EnvironmentCheck = lazy(() => import('../../components/admin/videos/EnvironmentCheck').then(module => ({ default: module.EnvironmentCheck })));
+const EnvDebug = lazy(() => import('../../components/admin/videos/EnvDebug').then(module => ({ default: module.EnvDebug })));
+const VideoTutorial = lazy(() => import('../../components/admin/videos/VideoTutorial').then(module => ({ default: module.VideoTutorial })));
+
+// Type pour RealTimeGuide
+type GuideState = any;
 import { useFormationsHierarchy } from '../../hooks/admin/useFormationsHierarchy';
 import { useBunnyLibrary } from '../../hooks/admin/useBunnyLibrary';
 import { createOrUpdateLesson, deleteLesson, createOrUpdateModule, deleteModule } from '../../services/trainingService';
@@ -363,21 +368,23 @@ export default function VideosManagement() {
         <EnvDebug />
 
         {/* Dashboard */}
-        <VideosDashboard
-          hierarchy={hierarchy}
-          orphanVideosCount={orphanVideos.length}
-          isLoading={isLoadingHierarchy}
-          onNewFormation={handleCreateModule}
-          onUpload={() => {
-            setShowUploadModal(true);
-            setGuideState('uploading');
-          }}
+        <Suspense fallback={<div className="bg-white rounded-lg shadow p-6"><div className="animate-pulse h-48 bg-gray-200 rounded"></div></div>}>
+          <VideosDashboard
+            hierarchy={hierarchy}
+            orphanVideosCount={orphanVideos.length}
+            isLoading={isLoadingHierarchy}
+            onNewFormation={handleCreateModule}
+            onUpload={() => {
+              setShowUploadModal(true);
+              setGuideState('uploading');
+            }}
           onAssignOrphans={() => {
             setShowLibraryModal(true);
             setGuideContext({ filterOrphans: true });
           }}
           onShowTutorial={() => setShowTutorial(true)}
-        />
+          />
+        </Suspense>
 
         {/* Main content */}
         <div className="grid lg:grid-cols-3 gap-6">
@@ -420,35 +427,39 @@ export default function VideosManagement() {
               </div>
             )}
 
-            <FormationTreeView
-              modules={hierarchy.modules}
-              selectedLessonId={selectedLessonId}
-              selectedLessons={selectedLessons}
-              expandedModules={expandedModules}
-              onToggleModule={handleToggleModule}
-              onSelectLesson={handleSelectLesson}
-              onEditLesson={handleEditLesson}
-              onDeleteLesson={(id) => {
-                if (confirm('Supprimer cette leçon ?')) {
-                  deleteLessonMutation.mutate(id);
-                }
-              }}
-              onReplaceVideo={handleReplaceVideo}
-              onAssignVideo={(id) => {
-                setShowLibraryModal(true);
-                setSelectedLessonId(id);
-              }}
-              onAddModule={handleCreateModule}
-              onAddLesson={handleCreateLesson}
-              onEditModule={handleEditModule}
-              onDeleteModule={handleDeleteModule}
-              onReorderLessons={handleReorderLessons}
-            />
+            <Suspense fallback={<div className="bg-white rounded-lg shadow p-6"><div className="animate-pulse h-96 bg-gray-200 rounded"></div></div>}>
+              <FormationTreeView
+                modules={hierarchy.modules}
+                selectedLessonId={selectedLessonId}
+                selectedLessons={selectedLessons}
+                expandedModules={expandedModules}
+                onToggleModule={handleToggleModule}
+                onSelectLesson={handleSelectLesson}
+                onEditLesson={handleEditLesson}
+                onDeleteLesson={(id) => {
+                  if (confirm('Supprimer cette leçon ?')) {
+                    deleteLessonMutation.mutate(id);
+                  }
+                }}
+                onReplaceVideo={handleReplaceVideo}
+                onAssignVideo={(id) => {
+                  setShowLibraryModal(true);
+                  setSelectedLessonId(id);
+                }}
+                onAddModule={handleCreateModule}
+                onAddLesson={handleCreateLesson}
+                onEditModule={handleEditModule}
+                onDeleteModule={handleDeleteModule}
+                onReorderLessons={handleReorderLessons}
+              />
+            </Suspense>
           </div>
 
           {/* Right: Guide and Edit Panel */}
           <div className="space-y-6">
-            <RealTimeGuide state={guideState} context={guideContext} />
+            <Suspense fallback={<div className="bg-white rounded-lg shadow p-6"><div className="animate-pulse h-32 bg-gray-200 rounded"></div></div>}>
+              <RealTimeGuide state={guideState} context={guideContext} />
+            </Suspense>
             
             <LessonEditPanel
               lesson={selectedLesson}

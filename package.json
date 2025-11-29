@@ -25,7 +25,9 @@
     "seed-test": "node scripts/seed-test-data.js",
     "grant-access": "node scripts/grant-access.js",
     "check-lessons-video": "node scripts/check-lessons-without-video.js",
-    "associate-video": "node scripts/associate-video-to-lesson.js"
+    "associate-video": "node scripts/associate-video-to-lesson.js",
+    "analyze-bundle": "npx vite-bundle-analyzer dist",
+    "analyze-bundle:serve": "npx vite-bundle-analyzer dist --serve"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -70,6 +72,7 @@
     "stripe": "^20.0.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
+    "web-vitals": "^4.2.4",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.21",
     "vite-plugin-pwa": "^1.2.0",
