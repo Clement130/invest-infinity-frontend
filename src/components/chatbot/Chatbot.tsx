@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
 import ChatWidget from './ChatWidget';
 import ChatWindow from './ChatWindow';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +13,7 @@ import {
   defaultResponses,
   actionRequirements,
 } from './types';
+import { CHATBOT_INTENTS } from '../../config/chatbot/faqIntents';
 import {
   logChatOpen,
   logChatClose,
@@ -112,27 +114,31 @@ export default function Chatbot() {
     }
   }, [isOpen]);
 
-  // Trouver une réponse dans la FAQ
-  const findFAQResponse = (query: string): { answer: string; followUp?: QuickReply[] } | null => {
+  // Trouver une réponse dans les Intents locaux
+  const findLocalIntent = (query: string) => {
     const normalizedQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     
-    for (const faq of faqDatabase) {
-      const matchScore = faq.keywords.reduce((score, keyword) => {
-        const normalizedKeyword = keyword.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        if (normalizedQuery.includes(normalizedKeyword)) {
-          return score + 1;
-        }
-        return score;
-      }, 0);
+    // Score de correspondance simple
+    let bestMatch = null;
+    let maxScore = 0;
 
-      if (matchScore >= 1) {
-        // Filtrer les followUp selon les permissions
-        const filteredFollowUp = faq.followUp ? filterQuickReplies(faq.followUp) : undefined;
-        return { answer: faq.answer, followUp: filteredFollowUp };
+    for (const intent of CHATBOT_INTENTS) {
+      for (const pattern of intent.patterns) {
+        const normalizedPattern = pattern.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        
+        // Match exact ou partiel fort
+        if (normalizedQuery.includes(normalizedPattern)) {
+          // Score basé sur la longueur du pattern (plus c'est précis, mieux c'est)
+          const score = normalizedPattern.length;
+          if (score > maxScore) {
+            maxScore = score;
+            bestMatch = intent;
+          }
+        }
       }
     }
 
-    return null;
+    return bestMatch;
   };
 
   // Ajouter le fallback hint aux réponses
@@ -214,6 +220,46 @@ export default function Chatbot() {
           true
         );
         setTimeout(() => navigate('/pricing'), 1500);
+        break;
+
+      case 'show_entree':
+        logActionExecuted(userType, action, true, user?.id);
+        const entreeIntent = CHATBOT_INTENTS.find(i => i.id === 'offer_entree_details');
+        if (entreeIntent) {
+            addBotMessage(entreeIntent.answer, entreeIntent.followUps as QuickReply[], true);
+        }
+        break;
+
+      case 'show_transformation':
+        logActionExecuted(userType, action, true, user?.id);
+        const transfoIntent = CHATBOT_INTENTS.find(i => i.id === 'offer_transformation_details');
+        if (transfoIntent) {
+            addBotMessage(transfoIntent.answer, transfoIntent.followUps as QuickReply[], true);
+        }
+        break;
+
+      case 'show_immersion':
+        logActionExecuted(userType, action, true, user?.id);
+        const immersionIntent = CHATBOT_INTENTS.find(i => i.id === 'offer_immersion_details');
+        if (immersionIntent) {
+            addBotMessage(immersionIntent.answer, immersionIntent.followUps as QuickReply[], true);
+        }
+        break;
+
+      case 'ask_immersion_logistics':
+        logActionExecuted(userType, action, true, user?.id);
+        const logisticsIntent = CHATBOT_INTENTS.find(i => i.id === 'immersion_logistics');
+        if (logisticsIntent) {
+            addBotMessage(logisticsIntent.answer, logisticsIntent.followUps as QuickReply[], true);
+        }
+        break;
+      
+      case 'ask_forgot_password':
+        logActionExecuted(userType, action, true, user?.id);
+        const pwIntent = CHATBOT_INTENTS.find(i => i.id === 'forgot_password');
+        if (pwIntent) {
+            addBotMessage(pwIntent.answer, pwIntent.followUps as QuickReply[], true);
+        }
         break;
 
       case 'show_testimonials':
@@ -429,7 +475,7 @@ export default function Chatbot() {
   }, [isOpen]);
 
   // Gérer l'envoi d'un message utilisateur
-  const handleSendMessage = useCallback((content: string) => {
+  const handleSendMessage = useCallback(async (content: string) => {
     // Logger le message
     logMessageSent(userType, content, user?.id);
 
@@ -442,25 +488,62 @@ export default function Chatbot() {
     };
     setMessages(prev => [...prev, userMessage]);
 
-    // Chercher une réponse dans la FAQ
-    const faqResponse = findFAQResponse(content);
+    // 1. Chercher d'abord dans les intents locaux
+    const localIntent = findLocalIntent(content);
     
-    if (faqResponse) {
-      addBotMessage(addFallbackHint(faqResponse.answer), faqResponse.followUp, true);
-    } else {
-      // Réponse par défaut si pas trouvé dans la FAQ
-      const filteredReplies = filterQuickReplies(config.quickReplies);
-      addBotMessage(
-        defaultResponses.notUnderstood + "\n\n" +
-        "*Tu peux reformuler ta question, choisir une option ci-dessous, ou contacter notre équipe pour une aide personnalisée.*",
-        [
-          ...filteredReplies.slice(0, 3),
-          { id: 'human', label: 'Parler à un humain', action: 'contact_human', icon: '👤' },
-        ],
-        true
-      );
+    if (localIntent) {
+      addBotMessage(addFallbackHint(localIntent.answer), localIntent.followUps as QuickReply[], true);
+      return;
     }
-  }, [addBotMessage, config.quickReplies, filterQuickReplies, userType, user?.id]);
+
+    // 2. Si pas trouvé, utiliser OpenAI (Fallback)
+    setIsTyping(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? ''}`
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: "Tu es l'assistant virtuel d'InvestInfinity. Tu aides les utilisateurs sur le trading et la plateforme." },
+            { role: "user", content: content }
+          ]
+        })
+      });
+
+      // Stop typing avant d'utiliser addBotMessage (qui le relancera pour simuler l'écriture)
+      setIsTyping(false);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Gestion spécifique si non configuré
+        if (response.status === 503) {
+           addBotMessage(errorData.error || "Le chatbot n'est pas encore configuré.", [], true);
+           return;
+        }
+        throw new Error(errorData.error || 'Erreur API');
+      }
+
+      const data = await response.json();
+      const aiContent = data.choices?.[0]?.message?.content;
+
+      if (aiContent) {
+        addBotMessage(aiContent, [], true);
+      } else {
+        addBotMessage("Je n'ai pas pu générer de réponse.", [], false);
+      }
+
+    } catch (error) {
+      console.error('Chatbot Error:', error);
+      setIsTyping(false);
+      addBotMessage("Désolé, une erreur est survenue lors de la communication avec l'assistant.", [], false);
+    }
+  }, [addBotMessage, userType, user?.id]);
 
   // Gérer le quick reply
   const handleQuickReply = useCallback((action: string) => {

@@ -178,3 +178,33 @@ export async function getSetting<T = any>(key: string): Promise<T | null> {
   return data?.value as T | null;
 }
 
+// === CHATBOT SETTINGS ===
+
+export async function getChatbotApiKey(): Promise<string> {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'openai_api_key')
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching chatbot API key:', error);
+    return '';
+  }
+
+  return data?.value || '';
+}
+
+export async function updateChatbotApiKey(apiKey: string): Promise<void> {
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ 
+        key: 'openai_api_key', 
+        value: apiKey 
+    }, { onConflict: 'key' });
+
+  if (error) {
+    console.error('Error updating chatbot API key:', error);
+    throw error;
+  }
+}

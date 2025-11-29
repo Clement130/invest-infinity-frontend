@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, Palette, Mail, Globe, Image, X } from 'lucide-react';
+import { Save, Palette, Mail, Globe, Image, X, MessageSquare, Play } from 'lucide-react';
 import {
   getPlatformSettings,
   updateAppearanceSettings,
   updateEmailTemplates,
   updateIntegrationSettings,
+  getChatbotApiKey,
+  updateChatbotApiKey,
   type AppearanceSettings,
   type EmailTemplates,
   type IntegrationSettings,
 } from '../../services/settingsService';
+import { supabase } from '../../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import LicenseStatusWidget from '../../components/admin/LicenseStatusWidget';
 import { useDeveloperRole } from '../../hooks/useDeveloperRole';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'appearance' | 'emails' | 'integrations'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'emails' | 'integrations' | 'chatbot'>('appearance');
   const { isDeveloper } = useDeveloperRole();
 
   return (
@@ -33,16 +36,17 @@ export default function SettingsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-white/10">
+      <div className="flex gap-2 border-b border-white/10 overflow-x-auto pb-1">
         {[
           { id: 'appearance', label: 'Apparence', icon: Palette },
           { id: 'emails', label: 'Emails', icon: Mail },
           { id: 'integrations', label: 'Intégrations', icon: Globe },
+          { id: 'chatbot', label: 'Chatbot / IA', icon: MessageSquare },
         ].map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id as any)}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition ${
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
               activeTab === id
                 ? 'border-purple-400 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-white'
@@ -59,6 +63,7 @@ export default function SettingsPage() {
         {activeTab === 'appearance' && <AppearanceSettings />}
         {activeTab === 'emails' && <EmailSettings />}
         {activeTab === 'integrations' && <IntegrationSettings />}
+        {activeTab === 'chatbot' && <ChatbotSettings />}
       </div>
     </div>
   );
@@ -505,3 +510,139 @@ function IntegrationSettings() {
   );
 }
 
+function ChatbotSettings() {
+  const [apiKey, setApiKey] = useState('');
+  const [testResponse, setTestResponse] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: currentKey } = useQuery({
+    queryKey: ['chatbot-key'],
+    queryFn: getChatbotApiKey,
+  });
+
+  useEffect(() => {
+    if (currentKey) setApiKey(currentKey);
+  }, [currentKey]);
+
+  const saveMutation = useMutation({
+    mutationFn: updateChatbotApiKey,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatbot-key'] });
+      toast.success('Clé API sauvegardée');
+    },
+    onError: (error: Error) => {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    },
+  });
+
+  const handleTest = async () => {
+    setIsTesting(true);
+    setTestResponse('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: 'Ceci est un test de connexion.' }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur inconnue');
+      }
+      
+      const data = await response.json();
+      setTestResponse(data.choices?.[0]?.message?.content || 'Réponse reçue, mais contenu vide.');
+      toast.success('Test réussi !');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Erreur test: ' + e.message);
+      setTestResponse('Erreur: ' + e.message);
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveMutation.mutate(apiKey);
+  };
+
+  return (
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-lg p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-purple-400" />
+          Configuration Chatbot
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              Clé API OpenAI
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="flex-1 bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-400 transition"
+              />
+              <button
+                type="submit"
+                disabled={saveMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                {saveMutation.isPending ? 'Sauvegarde...' : 'Enregistrer'}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Votre clé est stockée de manière sécurisée et n'est jamais exposée au client public.
+            </p>
+          </div>
+        </div>
+      </form>
+
+      {/* Zone de test */}
+      <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Play className="w-5 h-5 text-green-400" />
+          Test de connexion
+        </h2>
+        
+        <p className="text-gray-400 text-sm mb-4">
+          Cliquez ci-dessous pour vérifier que le chatbot peut bien communiquer avec OpenAI via votre configuration.
+        </p>
+
+        <button
+          onClick={handleTest}
+          disabled={isTesting || !apiKey}
+          className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isTesting ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          Tester le chatbot
+        </button>
+
+        {testResponse && (
+          <div className={`mt-4 p-4 rounded-lg border ${testResponse.startsWith('Erreur') ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-green-500/10 border-green-500/30 text-green-200'}`}>
+            <p className="font-mono text-sm whitespace-pre-wrap">{testResponse}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
