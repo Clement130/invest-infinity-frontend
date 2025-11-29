@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { Check, Loader2, Shield, MapPin, Calendar, Users, Clock, UtensilsCrossed, Award, ArrowLeft } from 'lucide-react';
+import { Check, Loader2, Shield, MapPin, Calendar, Users, Clock, UtensilsCrossed, Award, ArrowLeft, Crown } from 'lucide-react';
 import { getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { getStripePriceId } from '../services/stripePriceService';
 import { useToast } from '../hooks/useToast';
@@ -134,26 +134,26 @@ export default function ImmersionElitePage() {
           </button>
 
           <div className="text-center mb-16">
-            <h1 className="text-5xl sm:text-6xl font-bold mb-6">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 drop-shadow-lg">
                 Immersion Élite
               </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-6">
+            <p className="text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8 font-medium">
               Formation présentielle intensive d'une semaine à Marseille
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-yellow-400" />
-                <span>Près de Halo, Marseille</span>
+            <div className="flex flex-wrap items-center justify-center gap-6 lg:gap-8 text-sm lg:text-base">
+              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <MapPin className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                <span className="text-gray-300 font-medium">Près de Halo, Marseille</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-yellow-400" />
-                <span>5-8 élèves maximum par session</span>
+              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <Users className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                <span className="text-gray-300 font-medium">5-8 élèves maximum par session</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-yellow-400" />
-                <span>Lundi au vendredi</span>
+              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <Calendar className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                <span className="text-gray-300 font-medium">Lundi au vendredi</span>
               </div>
             </div>
           </div>
@@ -163,67 +163,101 @@ export default function ImmersionElitePage() {
       {/* Contenu principal */}
       <section className="relative pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             
             {/* Colonne gauche - Détails */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 lg:space-y-8">
               {/* Ce qui est inclus */}
-              <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-2 border-yellow-500/30 rounded-2xl p-8">
-                <h2 className="text-3xl font-bold mb-8 text-yellow-400">Ce qui est inclus</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div className="bg-gradient-to-br from-slate-900/60 via-slate-800/60 to-slate-900/60 backdrop-blur-sm border-2 border-yellow-500/30 rounded-3xl p-8 lg:p-10 shadow-xl">
+                <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">
+                  Ce qui est inclus
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Tout Transformation inclus</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Tout Transformation inclus</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Accès complet à la formation en ligne</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">5 jours de formation</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">5 jours de formation</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Lundi au vendredi, 9h-17h</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Coaching personnalisé</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Coaching personnalisé</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Petit groupe pour un suivi optimal</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Trading en live</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Trading en live</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Avec Mickaël en temps réel</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Analyse de vos trades</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Analyse de vos trades</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Feedback immédiat sur vos positions</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Déjeuners offerts</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Déjeuners offerts</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">5 repas inclus</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Certificat de complétion</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Certificat de complétion</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Reconnaissance de votre formation</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">Accès VIP Discord</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Accès VIP Discord</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Communauté à vie</p>
                     </div>
                   </div>
@@ -231,27 +265,41 @@ export default function ImmersionElitePage() {
               </div>
 
               {/* Programme type */}
-              <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-2 border-yellow-500/30 rounded-2xl p-8">
-                <h2 className="text-3xl font-bold mb-8 text-yellow-400">Programme type</h2>
-                <div className="space-y-5">
-                  <div className="flex items-start gap-4">
-                    <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-1" />
+              <div className="bg-gradient-to-br from-slate-900/60 via-slate-800/60 to-slate-900/60 backdrop-blur-sm border-2 border-yellow-500/30 rounded-3xl p-8 lg:p-10 shadow-xl">
+                <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">
+                  Programme type
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-5 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">9h00 - 12h00</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-lg">9h00 - 12h00</h3>
                       <p className="text-gray-400 leading-relaxed">Formation théorique et analyse de marché</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <UtensilsCrossed className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-1" />
+                  <div className="flex items-start gap-4 p-5 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <UtensilsCrossed className="w-5 h-5 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">12h00 - 13h30</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-lg">12h00 - 13h30</h3>
                       <p className="text-gray-400 leading-relaxed">Déjeuner (offert)</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-1" />
+                  <div className="flex items-start gap-4 p-5 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-yellow-400" />
+                      </div>
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1.5">13h30 - 17h00</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-lg">13h30 - 17h00</h3>
                       <p className="text-gray-400 leading-relaxed">Trading en live, analyse de trades, coaching personnalisé</p>
                     </div>
                   </div>
@@ -259,12 +307,12 @@ export default function ImmersionElitePage() {
               </div>
 
               {/* Important */}
-              <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-2xl p-6">
-                <h3 className="font-semibold text-blue-400 mb-4 flex items-center gap-2">
-                  <Shield className="w-5 h-5 flex-shrink-0" />
-                  Important
+              <div className="bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-blue-500/10 backdrop-blur-sm border-2 border-blue-500/40 rounded-3xl p-6 lg:p-8 shadow-lg">
+                <h3 className="font-bold text-lg text-blue-400 mb-4 flex items-center gap-3">
+                  <Shield className="w-6 h-6 flex-shrink-0" />
+                  <span>Important</span>
                 </h3>
-                <p className="text-gray-300 leading-relaxed">
+                <p className="text-gray-300 leading-relaxed text-base">
                   Vous devez gérer votre transport et logement. La formation se déroule près de Halo, Marseille. 
                   Nous vous fournirons des recommandations d'hébergement à proximité après votre réservation.
                 </p>
@@ -273,27 +321,34 @@ export default function ImmersionElitePage() {
 
             {/* Colonne droite - Réservation */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24 bg-gradient-to-br from-yellow-900/20 to-amber-900/20 border-2 border-yellow-500 rounded-2xl p-8">
-                <div className="text-center mb-8">
-                  <div className="flex items-baseline justify-center gap-2 mb-2">
-                    <span className="text-5xl font-bold text-yellow-400">1 997€</span>
+              <div className="sticky top-24 bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-sm border-2 border-yellow-500/40 rounded-3xl p-8 shadow-2xl shadow-yellow-500/20">
+                {/* Prix avec design premium */}
+                <div className="text-center mb-8 pb-8 border-b border-yellow-500/20">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-baseline justify-center gap-2">
+                      <span className="text-6xl font-extrabold bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 bg-clip-text text-transparent leading-none">
+                        1 997€
+                      </span>
+                    </div>
+                    <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">paiement unique</span>
                   </div>
-                  <span className="text-gray-400 text-sm block">paiement unique</span>
                 </div>
 
+                {/* Sélection de session */}
                 <div className="mb-8">
-                  <label className="block text-sm font-medium text-gray-300 mb-4">
+                  <label className="block text-sm font-semibold text-gray-200 mb-4 uppercase tracking-wide">
                     Sélectionnez une session
                   </label>
                   <div className="space-y-3">
                     {loadingSessions ? (
-                      <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center justify-center py-12">
                         <Loader2 className="w-6 h-6 animate-spin text-yellow-400" />
-                        <span className="ml-2 text-gray-400">Chargement des sessions...</span>
+                        <span className="ml-3 text-gray-400">Chargement des sessions...</span>
                       </div>
                     ) : sessions.length === 0 ? (
-                      <div className="text-center py-8 text-gray-400">
-                        Aucune session disponible pour le moment
+                      <div className="text-center py-12 text-gray-400">
+                        <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">Aucune session disponible pour le moment</p>
                       </div>
                     ) : (
                       sessions.map((session) => {
@@ -307,28 +362,28 @@ export default function ImmersionElitePage() {
                             onClick={() => !isFull && setSelectedSession(session.id)}
                             disabled={isFull}
                             className={`
-                              w-full p-4 rounded-lg border-2 transition-all text-left
+                              w-full p-5 rounded-xl border-2 transition-all duration-300 text-left
                               ${isFull 
-                                ? 'border-gray-700 bg-gray-800/50 cursor-not-allowed opacity-50' 
+                                ? 'border-gray-700/50 bg-gray-800/30 cursor-not-allowed opacity-50' 
                                 : isSelected
-                                ? 'border-yellow-500 bg-yellow-500/10'
-                                : 'border-gray-700 bg-gray-800/50 hover:border-yellow-500/50'
+                                ? 'border-yellow-500 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 shadow-lg shadow-yellow-500/20 scale-[1.02]'
+                                : 'border-gray-700/50 bg-gray-800/30 hover:border-yellow-500/50 hover:bg-gray-800/50 hover:scale-[1.01]'
                               }
                             `}
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-white text-base">
+                              <span className="font-bold text-white text-base">
                                 {formatSessionDates(session.session_date_start, session.session_date_end)}
                               </span>
                               {isFull ? (
-                                <span className="text-xs text-red-400 font-medium">Complet</span>
+                                <span className="text-xs text-red-400 font-semibold px-2 py-1 bg-red-500/10 rounded-md">Complet</span>
                               ) : (
-                                <span className="text-xs text-green-400 font-medium">
-                                  {availablePlaces} {availablePlaces === 1 ? 'place restante' : 'places restantes'}
+                                <span className="text-xs text-green-400 font-semibold px-2 py-1 bg-green-500/10 rounded-md">
+                                  {availablePlaces} {availablePlaces === 1 ? 'place' : 'places'}
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-400 mt-2">
                               <Users className="w-4 h-4 flex-shrink-0" />
                               <span>{session.reserved_places}/{session.max_places} élèves</span>
                             </div>
@@ -339,27 +394,45 @@ export default function ImmersionElitePage() {
                   </div>
                 </div>
 
+                {/* Bouton de réservation premium */}
                 <button
                   onClick={handleReservation}
                   disabled={!selectedSession || loading}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-lg font-bold hover:from-yellow-400 hover:to-amber-400 transition-all transform hover:scale-[1.02] shadow-lg shadow-yellow-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="
+                    w-full py-5 px-6 
+                    bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
+                    text-[#1a0f0a] font-extrabold text-lg
+                    rounded-xl 
+                    transition-all duration-300 
+                    transform hover:scale-[1.02] active:scale-[0.98]
+                    shadow-2xl shadow-orange-500/40 
+                    hover:shadow-orange-500/60
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                    flex items-center justify-center gap-3
+                    relative overflow-hidden
+                    group
+                  "
                 >
+                  {/* Effet de brillance au survol */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  
                   {loading ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Redirection...
+                      <Loader2 className="w-6 h-6 animate-spin relative z-10" />
+                      <span className="relative z-10">Redirection...</span>
                     </>
                   ) : (
                     <>
-                      <Award className="w-5 h-5" />
-                      Réserver maintenant
+                      <Crown className="w-6 h-6 relative z-10" />
+                      <span className="relative z-10">Réserver Immersion Élite — 1 997€</span>
                     </>
                   )}
                 </button>
 
-                <div className="mt-6 flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <Shield className="w-5 h-5 text-green-400" />
-                  <span className="text-green-400 text-sm font-medium">Paiement sécurisé via Stripe</span>
+                {/* Badge de sécurité */}
+                <div className="mt-6 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl">
+                  <Shield className="w-5 h-5 text-green-400 flex-shrink-0" />
+                  <span className="text-green-400 text-sm font-semibold">Paiement sécurisé via Stripe</span>
                 </div>
               </div>
             </div>
