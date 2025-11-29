@@ -530,7 +530,7 @@ export default function ChatBot() {
       <div
         ref={chatContainerRef}
         className={`
-          fixed z-50
+          fixed z-[10000]
           ${isMobile
             ? chatbotMode === 'support'
               ? 'inset-x-0 top-[25%] bottom-0 w-full rounded-t-3xl'
@@ -924,7 +924,7 @@ export default function ChatBot() {
 
       {/* Floating Button - Caché quand chat ouvert sur mobile */}
       {(!isMobile || !isOpen) && (
-        <div className={`fixed z-50 ${
+        <div className={`fixed z-[9999] ${
           isMobile 
             ? 'bottom-5 right-4'
             : 'bottom-4 right-4 sm:right-6'
