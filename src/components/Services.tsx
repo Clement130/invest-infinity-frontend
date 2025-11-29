@@ -187,10 +187,22 @@ export default function Services({ onOpenRegister }: ServicesProps) {
                     <div className="grid md:grid-cols-2 gap-0">
                       {/* Image Section */}
                       <div className="relative h-96 md:h-full">
+                        {/* Fallback gradient background */}
+                        <div 
+                          className="absolute inset-0 w-full h-full"
+                          style={{
+                            background: `linear-gradient(135deg, ${service.color}20, ${service.color}40)`,
+                          }}
+                        />
                         <img
                           src={service.image}
                           alt={service.title}
                           className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            // Masquer l'image si elle ne charge pas, le gradient de fond sera visible
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1f1f23] to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-6">
