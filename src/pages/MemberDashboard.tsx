@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import { useMemo, useState, useEffect, lazy, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -265,12 +265,40 @@ export default function MemberDashboard() {
 
   const continueLearning = progressSummary?.continueLearning;
 
-  const isLoading =
+  // Timeout de sécurité pour éviter le chargement infini
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const loadingStartRef = useRef<number>(Date.now());
+  
+  useEffect(() => {
+    // Réinitialiser le timer si l'utilisateur change
+    loadingStartRef.current = Date.now();
+    setLoadingTimeout(false);
+    
+    const timer = setTimeout(() => {
+      if (statsQuery.isLoading) {
+        console.warn('[MemberDashboard] Timeout de chargement atteint après 8 secondes');
+        setLoadingTimeout(true);
+      }
+    }, 8000);
+    
+    return () => clearTimeout(timer);
+  }, [user?.id]);
+
+  // Réinitialiser le timeout quand les données arrivent
+  useEffect(() => {
+    if (!statsQuery.isLoading) {
+      setLoadingTimeout(false);
+    }
+  }, [statsQuery.isLoading]);
+
+  // Considérer le chargement terminé si timeout ou si les queries sont terminées
+  const isLoading = loadingTimeout ? false : (
     statsQuery.isLoading ||
     (challengesQuery.isLoading && !isMobile) ||
     (eventsQuery.isLoading && !isMobile) ||
     (modulesQuery.isLoading && !isMobile) ||
-    (progressQuery.isLoading && !isMobile);
+    (progressQuery.isLoading && !isMobile)
+  );
 
   const firstName = profile?.full_name?.split(' ')[0] || 'Trader';
   const globalProgress = stats

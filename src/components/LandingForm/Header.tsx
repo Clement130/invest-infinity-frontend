@@ -90,7 +90,7 @@ export const Header: React.FC = () => {
     <div className="bg-gradient-to-r from-pink-500 to-pink-600 text-white sticky top-0 z-50 shadow-sm text-center text-sm font-medium">
       <div className="py-2 px-4">
         {afterEnd ? (
-          <span>Dernière ligne droite pour rejoindre gratuitement le Discord</span>
+          <span>Dernière ligne droite pour rejoindre la communauté VIP</span>
         ) : (
           <span>⏳ Il reste seulement {accessCount} accès disponibles</span>
         )}

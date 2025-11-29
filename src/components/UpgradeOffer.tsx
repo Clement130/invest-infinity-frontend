@@ -32,7 +32,7 @@ export default function UpgradeOffer() {
           <p className="text-lg sm:text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
             Tu as déjà fait le bon choix en rejoignant la formation publique.  
             Rejoins maintenant la communauté VIP : alertes en temps réel,  
-            vidéos avancées et suivi expert — le tout 100 % gratuit et sans engagement.  
+            vidéos avancées et suivi expert — grâce à notre partenariat transparent avec RaiseFX.  
             Ton capital reste toujours à toi et tu peux retirer tes fonds à tout moment.  
           </p>
         </header>
@@ -49,12 +49,12 @@ export default function UpgradeOffer() {
                   Alertes & Formation Privée
                 </h2>
                 <p className="text-gray-100 text-base max-w-3xl leading-relaxed">
-                  Accède gratuitement à des vidéos avancées,  
-                  des alertes en temps réel et des ressources privées,  
+                  Accède à des vidéos avancées,
+                  des alertes en temps réel et des ressources privées,
                   pour booster tes performances et garder une longueur d’avance.
                 </p>
                 <p className="text-green-300 text-base font-semibold">
-                    C’est gratuit et sans engagement. 
+                    Modèle transparent sans abonnement caché.
                 </p>
                 <p className="text-gray-300 text-base font-semibold">
                     Tu restes propriétaire de tes fonds, que tu peux utiliser librement pour trader ou copier mes trades. L’objectif est de les faire fructifier, pour que tu puisses retirer tes profits quand tu le souhaites.

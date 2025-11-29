@@ -102,13 +102,46 @@ export interface Event {
 
 // Récupérer les statistiques de l'utilisateur
 export async function getUserStats(userId: string): Promise<UserStats> {
+  // Valeur par défaut à retourner en cas d'erreur ou timeout
+  const defaultStats: UserStats = {
+    totalModules: 0,
+    completedModules: 0,
+    totalLessons: 0,
+    completedLessons: 0,
+    totalTimeSpent: 0,
+    badges: [],
+    level: 1,
+    xp: 0,
+    nextLevelXp: 100,
+    streak: 0,
+    xpTracks: [],
+    dailyQuests: [],
+    freezePasses: 0,
+    activeBooster: null,
+  };
+
+  if (!userId) {
+    console.warn('[getUserStats] userId manquant, retour des valeurs par défaut');
+    return defaultStats;
+  }
+
   try {
+  // Timeout global de 8 secondes pour éviter les blocages
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout: getUserStats a pris plus de 8 secondes')), 8000);
+  });
+
   // Récupérer les modules, leçons et progression en parallèle pour optimiser
-  const [modules, lessonsResponse, progressResponse] = await Promise.all([
+  const dataPromise = Promise.all([
     getModules(),
     supabase.from('training_lessons').select('id, module_id'),
     supabase.from('training_progress').select('*').eq('user_id', userId),
   ]);
+
+  const [modules, lessonsResponse, progressResponse] = await Promise.race([
+    dataPromise,
+    timeoutPromise,
+  ]) as [Awaited<ReturnType<typeof getModules>>, any, any];
 
   const totalModules = modules.length;
   const allLessons = lessonsResponse.data || [];
@@ -204,25 +237,13 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     freezePasses,
     activeBooster,
   };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[getUserStats] Erreur globale:', error);
+    if (error.message?.includes('Timeout')) {
+      console.warn('[getUserStats] Timeout atteint - retour des valeurs par défaut');
+    }
     // Retourner des valeurs par défaut en cas d'erreur
-    return {
-      totalModules: 0,
-      completedModules: 0,
-      totalLessons: 0,
-      completedLessons: 0,
-      totalTimeSpent: 0,
-      badges: [],
-      level: 1,
-      xp: 0,
-      nextLevelXp: 100,
-      streak: 0,
-      xpTracks: [],
-      dailyQuests: [],
-      freezePasses: 0,
-      activeBooster: null,
-    };
+    return defaultStats;
   }
 }
 

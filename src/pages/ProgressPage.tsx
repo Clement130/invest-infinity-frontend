@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useSession } from '../hooks/useSession';
@@ -37,6 +37,18 @@ const itemVariants = {
 
 export default function ProgressPage() {
   const { user } = useSession();
+  
+  // Timeout de sécurité pour éviter le chargement infini
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.warn('[ProgressPage] Timeout de chargement atteint après 10 secondes');
+      setLoadingTimeout(true);
+    }, 10000);
+    
+    return () => clearTimeout(timer);
+  }, [user?.id]);
 
   const statsQuery = useQuery({
     queryKey: ['member-stats', user?.id],
@@ -129,8 +141,11 @@ export default function ProgressPage() {
   // Vérifier si les queries sont en chargement
   // Si user n'est pas défini, les queries dépendantes de user ne sont pas activées
   // donc on ne doit pas les considérer comme "loading"
-  const isLoading = modulesQuery.isLoading || 
-    (!!user?.id && (statsQuery.isLoading || progressSummaryQuery.isLoading));
+  // Si timeout atteint, considérer le chargement comme terminé
+  const isLoading = loadingTimeout ? false : (
+    modulesQuery.isLoading || 
+    (!!user?.id && (statsQuery.isLoading || progressSummaryQuery.isLoading))
+  );
 
   return (
     <div className="space-y-8 pb-8">

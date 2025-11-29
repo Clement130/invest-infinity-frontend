@@ -7,17 +7,17 @@ const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 const getQueryConfig = () => ({
   staleTime: isMobile ? 1000 * 60 * 10 : 1000 * 60 * 5, // 10min sur mobile, 5min sur desktop
   gcTime: isMobile ? 1000 * 60 * 60 : 1000 * 60 * 30, // 1h sur mobile, 30min sur desktop
-  retry: isMobile ? 0 : 1, // Pas de retry automatique sur mobile pour économiser la data
+  retry: 1, // Toujours 1 retry pour éviter les erreurs temporaires
   refetchOnWindowFocus: !isMobile, // Désactivé sur mobile
-  refetchOnReconnect: !isMobile, // Désactivé sur mobile
-  networkMode: isMobile ? 'offlineFirst' : 'online', // Mode offline-first sur mobile
+  refetchOnReconnect: true, // Toujours refetch à la reconnexion
+  networkMode: 'online' as const, // Toujours en mode online pour éviter les blocages
 });
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: getQueryConfig(),
     mutations: {
-      retry: isMobile ? 0 : 1, // Pas de retry pour les mutations sur mobile
+      retry: 1, // 1 retry pour les mutations
     },
   },
 });

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,10 +44,26 @@ export default function ClientApp() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  
+  // Timeout de sécurité pour éviter le chargement infini
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const loadingStartRef = useRef<number>(Date.now());
+  
+  useEffect(() => {
+    loadingStartRef.current = Date.now();
+    setLoadingTimeout(false);
+    
+    const timer = setTimeout(() => {
+      console.warn('[ClientApp] Timeout de chargement atteint après 10 secondes');
+      setLoadingTimeout(true);
+    }, 10000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const {
     data: modules = [],
-    isLoading: loadingModules,
+    isLoading: loadingModulesQuery,
     isError,
   } = useQuery({
     queryKey: ['modules', 'client'],
@@ -55,6 +71,9 @@ export default function ClientApp() {
     retry: 1,
     retryDelay: 1000,
   });
+
+  // Si timeout atteint, considérer le chargement comme terminé
+  const loadingModules = loadingTimeout ? false : loadingModulesQuery;
 
   const progressSummaryQuery = useQuery({
     queryKey: ['member-progress', user?.id],

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import type { UserRole } from '../types/training';
 
@@ -9,20 +9,45 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
   // On garde en mémoire le dernier rôle valide pour éviter les redirections
   // pendant les rafraîchissements de session
   const [lastValidRole, setLastValidRole] = useState<UserRole | null>(null);
+  
+  // Timeout de sécurité pour éviter les blocages infinis
+  const [forceComplete, setForceComplete] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mettre à jour le dernier rôle valide quand on en a un
   useEffect(() => {
     if (role && user) {
       setLastValidRole(role);
+      setForceComplete(false); // Réinitialiser si on a un rôle
       console.log('[useRoleGuard] Rôle valide mémorisé:', role);
     } else if (!user) {
       // Réinitialiser le rôle quand l'utilisateur se déconnecte
       setLastValidRole(null);
+      setForceComplete(false);
       console.log('[useRoleGuard] Rôle réinitialisé (déconnexion)');
     }
     // Si role devient null mais qu'on a un user, on garde le lastValidRole
     // pour éviter les redirections pendant les rechargements
   }, [role, user]);
+
+  // Timeout de sécurité - après 5 secondes, forcer la fin du chargement
+  useEffect(() => {
+    if (loading && !forceComplete) {
+      timeoutRef.current = setTimeout(() => {
+        console.warn('[useRoleGuard] Timeout de sécurité atteint (5s) - forçage de la fin du chargement');
+        setForceComplete(true);
+      }, 5000);
+    } else if (!loading && timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [loading, forceComplete]);
 
   const isAllowed = useMemo(() => {
     if (!user) {
@@ -108,11 +133,15 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
     return loading;
   }, [requiresRole, user, role, profile, loading, awaitingRoleStart, lastValidRole]);
 
+  // Si forceComplete est true, on considère que le chargement est terminé
+  const effectiveLoading = forceComplete ? false : loading;
+  const effectiveAwaitingRole = forceComplete ? false : awaitingRole;
+
   return {
     user,
     role,
-    loading,
-    awaitingRole,
+    loading: effectiveLoading,
+    awaitingRole: effectiveAwaitingRole,
     isAllowed,
   };
 }
