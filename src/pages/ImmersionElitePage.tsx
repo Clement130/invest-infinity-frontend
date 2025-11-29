@@ -123,62 +123,62 @@ export default function ImmersionElitePage() {
             <div className="lg:col-span-2 space-y-8">
               {/* Ce qui est inclus */}
               <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-2 border-yellow-500/30 rounded-2xl p-8">
-                <h2 className="text-3xl font-bold mb-6 text-yellow-400">Ce qui est inclus</h2>
+                <h2 className="text-3xl font-bold mb-8 text-yellow-400">Ce qui est inclus</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Tout Transformation inclus</h3>
-                      <p className="text-sm text-gray-400">Accès complet à la formation en ligne</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Tout Transformation inclus</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Accès complet à la formation en ligne</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">5 jours de formation</h3>
-                      <p className="text-sm text-gray-400">Lundi au vendredi, 9h-17h</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">5 jours de formation</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Lundi au vendredi, 9h-17h</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Coaching personnalisé</h3>
-                      <p className="text-sm text-gray-400">Petit groupe pour un suivi optimal</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Coaching personnalisé</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Petit groupe pour un suivi optimal</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Trading en live</h3>
-                      <p className="text-sm text-gray-400">Avec Mickaël en temps réel</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Trading en live</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Avec Mickaël en temps réel</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Analyse de vos trades</h3>
-                      <p className="text-sm text-gray-400">Feedback immédiat sur vos positions</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Analyse de vos trades</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Feedback immédiat sur vos positions</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Déjeuners offerts</h3>
-                      <p className="text-sm text-gray-400">5 repas inclus</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Déjeuners offerts</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">5 repas inclus</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Certificat de complétion</h3>
-                      <p className="text-sm text-gray-400">Reconnaissance de votre formation</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Certificat de complétion</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Reconnaissance de votre formation</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">Accès VIP Discord</h3>
-                      <p className="text-sm text-gray-400">Communauté à vie</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">Accès VIP Discord</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Communauté à vie</p>
                     </div>
                   </div>
                 </div>
@@ -186,27 +186,27 @@ export default function ImmersionElitePage() {
 
               {/* Programme type */}
               <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-2 border-yellow-500/30 rounded-2xl p-8">
-                <h2 className="text-3xl font-bold mb-6 text-yellow-400">Programme type</h2>
-                <div className="space-y-4">
+                <h2 className="text-3xl font-bold mb-8 text-yellow-400">Programme type</h2>
+                <div className="space-y-5">
                   <div className="flex items-start gap-4">
                     <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">9h00 - 12h00</h3>
-                      <p className="text-gray-400">Formation théorique et analyse de marché</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">9h00 - 12h00</h3>
+                      <p className="text-gray-400 leading-relaxed">Formation théorique et analyse de marché</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <UtensilsCrossed className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">12h00 - 13h30</h3>
-                      <p className="text-gray-400">Déjeuner (offert)</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">12h00 - 13h30</h3>
+                      <p className="text-gray-400 leading-relaxed">Déjeuner (offert)</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold text-white mb-1">13h30 - 17h00</h3>
-                      <p className="text-gray-400">Trading en live, analyse de trades, coaching personnalisé</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white mb-1.5">13h30 - 17h00</h3>
+                      <p className="text-gray-400 leading-relaxed">Trading en live, analyse de trades, coaching personnalisé</p>
                     </div>
                   </div>
                 </div>
@@ -214,11 +214,11 @@ export default function ImmersionElitePage() {
 
               {/* Important */}
               <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-2xl p-6">
-                <h3 className="font-semibold text-blue-400 mb-3 flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
+                <h3 className="font-semibold text-blue-400 mb-4 flex items-center gap-2">
+                  <Shield className="w-5 h-5 flex-shrink-0" />
                   Important
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 leading-relaxed">
                   Vous devez gérer votre transport et logement. La formation se déroule près de Halo, Marseille. 
                   Nous vous fournirons des recommandations d'hébergement à proximité après votre réservation.
                 </p>
@@ -228,15 +228,15 @@ export default function ImmersionElitePage() {
             {/* Colonne droite - Réservation */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 bg-gradient-to-br from-yellow-900/20 to-amber-900/20 border-2 border-yellow-500 rounded-2xl p-8">
-                <div className="text-center mb-6">
+                <div className="text-center mb-8">
                   <div className="flex items-baseline justify-center gap-2 mb-2">
                     <span className="text-5xl font-bold text-yellow-400">1 997€</span>
                   </div>
-                  <span className="text-gray-400 text-sm">paiement unique</span>
+                  <span className="text-gray-400 text-sm block">paiement unique</span>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                <div className="mb-8">
+                  <label className="block text-sm font-medium text-gray-300 mb-4">
                     Sélectionnez une session
                   </label>
                   <div className="space-y-3">
@@ -258,18 +258,18 @@ export default function ImmersionElitePage() {
                             }
                           `}
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-white">{session.date}</span>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-white text-base">{session.date}</span>
                             {isFull ? (
-                              <span className="text-xs text-red-400">Complet</span>
+                              <span className="text-xs text-red-400 font-medium">Complet</span>
                             ) : (
-                              <span className="text-xs text-green-400">
+                              <span className="text-xs text-green-400 font-medium">
                                 {session.maxPlaces - session.places} places restantes
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-400">
-                            <Users className="w-4 h-4" />
+                          <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                            <Users className="w-4 h-4 flex-shrink-0" />
                             <span>{session.places}/{session.maxPlaces} élèves</span>
                           </div>
                         </button>

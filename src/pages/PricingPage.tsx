@@ -161,26 +161,26 @@ export default function PricingPage() {
                   <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
                 </div>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-3.5 mb-8">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Accès à vie à la formation vidéo complète (50+ heures)</span>
+                    <span className="text-gray-300 leading-relaxed">Accès à vie à la formation vidéo complète (50+ heures)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Communauté privée Discord</span>
+                    <span className="text-gray-300 leading-relaxed">Communauté privée Discord</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Alertes trading en temps réel</span>
+                    <span className="text-gray-300 leading-relaxed">Alertes trading en temps réel</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Support par chat 7j/7</span>
+                    <span className="text-gray-300 leading-relaxed">Support par chat 7j/7</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Tutoriels plateformes (TopStep, Apex, MT4/MT5)</span>
+                    <span className="text-gray-300 leading-relaxed">Tutoriels plateformes (TopStep, Apex, MT4/MT5)</span>
                   </li>
                 </ul>
 
@@ -217,30 +217,30 @@ export default function PricingPage() {
                   <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
                 </div>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-3.5 mb-8">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Tout Entrée inclus</span>
+                    <span className="text-gray-300 leading-relaxed">Tout Entrée inclus</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Sessions de trading en direct (lun-ven, 15h-17h30)</span>
+                    <span className="text-gray-300 leading-relaxed">Sessions de trading en direct (lun-ven, 15h-17h30)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Replays illimités des sessions live</span>
+                    <span className="text-gray-300 leading-relaxed">Replays illimités des sessions live</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Zone Premium : analyses marchés quotidiennes</span>
+                    <span className="text-gray-300 leading-relaxed">Zone Premium : analyses marchés quotidiennes</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">2 stratégies ICT éprouvées de Mickaël</span>
+                    <span className="text-gray-300 leading-relaxed">2 stratégies ICT éprouvées de Mickaël</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Phone className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">1 coaching individuel 30min (visio)</span>
+                    <span className="text-gray-300 leading-relaxed">1 coaching individuel 30min (visio)</span>
                   </li>
                 </ul>
 
@@ -280,55 +280,57 @@ export default function PricingPage() {
                   <Crown className="w-6 h-6 text-yellow-400" />
                   <h3 className="text-2xl font-bold">Immersion Élite</h3>
                 </div>
-                <p className="text-gray-400 mb-2">Formation présentielle intensive à Marseille</p>
+                <p className="text-gray-400 mb-4">Formation présentielle intensive à Marseille</p>
                 
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-2">
+                <div className="mb-8">
+                  <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-4xl font-bold text-yellow-400">1 997€</span>
                   </div>
-                  <span className="text-gray-400 text-sm">paiement unique • 1 semaine intensive</span>
-                  <div className="flex items-center gap-2 mt-2 text-sm text-yellow-400/80">
-                    <MapPin className="w-4 h-4" />
-                    <span>Près de Halo, Marseille</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-yellow-400/80">
-                    <Calendar className="w-4 h-4" />
-                    <span>Lundi au vendredi, 5-8 élèves max</span>
+                  <span className="text-gray-400 text-sm block mb-3">paiement unique • 1 semaine intensive</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-yellow-400/80">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span>Près de Halo, Marseille</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-yellow-400/80">
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
+                      <span>Lundi au vendredi, 5-8 élèves max</span>
+                    </div>
                   </div>
                 </div>
 
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-3.5 mb-8">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Tout Transformation inclus</span>
+                    <span className="text-gray-300 leading-relaxed">Tout Transformation inclus</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">5 jours de formation en présentiel (9h-17h)</span>
+                    <span className="text-gray-300 leading-relaxed">5 jours de formation en présentiel (9h-17h)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Coaching personnalisé en petit groupe</span>
+                    <span className="text-gray-300 leading-relaxed">Coaching personnalisé en petit groupe</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Trading en live avec Mickaël</span>
+                    <span className="text-gray-300 leading-relaxed">Trading en live avec Mickaël</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Analyse de vos trades en temps réel</span>
+                    <span className="text-gray-300 leading-relaxed">Analyse de vos trades en temps réel</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Déjeuners offerts (5 repas)</span>
+                    <span className="text-gray-300 leading-relaxed">Déjeuners offerts (5 repas)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Certificat de complétion</span>
+                    <span className="text-gray-300 leading-relaxed">Certificat de complétion</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Accès VIP Discord à vie</span>
+                    <span className="text-gray-300 leading-relaxed">Accès VIP Discord à vie</span>
                   </li>
                 </ul>
 
