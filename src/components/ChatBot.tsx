@@ -532,7 +532,7 @@ export default function ChatBot() {
           fixed z-50
           ${isMobile
             ? chatbotMode === 'support'
-              ? 'inset-x-0 bottom-0 top-[25%] w-full rounded-t-3xl'
+              ? 'inset-x-0 bottom-0 w-full h-[500px] max-h-[75vh] rounded-t-3xl'
               : 'inset-x-0 bottom-0 top-[10%] w-full rounded-t-3xl'
             : chatbotMode === 'support'
               ? 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] h-[500px] max-h-[70vh] rounded-2xl'
@@ -548,10 +548,15 @@ export default function ChatBot() {
               ? 'opacity-0 translate-y-full pointer-events-none'
               : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
           }
-          ${isMobile && isOpen ? 'max-h-[90vh]' : ''}
+          ${isMobile && isOpen && chatbotMode !== 'support' ? 'max-h-[90vh]' : ''}
           flex flex-col overflow-hidden
         `}
-        style={isMobile ? {
+        style={isMobile && chatbotMode === 'support' ? {
+          contain: 'layout style paint',
+          height: '500px',
+          maxHeight: '75vh',
+          paddingTop: 'env(safe-area-inset-top)'
+        } : isMobile ? {
           contain: 'layout style paint',
           height: `${viewportHeight}px`,
           maxHeight: '100dvh',
