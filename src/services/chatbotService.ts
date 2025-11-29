@@ -951,7 +951,7 @@ class ChatbotService {
 
   private handleRaiseFX(): ChatbotResponse {
     const message = `🏦 **RaiseFX - Notre Broker Partenaire**\n\n` +
-      `RaiseFX est notre broker de confiance qui permet à Invest Infinity d'être 100% gratuit !\n\n` +
+      `RaiseFX est notre broker de confiance pour Invest Infinity.\n\n` +
       `✅ **Pourquoi RaiseFX ?**\n` +
       `• Broker régulé et sécurisé\n` +
       `• Spreads compétitifs\n` +
@@ -960,9 +960,9 @@ class ChatbotService {
       `• Support réactif\n\n` +
       `🤝 **Le Partenariat :**\n` +
       `Grâce à notre partenariat avec RaiseFX, nous pouvons t'offrir :\n` +
-      `• Toutes les formations vidéo GRATUITEMENT\n` +
-      `• Accès au Discord VIP GRATUITEMENT\n` +
-      `• Tous les contenus premium GRATUITEMENT\n\n` +
+      `• Toutes les formations vidéo\n` +
+      `• Accès au Discord VIP\n` +
+      `• Tous les contenus premium\n\n` +
       `💡 **Comment ça marche ?**\n` +
       `En ouvrant un compte chez RaiseFX, tu accèdes à tout le contenu Invest Infinity. ` +
       `C'est notre modèle économique : pas d'abonnement, pas de frais cachés !\n\n` +
@@ -977,21 +977,21 @@ class ChatbotService {
   private handleHowItWorks(): ChatbotResponse {
     const message = `⚙️ **Comment Invest Infinity fonctionne**\n\n` +
       `Notre modèle est simple et transparent :\n\n` +
-      `🎯 **1. Inscription gratuite**\n` +
+      `🎯 **1. Inscription**\n` +
       `   Crée ton compte en quelques clics\n\n` +
       `🏦 **2. Compte RaiseFX**\n` +
       `   Ouvre un compte chez notre broker partenaire\n` +
-      `   C'est grâce à ce partenariat qu'on peut être gratuit\n\n` +
+      `   C'est grâce à ce partenariat que nous fonctionnons\n\n` +
       `🎁 **3. Accès immédiat**\n` +
       `   Dès que ton compte RaiseFX est ouvert :\n` +
       `   ✅ Toutes les formations vidéo\n` +
       `   ✅ Discord VIP avec alertes\n` +
       `   ✅ Communauté de traders\n` +
       `   ✅ Support et accompagnement\n\n` +
-      `💰 **Pourquoi c'est gratuit ?**\n` +
+      `💰 **Notre modèle économique**\n` +
       `Nous travaillons en partenariat avec RaiseFX. ` +
       `Quand tu ouvres un compte chez eux, ils nous rémunèrent. ` +
-      `C'est comme ça qu'on peut t'offrir tout gratuitement !\n\n` +
+      `C'est comme ça que nous pouvons proposer nos services !\n\n` +
       `🚫 **Pas de piège :**\n` +
       `• Aucun abonnement caché\n` +
       `• Aucun frais supplémentaire\n` +
