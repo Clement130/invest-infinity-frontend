@@ -530,7 +530,7 @@ export default function ChatBot() {
       <div
         ref={chatContainerRef}
         className={`
-          fixed z-[100000]
+          fixed
           ${isMobile
             ? chatbotMode === 'support'
               ? 'inset-x-0 top-[25%] bottom-0 w-full rounded-t-3xl'
@@ -552,6 +552,7 @@ export default function ChatBot() {
           ${isMobile && isOpen && chatbotMode !== 'support' ? 'max-h-[90vh]' : ''}
           flex flex-col overflow-hidden
         `}
+        style={{ zIndex: 2147483647 }}
         style={isMobile && chatbotMode === 'support' ? {
           contain: 'layout style paint',
           maxHeight: '75vh',
@@ -924,7 +925,7 @@ export default function ChatBot() {
 
       {/* Floating Button - Caché quand chat ouvert sur mobile */}
       {(!isMobile || !isOpen) && (
-        <div className={`fixed z-[99999] ${
+        <div className={`fixed ${
           isMobile 
             ? 'bottom-5 right-4'
             : 'bottom-4 right-4 sm:right-6'
@@ -947,6 +948,7 @@ export default function ChatBot() {
               relative overflow-hidden
               group
             `}
+            style={{ zIndex: 2147483647 }}
             aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat avec l\'assistant IA'}
             style={{ contain: 'layout style paint' }}
           >
