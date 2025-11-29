@@ -103,47 +103,41 @@ export interface Event {
 // Récupérer les statistiques de l'utilisateur
 export async function getUserStats(userId: string): Promise<UserStats> {
   try {
-  // Récupérer les modules et leçons
-  const modules = await getModules();
+  // Récupérer les modules, leçons et progression en parallèle pour optimiser
+  const [modules, lessonsResponse, progressResponse] = await Promise.all([
+    getModules(),
+    supabase.from('training_lessons').select('id, module_id'),
+    supabase.from('training_progress').select('*').eq('user_id', userId),
+  ]);
+
   const totalModules = modules.length;
+  const allLessons = lessonsResponse.data || [];
+  const progress = progressResponse.data || [];
+  const totalLessons = allLessons.length;
 
-  // Récupérer la progression
-  const { data: progress } = await supabase
-    .from('training_progress')
-    .select('*')
-    .eq('user_id', userId);
+  // Créer une map des leçons par module pour un calcul rapide
+  const lessonsByModule = new Map<string, string[]>();
+  allLessons.forEach((lesson) => {
+    const list = lessonsByModule.get(lesson.module_id) || [];
+    list.push(lesson.id);
+    lessonsByModule.set(lesson.module_id, list);
+  });
 
-  const completedLessons = progress?.filter((p) => p.done).length || 0;
-  
-  // Récupérer le nombre réel de leçons depuis la base de données
-  const { data: allLessons } = await supabase
-    .from('training_lessons')
-    .select('id, module_id');
-  
-  const totalLessons = allLessons?.length || 0;
+  // Créer un Set des leçons complétées
+  const completedLessonIds = new Set(
+    progress.filter((p) => p.done).map((p) => p.lesson_id)
+  );
+  const completedLessons = completedLessonIds.size;
 
-  // Calculer les modules complétés (toutes les leçons complétées)
-  const { data: moduleProgress } = await supabase
-    .from('training_progress')
-    .select('lesson_id, done')
-    .eq('user_id', userId)
-    .eq('done', true);
-
-  // Récupérer les leçons pour chaque module
+  // Calculer les modules complétés sans requêtes supplémentaires
   let completedModules = 0;
   for (const module of modules) {
-    const { data: lessons } = await supabase
-      .from('training_lessons')
-      .select('id')
-      .eq('module_id', module.id);
-
-    const moduleLessons = lessons || [];
-    const completedModuleLessons = moduleProgress?.filter((p) =>
-      moduleLessons.some((l) => l.id === p.lesson_id)
-    ).length || 0;
-
-    if (moduleLessons.length > 0 && completedModuleLessons === moduleLessons.length) {
-      completedModules++;
+    const moduleLessonIds = lessonsByModule.get(module.id) || [];
+    if (moduleLessonIds.length > 0) {
+      const allCompleted = moduleLessonIds.every((id) => completedLessonIds.has(id));
+      if (allCompleted) {
+        completedModules++;
+      }
     }
   }
 
