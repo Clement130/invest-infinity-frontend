@@ -1,7 +1,19 @@
+/**
+ * DashboardLayout - Layout principal de l'espace client
+ * 
+ * Structure mobile-first :
+ * - Mobile (< lg): Header + Content + BottomNav (pas de sidebar visible)
+ * - Desktop (lg+): Sidebar + Header + Content
+ * 
+ * Le chatbot flottant est géré séparément et doit être décalé
+ * au-dessus de la BottomNav sur mobile.
+ */
+
 import { type ReactNode, memo } from 'react';
 import { motion } from 'framer-motion';
 import ClientSidebar from '../components/navigation/ClientSidebar';
 import DashboardHeader from '../components/navigation/DashboardHeader';
+import BottomNav from '../components/navigation/BottomNav';
 import { useSession } from '../hooks/useSession';
 
 interface DashboardLayoutProps {
@@ -35,7 +47,7 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
       {/* Base gradient */}
       <div className={`absolute inset-0 bg-gradient-to-br ${config.base}`} />
       
-      {/* Animated gradient orbs */}
+      {/* Animated gradient orbs - désactivés sur mobile pour perf */}
       <motion.div
         animate={{
           x: [0, 100, 0],
@@ -47,7 +59,7 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className={`absolute top-0 left-1/4 w-[600px] h-[600px] ${orbPrimary} rounded-full blur-[120px]`}
+        className={`hidden md:block absolute top-0 left-1/4 w-[600px] h-[600px] ${orbPrimary} rounded-full blur-[120px]`}
       />
       <motion.div
         animate={{
@@ -60,7 +72,7 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className={`absolute bottom-0 right-1/4 w-[500px] h-[500px] ${orbSecondary} rounded-full blur-[100px]`}
+        className={`hidden md:block absolute bottom-0 right-1/4 w-[500px] h-[500px] ${orbSecondary} rounded-full blur-[100px]`}
       />
       <motion.div
         animate={{
@@ -72,8 +84,12 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] ${orbTertiary} rounded-full blur-[150px]`}
+        className={`hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] ${orbTertiary} rounded-full blur-[150px]`}
       />
+
+      {/* Static gradient for mobile - plus léger */}
+      <div className={`md:hidden absolute top-0 left-0 w-full h-1/2 ${orbPrimary} blur-[100px] opacity-50`} />
+      <div className={`md:hidden absolute bottom-0 right-0 w-full h-1/2 ${orbSecondary} blur-[100px] opacity-50`} />
 
       {/* Grid pattern overlay */}
       <div 
@@ -96,9 +112,10 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
   );
 });
 
-// Sidebar mémorisée pour éviter les re-renders
+// Composants mémorisés pour éviter les re-renders
 const MemoizedSidebar = memo(ClientSidebar);
 const MemoizedHeader = memo(DashboardHeader);
+const MemoizedBottomNav = memo(BottomNav);
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile } = useSession();
@@ -109,21 +126,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Animated Background - ne se re-render jamais */}
       <AnimatedBackground themeKey={themeKey} />
 
-      {/* Sidebar - reste statique lors des navigations */}
+      {/* Sidebar - Desktop uniquement (géré dans ClientSidebar) */}
       <MemoizedSidebar />
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
         {/* Header - reste statique lors des navigations */}
         <MemoizedHeader />
 
         {/* Content - seule partie qui change */}
+        {/* pb-4 sur mobile pour ne pas être caché par la BottomNav (géré dans BottomNav avec spacer) */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Bottom Navigation - Mobile uniquement */}
+      <MemoizedBottomNav />
     </div>
   );
 }

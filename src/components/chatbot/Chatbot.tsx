@@ -510,7 +510,8 @@ export default function Chatbot() {
   }, [isOpen, isMinimized, userType, user?.id]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+    // Position ajustée : bottom-24 sur mobile pour éviter la BottomNav, bottom-6 sur desktop
+    <div className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-50 flex flex-col items-end gap-4">
       <ChatWindow
         isOpen={isOpen}
         messages={messages}
