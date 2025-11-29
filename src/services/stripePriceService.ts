@@ -57,10 +57,15 @@ export async function getStripePriceId(planType: 'entree' | 'transformation' | '
       .select('stripe_price_id')
       .eq('plan_type', planType)
       .eq('is_active', true)
-      .single();
+      .maybeSingle(); // Utiliser maybeSingle() au lieu de single() pour éviter l'erreur 406
 
-    if (error || !data) {
+    if (error) {
       console.error('Error fetching Stripe price:', error);
+      return null;
+    }
+
+    if (!data || !data.stripe_price_id) {
+      console.warn('No Stripe price found for plan type:', planType);
       return null;
     }
 
