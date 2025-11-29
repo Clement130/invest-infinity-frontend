@@ -335,16 +335,24 @@ export default function PricingPage() {
                 <p className="text-gray-400 mb-4">Formation présentielle intensive à Marseille</p>
                 
                 <div className="mb-8">
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-4xl font-bold text-yellow-400">1 997€</span>
+                  {/* Prix mis en évidence avec fond et gradient */}
+                  <div className="bg-gradient-to-br from-yellow-500/20 via-amber-500/20 to-yellow-500/20 border-2 border-yellow-500/40 rounded-2xl p-6 mb-4 backdrop-blur-sm">
+                    <div className="text-center">
+                      <div className="flex items-baseline justify-center gap-2 mb-2">
+                        <span className="text-6xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400 drop-shadow-lg">
+                          1 997€
+                        </span>
+                      </div>
+                      <span className="text-gray-300 text-sm font-semibold uppercase tracking-wide">paiement unique • 1 semaine intensive</span>
+                    </div>
                   </div>
-                  <span className="text-gray-400 text-sm block mb-3">paiement unique • 1 semaine intensive</span>
+                  
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-yellow-400/80">
+                    <div className="flex items-center gap-2 text-sm text-yellow-400/90 font-medium">
                       <MapPin className="w-4 h-4 flex-shrink-0" />
                       <span>Près de Halo, Marseille</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-yellow-400/80">
+                    <div className="flex items-center gap-2 text-sm text-yellow-400/90 font-medium">
                       <Calendar className="w-4 h-4 flex-shrink-0" />
                       <span>Lundi au vendredi, 5-8 élèves max</span>
                     </div>
@@ -388,10 +396,25 @@ export default function PricingPage() {
 
                 <button
                   onClick={() => handlePurchase('immersion')}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-lg font-bold hover:from-yellow-400 hover:to-amber-400 transition-all transform hover:scale-[1.02] shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2"
+                  className="
+                    w-full py-5 px-6 
+                    bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
+                    text-[#1a0f0a] font-extrabold text-lg
+                    rounded-xl 
+                    transition-all duration-300 
+                    transform hover:scale-[1.02] active:scale-[0.98]
+                    shadow-2xl shadow-orange-500/40 
+                    hover:shadow-orange-500/60
+                    flex items-center justify-center gap-3
+                    relative overflow-hidden
+                    group
+                  "
                 >
-                      <Crown className="w-5 h-5" />
-                  Réserver Immersion Élite — 1 997€
+                  {/* Effet de brillance au survol */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  
+                  <Crown className="w-6 h-6 relative z-10" />
+                  <span className="relative z-10">Réserver Immersion Élite — 1 997€</span>
                 </button>
               </div>
             </div>
