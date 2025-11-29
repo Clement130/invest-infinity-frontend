@@ -103,63 +103,63 @@ export interface Event {
 // Récupérer les statistiques de l'utilisateur
 export async function getUserStats(userId: string): Promise<UserStats> {
   try {
-    // Récupérer les modules et leçons
-    const modules = await getModules();
-    const totalModules = modules.length;
+  // Récupérer les modules et leçons
+  const modules = await getModules();
+  const totalModules = modules.length;
 
-    // Récupérer la progression
-    const { data: progress } = await supabase
-      .from('training_progress')
-      .select('*')
-      .eq('user_id', userId);
+  // Récupérer la progression
+  const { data: progress } = await supabase
+    .from('training_progress')
+    .select('*')
+    .eq('user_id', userId);
 
-    const completedLessons = progress?.filter((p) => p.done).length || 0;
-    
-    // Récupérer le nombre réel de leçons depuis la base de données
-    const { data: allLessons } = await supabase
+  const completedLessons = progress?.filter((p) => p.done).length || 0;
+  
+  // Récupérer le nombre réel de leçons depuis la base de données
+  const { data: allLessons } = await supabase
+    .from('training_lessons')
+    .select('id, module_id');
+  
+  const totalLessons = allLessons?.length || 0;
+
+  // Calculer les modules complétés (toutes les leçons complétées)
+  const { data: moduleProgress } = await supabase
+    .from('training_progress')
+    .select('lesson_id, done')
+    .eq('user_id', userId)
+    .eq('done', true);
+
+  // Récupérer les leçons pour chaque module
+  let completedModules = 0;
+  for (const module of modules) {
+    const { data: lessons } = await supabase
       .from('training_lessons')
-      .select('id, module_id');
-    
-    const totalLessons = allLessons?.length || 0;
+      .select('id')
+      .eq('module_id', module.id);
 
-    // Calculer les modules complétés (toutes les leçons complétées)
-    const { data: moduleProgress } = await supabase
-      .from('training_progress')
-      .select('lesson_id, done')
-      .eq('user_id', userId)
-      .eq('done', true);
+    const moduleLessons = lessons || [];
+    const completedModuleLessons = moduleProgress?.filter((p) =>
+      moduleLessons.some((l) => l.id === p.lesson_id)
+    ).length || 0;
 
-    // Récupérer les leçons pour chaque module
-    let completedModules = 0;
-    for (const module of modules) {
-      const { data: lessons } = await supabase
-        .from('training_lessons')
-        .select('id')
-        .eq('module_id', module.id);
-
-      const moduleLessons = lessons || [];
-      const completedModuleLessons = moduleProgress?.filter((p) =>
-        moduleLessons.some((l) => l.id === p.lesson_id)
-      ).length || 0;
-
-      if (moduleLessons.length > 0 && completedModuleLessons === moduleLessons.length) {
-        completedModules++;
-      }
+    if (moduleLessons.length > 0 && completedModuleLessons === moduleLessons.length) {
+      completedModules++;
     }
+  }
 
-    // Calculer XP et niveau
-    const xp = completedLessons * 10 + completedModules * 50;
-    const level = Math.floor(xp / 100) + 1;
-    const nextLevelXp = level * 100;
+  // Calculer XP et niveau
+  const xp = completedLessons * 10 + completedModules * 50;
+  const level = Math.floor(xp / 100) + 1;
+  const nextLevelXp = level * 100;
 
     // Badges (simplifié, à améliorer) - avec gestion d'erreur
     let badges: Badge[] = [];
     try {
       badges = await getUserBadges(userId, {
-        completedLessons,
-        completedModules,
-        xp,
-      });
+    completedLessons,
+    completedModules,
+    xp,
+  });
     } catch (error) {
       console.error('[getUserStats] Erreur lors de la récupération des badges:', error);
     }
@@ -180,11 +180,11 @@ export async function getUserStats(userId: string): Promise<UserStats> {
 
     try {
       const results = await Promise.allSettled([
-        fetchXpTrackStats(userId, xp),
-        fetchUserQuests(userId),
-        fetchFreezePassCount(userId),
-        fetchActiveBooster(userId),
-      ]);
+    fetchXpTrackStats(userId, xp),
+    fetchUserQuests(userId),
+    fetchFreezePassCount(userId),
+    fetchActiveBooster(userId),
+  ]);
 
       if (results[0].status === 'fulfilled') xpTracks = results[0].value;
       if (results[1].status === 'fulfilled') dailyQuests = results[1].value;
@@ -194,22 +194,22 @@ export async function getUserStats(userId: string): Promise<UserStats> {
       console.error('[getUserStats] Erreur lors de la récupération des données additionnelles:', error);
     }
 
-    return {
-      totalModules,
-      completedModules,
-      totalLessons,
-      completedLessons,
-      totalTimeSpent: completedLessons * 15, // Estimation : 15 min par leçon
-      badges,
-      level,
-      xp: xp % 100,
-      nextLevelXp: 100,
-      streak,
-      xpTracks,
-      dailyQuests,
-      freezePasses,
-      activeBooster,
-    };
+  return {
+    totalModules,
+    completedModules,
+    totalLessons,
+    completedLessons,
+    totalTimeSpent: completedLessons * 15, // Estimation : 15 min par leçon
+    badges,
+    level,
+    xp: xp % 100,
+    nextLevelXp: 100,
+    streak,
+    xpTracks,
+    dailyQuests,
+    freezePasses,
+    activeBooster,
+  };
   } catch (error) {
     console.error('[getUserStats] Erreur globale:', error);
     // Retourner des valeurs par défaut en cas d'erreur

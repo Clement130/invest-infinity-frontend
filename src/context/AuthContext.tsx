@@ -114,26 +114,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data) {
         console.warn('[AuthContext] Profil non trouvé (data est null)');
-        // Essayer de créer le profil si l'utilisateur auth existe
+        // Créer un profil par défaut côté client sans appeler Supabase
+        // Le profil sera créé automatiquement par un trigger ou manuellement plus tard
         const { data: authUser } = await supabase.auth.getUser();
         if (authUser?.user?.email) {
-          console.log('[AuthContext] Tentative de création du profil...');
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              id: userId,
-              user_id: userId,
-              email: authUser.user.email,
-              role: 'client',
-              })
-            .select()
-            .single();
-
-          if (!createError && newProfile) {
-            console.log('[AuthContext] Profil créé:', { id: newProfile.id, email: newProfile.email, role: newProfile.role });
-            setProfile(newProfile);
-            return;
-          }
+          const defaultProfile = {
+            id: userId,
+            user_id: userId,
+            email: authUser.user.email,
+            role: 'client' as const,
+            license: 'none' as const,
+            full_name: null,
+            license_valid_until: null,
+            stripe_customer_id: null,
+            created_at: new Date().toISOString(),
+            updated_at: null,
+          };
+          console.log('[AuthContext] Utilisation du profil par défaut (pas de création en base):', defaultProfile);
+          setProfile(defaultProfile as ProfileRow);
+          profileRef.current = defaultProfile as ProfileRow;
+          return;
         }
         setProfile(null);
         return;
