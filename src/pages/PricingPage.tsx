@@ -83,9 +83,28 @@ export default function PricingPage() {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        console.error('Erreur checkout:', error);
-        toast.error('Erreur lors de la création du paiement.');
+        const errorText = await response.text();
+        let errorMessage = 'Erreur lors de la création du paiement.';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+          console.error('Erreur checkout:', {
+            status: response.status,
+            error: errorData,
+            priceId: priceId,
+            plan: plan
+          });
+        } catch {
+          console.error('Erreur checkout (texte brut):', {
+            status: response.status,
+            error: errorText,
+            priceId: priceId,
+            plan: plan
+          });
+        }
+        
+        toast.error(errorMessage);
         setLoading(null);
         return;
       }
