@@ -45,27 +45,35 @@ export default function PricingPage() {
     setLoading(plan);
 
     try {
-      // TOUJOURS récupérer le Price ID depuis la DB pour être sûr qu'il est à jour
-      let priceId = await getStripePriceId(plan);
-      
-      console.log('Price ID récupéré depuis DB:', priceId, 'plan:', plan);
-      
-      // Si la récupération échoue, essayer le cache
-      if (!priceId || priceId.includes('PLACEHOLDER')) {
-        console.warn('Price ID depuis DB invalide, utilisation du cache');
-        priceId = STRIPE_PRICE_IDS[plan];
-        console.log('Price ID depuis cache:', priceId);
-      }
-      
-      // Si c'est toujours un placeholder, erreur
-      if (!priceId || priceId.includes('PLACEHOLDER')) {
-        console.error('Price ID invalide ou placeholder:', priceId, 'plan:', plan);
-        toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
+      // Récupération forcée du Price ID depuis la DB
+      const priceId = await getStripePriceId(plan);
+
+      console.log('🎯 Checkout démarré pour plan:', plan);
+      console.log('💰 Price ID récupéré:', priceId);
+
+      // Vérifications strictes
+      if (!priceId) {
+        console.error('❌ Price ID null pour plan:', plan);
+        toast.error('Erreur: configuration Stripe manquante. Contactez le support.');
         setLoading(null);
         return;
       }
-      
-      console.log('Price ID final utilisé:', priceId);
+
+      if (typeof priceId !== 'string' || priceId.trim() === '') {
+        console.error('❌ Price ID invalide (pas une string ou vide):', priceId, typeof priceId);
+        toast.error('Erreur: configuration Stripe invalide. Contactez le support.');
+        setLoading(null);
+        return;
+      }
+
+      if (priceId.includes('PLACEHOLDER') || !priceId.startsWith('price_')) {
+        console.error('❌ Price ID invalide (placeholder ou mauvais format):', priceId);
+        toast.error('Erreur: configuration Stripe incomplète. Contactez le support.');
+        setLoading(null);
+        return;
+      }
+
+      console.log('✅ Price ID validé:', priceId);
 
       const response = await fetch(CHECKOUT_PUBLIC_URL, {
         method: 'POST',
@@ -256,7 +264,7 @@ export default function PricingPage() {
                 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">497€</span>
+                    <span className="text-4xl font-bold">347€</span>
                   </div>
                   <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
                 </div>
@@ -304,7 +312,7 @@ export default function PricingPage() {
                       Redirection...
                     </>
                   ) : (
-                    'Choisir Transformation — 497€'
+                    'Choisir Transformation — 347€'
                   )}
                 </button>
               </div>
