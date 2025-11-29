@@ -3,14 +3,15 @@ import { QueryClient } from '@tanstack/react-query';
 // Détecter si on est sur mobile pour optimiser les queries
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-// Configuration optimisée pour mobile
+// Configuration optimisée - éviter les requêtes dupliquées
 const getQueryConfig = () => ({
-  staleTime: isMobile ? 1000 * 60 * 10 : 1000 * 60 * 5, // 10min sur mobile, 5min sur desktop
-  gcTime: isMobile ? 1000 * 60 * 60 : 1000 * 60 * 30, // 1h sur mobile, 30min sur desktop
-  retry: 1, // Toujours 1 retry pour éviter les erreurs temporaires
-  refetchOnWindowFocus: !isMobile, // Désactivé sur mobile
-  refetchOnReconnect: true, // Toujours refetch à la reconnexion
-  networkMode: 'online' as const, // Toujours en mode online pour éviter les blocages
+  staleTime: 1000 * 60 * 10, // 10 minutes - les données sont considérées fraîches
+  gcTime: 1000 * 60 * 60, // 1h de cache
+  retry: 1, // 1 retry pour éviter les erreurs temporaires
+  refetchOnWindowFocus: false, // Désactivé pour éviter les requêtes inutiles
+  refetchOnReconnect: false, // Désactivé pour éviter les requêtes au retour
+  refetchOnMount: false, // Ne pas refetch si les données sont en cache
+  networkMode: 'online' as const,
 });
 
 export const queryClient = new QueryClient({

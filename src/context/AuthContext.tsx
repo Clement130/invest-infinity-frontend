@@ -39,8 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = useCallback(async (userId: string) => {
     try {
-      console.log('[AuthContext] Chargement du profil pour userId:', userId);
-      
       // Timeout de 5 secondes pour éviter les blocages
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Timeout: chargement du profil trop long')), 5000);
@@ -58,8 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data = result.data;
         error = result.error;
       } catch (raceError: any) {
-        // Gérer le timeout ou autres erreurs de Promise.race
-        console.error('[AuthContext] Erreur lors du chargement du profil:', raceError);
         // Créer un profil par défaut basé sur l'utilisateur auth
         const { data: authUser } = await supabase.auth.getUser();
         if (authUser?.user) {
@@ -74,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             created_at: new Date().toISOString(),
             updated_at: null,
           };
-          console.log('[AuthContext] Utilisation du profil par défaut:', defaultProfile);
           setProfile(defaultProfile as ProfileRow);
           profileRef.current = defaultProfile as ProfileRow;
         } else {
@@ -84,9 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (error && error.code !== 'PGRST116') {
-        console.error('[AuthContext] Erreur profil:', error);
-        console.error('[AuthContext] Code:', error.code, 'Message:', error.message);
-        
         // Pour les erreurs 400 ou autres erreurs réseau, créer un profil par défaut
         // pour ne pas bloquer l'application
           const { data: authUser } = await supabase.auth.getUser();
@@ -102,10 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             created_at: new Date().toISOString(),
             updated_at: null,
           };
-          console.log('[AuthContext] Erreur Supabase, utilisation du profil par défaut:', defaultProfile);
           setProfile(defaultProfile as ProfileRow);
           profileRef.current = defaultProfile as ProfileRow;
-            return;
+          return;
         }
         
         setProfile(null);
@@ -113,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!data) {
-        console.warn('[AuthContext] Profil non trouvé (data est null)');
         // Créer un profil par défaut côté client sans appeler Supabase
         // Le profil sera créé automatiquement par un trigger ou manuellement plus tard
         const { data: authUser } = await supabase.auth.getUser();
@@ -130,7 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             created_at: new Date().toISOString(),
             updated_at: null,
           };
-          console.log('[AuthContext] Utilisation du profil par défaut (pas de création en base):', defaultProfile);
           setProfile(defaultProfile as ProfileRow);
           profileRef.current = defaultProfile as ProfileRow;
           return;
@@ -139,15 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log('[AuthContext] Profil chargé:', { id: data.id, email: data.email, role: data.role });
       setProfile(data);
       profileRef.current = data; // Conserver dans la ref aussi
     } catch (err: any) {
-      console.error('[AuthContext] Exception lors du chargement du profil:', err);
-      if (err.message?.includes('Timeout')) {
-        console.warn('[AuthContext] Timeout: le chargement du profil a pris plus de 5 secondes');
-      }
-      // Ne pas bloquer l'application si le profil ne charge pas - l'utilisateur peut continuer
+      // Ne pas bloquer l'application si le profil ne charge pas
       setProfile(null);
     }
   }, []);
@@ -165,7 +149,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
       }
     } catch (err) {
-      console.error('[AuthContext] Erreur dans bootstrapSession:', err);
       // Ne pas bloquer l'application même en cas d'erreur
       setProfile(null);
     } finally {
@@ -182,17 +165,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Utiliser une fonction de callback pour accéder à la valeur actuelle de user
         setUser((previousUser) => {
-          // Si c'est un rafraîchissement de token (TOKEN_REFRESHED) et que l'utilisateur est le même,
+          // Si c'est un rafraîchissement de token et que l'utilisateur est le même,
           // on ne réinitialise pas le profil pour éviter les redirections
           if (event === 'TOKEN_REFRESHED' && sessionUser?.id === previousUser?.id) {
-            console.log('[AuthContext] TOKEN_REFRESHED détecté - conservation du profil existant');
             setIsRefreshing(true);
             // On garde le profil existant pendant le rafraîchissement
-            // Si on a un profil en mémoire, on le conserve dans l'état
             const currentProfile = profileRef.current;
             if (currentProfile) {
-              console.log('[AuthContext] Profil conservé pendant le rafraîchissement:', currentProfile.role);
-              // Le profil reste dans l'état pour éviter les redirections
               setProfile(currentProfile);
             }
             // On recharge le profil en arrière-plan sans bloquer
@@ -202,17 +181,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return sessionUser;
           }
           
-          // Pour les autres événements (SIGNED_IN, SIGNED_OUT, etc.), on met à jour normalement
-          // MAIS on conserve le profil existant si l'utilisateur est le même pour éviter les redirections
-          // lors des changements d'onglet ou autres vérifications de session
+          // Pour les autres événements, on met à jour normalement
+          // MAIS on conserve le profil existant si l'utilisateur est le même
           if (sessionUser) {
             // Si l'utilisateur est le même et qu'on a déjà un profil, on le conserve
-            // pendant le rechargement pour éviter les redirections
             if (sessionUser.id === previousUser?.id && profileRef.current) {
-              console.log('[AuthContext] Vérification de session - conservation du profil existant');
-              // Conserver le profil pendant le rechargement
               setProfile(profileRef.current);
-              // Recharger en arrière-plan
+              // Recharger en arrière-plan sans bloquer
               loadProfile(sessionUser.id);
             } else {
               // Nouvel utilisateur ou pas de profil en mémoire, charger normalement

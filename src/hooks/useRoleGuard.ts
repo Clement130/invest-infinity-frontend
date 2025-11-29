@@ -18,23 +18,18 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
   useEffect(() => {
     if (role && user) {
       setLastValidRole(role);
-      setForceComplete(false); // Réinitialiser si on a un rôle
-      console.log('[useRoleGuard] Rôle valide mémorisé:', role);
+      setForceComplete(false);
     } else if (!user) {
       // Réinitialiser le rôle quand l'utilisateur se déconnecte
       setLastValidRole(null);
       setForceComplete(false);
-      console.log('[useRoleGuard] Rôle réinitialisé (déconnexion)');
     }
-    // Si role devient null mais qu'on a un user, on garde le lastValidRole
-    // pour éviter les redirections pendant les rechargements
   }, [role, user]);
 
   // Timeout de sécurité - après 5 secondes, forcer la fin du chargement
   useEffect(() => {
     if (loading && !forceComplete) {
       timeoutRef.current = setTimeout(() => {
-        console.warn('[useRoleGuard] Timeout de sécurité atteint (5s) - forçage de la fin du chargement');
         setForceComplete(true);
       }, 5000);
     } else if (!loading && timeoutRef.current) {
@@ -124,8 +119,6 @@ export function useRoleGuard(allowedRoles?: UserRole[]) {
     // Si on attend depuis plus de 3 secondes, on considère que c'est une erreur
     const waitTime = Date.now() - awaitingRoleStart;
     if (waitTime > 3000) {
-      console.warn('[useRoleGuard] Attente du rôle depuis plus de 3 secondes - arrêt de l\'attente');
-      console.warn('[useRoleGuard] État - user:', !!user, 'role:', role, 'profile:', profile ? 'exists' : 'null', 'loading:', loading);
       return false;
     }
     

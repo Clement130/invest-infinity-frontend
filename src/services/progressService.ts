@@ -61,13 +61,6 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
   const lessons = (lessonsResponse.data ?? []) as TrainingLesson[];
   const progressEntries = (progressResponse.data ?? []) as TrainingProgress[];
 
-  console.log('[progressService] getUserProgressSummary:', {
-    userId,
-    modulesCount: modules.length,
-    lessonsCount: lessons.length,
-    progressEntriesCount: progressEntries.length,
-  });
-
   const moduleById = new Map<string, TrainingModule>();
   modules.forEach((module) => moduleById.set(module.id, module));
 
@@ -94,30 +87,6 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
       return lesson && activeModuleIds.has(lesson.module_id);
     })
     .map((entry) => entry.lesson_id);
-
-  console.log('[progressService] completedLessonIds:', {
-    total: completedLessonIds.length,
-    ids: completedLessonIds,
-  });
-
-  // Log détaillé pour chaque entrée de progression
-  console.log('[progressService] Détails des entrées de progression:', {
-    totalEntries: progressEntries.length,
-    entriesDone: progressEntries.filter(e => e.done).length,
-    entriesNotDone: progressEntries.filter(e => !e.done).length,
-    entriesDetails: progressEntries.map(entry => {
-      const lesson = lessonsById.get(entry.lesson_id);
-      const isActiveModule = lesson ? activeModuleIds.has(lesson.module_id) : false;
-      return {
-        lessonId: entry.lesson_id,
-        lessonTitle: lesson?.title || 'N/A',
-        moduleId: lesson?.module_id || 'N/A',
-        isActiveModule,
-        done: entry.done,
-        included: entry.done && isActiveModule,
-      };
-    }),
-  });
 
   const moduleDetails: ModuleProgressDetail[] = modules.map((module) => {
     const moduleLessons = lessonsByModule.get(module.id) ?? [];
@@ -205,25 +174,6 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
     completedLessonIds,
     continueLearning,
   };
-
-  const totalLessons = result.modules.reduce((sum, m) => sum + m.totalLessons, 0);
-  const globalProgressCalc = totalLessons > 0 
-    ? Math.round((result.completedLessonIds.length / totalLessons) * 100)
-    : 0;
-
-  console.log('[progressService] getUserProgressSummary result:', {
-    modulesCount: result.modules.length,
-    completedLessonIdsCount: result.completedLessonIds.length,
-    totalLessons,
-    globalProgressCalculated: globalProgressCalc,
-    modulesDetails: result.modules.map(m => ({
-      moduleId: m.moduleId,
-      moduleTitle: m.moduleTitle,
-      totalLessons: m.totalLessons,
-      completedLessons: m.completedLessons,
-      completionRate: m.completionRate,
-    })),
-  });
 
   return result;
 }

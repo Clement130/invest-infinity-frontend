@@ -199,7 +199,6 @@ export default function Services({ onOpenRegister }: ServicesProps) {
                           alt={service.title}
                           className="absolute inset-0 w-full h-full object-cover"
                           onError={(e) => {
-                            // Masquer l'image si elle ne charge pas, le gradient de fond sera visible
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                           }}

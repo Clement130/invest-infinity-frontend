@@ -156,13 +156,15 @@ export default function ChatBot() {
   }, []);
 
   // Mettre à jour le mode quand le contexte change
+  const previousModeRef = useRef(chatbotMode);
   useEffect(() => {
     chatbotService.setMode(chatbotMode);
-    // Réinitialiser les messages si on change de mode
-    if (messages.length === 1 && messages[0].id === '1') {
+    // Réinitialiser les messages uniquement si le mode a changé
+    if (previousModeRef.current !== chatbotMode) {
+      previousModeRef.current = chatbotMode;
       setMessages([getInitialMessage(chatbotMode)]);
     }
-  }, [chatbotMode, location.pathname, messages]);
+  }, [chatbotMode]);
 
   // Initialisation du contexte utilisateur et définition du mode
   useEffect(() => {
@@ -289,8 +291,6 @@ export default function ChatBot() {
         if (container) {
           container.style.zIndex = '2147483647';
         }
-
-        console.log('Z-index du bouton ChatBot forcé');
       }
     };
 
