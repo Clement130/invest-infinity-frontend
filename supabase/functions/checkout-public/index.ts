@@ -45,9 +45,9 @@ async function getAllowedPriceIds(): Promise<string[]> {
       secureLog('checkout-public', 'Error fetching allowed price IDs', { error: error?.message });
       // Fallback vers les valeurs par défaut
       return [
-        'price_ENTREE_PLACEHOLDER',
-        'price_1SXfxaKaUb6KDbNFRgl7y7I5',
-        'price_IMMERSION_PLACEHOLDER',
+        'price_1SYkswKaUb6KDbNFvH1x4v0V',
+        'price_1SYloMKaUb6KDbNFAF6XfNvI',
+        'price_1SYkswKaUb6KDbNFvwoV35RW',
       ];
     }
 
@@ -62,9 +62,9 @@ async function getAllowedPriceIds(): Promise<string[]> {
     });
     // Fallback
     return [
-      'price_ENTREE_PLACEHOLDER',
-      'price_1SXfxaKaUb6KDbNFRgl7y7I5',
-      'price_IMMERSION_PLACEHOLDER',
+      'price_1SYkswKaUb6KDbNFvH1x4v0V',
+      'price_1SYloMKaUb6KDbNFAF6XfNvI',
+      'price_1SYkswKaUb6KDbNFvwoV35RW',
     ];
   }
 }

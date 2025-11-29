@@ -41,9 +41,9 @@ async function getPriceToLicenseMapping(): Promise<Record<string, string>> {
       secureLog('stripe-webhook', 'Error fetching price to license mapping', { error: error?.message });
       // Fallback
       return {
-        'price_ENTREE_PLACEHOLDER': 'entree',
-        'price_1SXfxaKaUb6KDbNFRgl7y7I5': 'transformation',
-        'price_IMMERSION_PLACEHOLDER': 'immersion',
+        'price_1SYkswKaUb6KDbNFvH1x4v0V': 'entree',
+        'price_1SYloMKaUb6KDbNFAF6XfNvI': 'transformation',
+        'price_1SYkswKaUb6KDbNFvwoV35RW': 'immersion',
       };
     }
 
@@ -62,9 +62,9 @@ async function getPriceToLicenseMapping(): Promise<Record<string, string>> {
     });
     // Fallback
     return {
-      'price_ENTREE_PLACEHOLDER': 'entree',
-      'price_1SXfxaKaUb6KDbNFRgl7y7I5': 'transformation',
-      'price_IMMERSION_PLACEHOLDER': 'immersion',
+      'price_1SYkswKaUb6KDbNFvH1x4v0V': 'entree',
+      'price_1SYloMKaUb6KDbNFAF6XfNvI': 'transformation',
+      'price_1SYkswKaUb6KDbNFvwoV35RW': 'immersion',
     };
   }
 }
@@ -141,13 +141,19 @@ serve(async (req) => {
       
       const customerEmail = session.customer_email || session.customer_details?.email;
       const priceId = session.metadata?.priceId;
+      const purchaseType = session.metadata?.type; // 'immersion' ou undefined
+      const sessionId = session.metadata?.sessionId; // ID de la session Immersion
       
       if (!customerEmail) {
         console.error('[stripe-webhook] No customer email found');
         return new Response('No customer email', { status: 400 });
       }
 
-      secureLog('stripe-webhook', 'Processing payment', { email: customerEmail });
+      secureLog('stripe-webhook', 'Processing payment', { 
+        email: customerEmail, 
+        type: purchaseType,
+        sessionId: sessionId
+      });
 
       // Vérifier si l'utilisateur existe déjà
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
@@ -287,6 +293,38 @@ serve(async (req) => {
 
           if (accessError) {
             secureLog('stripe-webhook', 'Error granting access', { error: accessError.message });
+          }
+        }
+      }
+
+      // Si c'est une réservation Immersion Élite, enregistrer la réservation
+      if (purchaseType === 'immersion' && sessionId) {
+        secureLog('stripe-webhook', 'Processing Immersion Elite booking', { sessionId });
+        
+        // Créer la réservation
+        const { error: bookingError } = await supabaseAdmin
+          .from('immersion_bookings')
+          .insert({
+            session_id: sessionId,
+            user_id: userId,
+            user_email: customerEmail,
+            stripe_session_id: session.id,
+            stripe_payment_intent_id: session.payment_intent as string,
+            status: 'confirmed'
+          });
+
+        if (bookingError) {
+          secureLog('stripe-webhook', 'Error creating immersion booking', { error: bookingError.message });
+        } else {
+          // Incrémenter le nombre de places réservées
+          const { error: incrementError } = await supabaseAdmin.rpc('increment_session_places', {
+            p_session_id: sessionId
+          });
+
+          if (incrementError) {
+            secureLog('stripe-webhook', 'Error incrementing session places', { error: incrementError.message });
+          } else {
+            secureLog('stripe-webhook', 'Immersion booking created successfully', { sessionId });
           }
         }
       }

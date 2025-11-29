@@ -1,30 +1,49 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { Check, Loader2, Shield, MapPin, Calendar, Users, Clock, UtensilsCrossed, Award, ArrowLeft } from 'lucide-react';
-import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
+import { getStripeSuccessUrl, getStripeCancelUrl } from '../config/stripe';
 import { getStripePriceId } from '../services/stripePriceService';
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
+import { 
+  getActiveSessions, 
+  formatSessionDates, 
+  getAvailablePlaces,
+  ImmersionSession 
+} from '../services/immersionSessionsService';
 
 // URL de la fonction checkout publique
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
-
-// Sessions disponibles (à remplacer par une vraie API plus tard)
-const AVAILABLE_SESSIONS = [
-  { id: '2024-03-04', date: '4-8 mars 2024', places: 3, maxPlaces: 8 },
-  { id: '2024-03-18', date: '18-22 mars 2024', places: 6, maxPlaces: 8 },
-  { id: '2024-04-01', date: '1-5 avril 2024', places: 2, maxPlaces: 8 },
-  { id: '2024-04-15', date: '15-19 avril 2024', places: 8, maxPlaces: 8 },
-];
 
 export default function ImmersionElitePage() {
   const toast = useToast();
   const navigate = useNavigate();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sessions, setSessions] = useState<ImmersionSession[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Charger les sessions depuis la base de données
+  useEffect(() => {
+    async function loadSessions() {
+      setLoadingSessions(true);
+      try {
+        const activeSessions = await getActiveSessions();
+        setSessions(activeSessions);
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+        toast.error('Erreur lors du chargement des sessions');
+      } finally {
+        setLoadingSessions(false);
+      }
+    }
+
+    loadSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Ne charger qu'une seule fois au montage
 
   const handleReservation = async () => {
     if (!selectedSession) {
@@ -32,18 +51,24 @@ export default function ImmersionElitePage() {
       return;
     }
 
+    const session = sessions.find(s => s.id === selectedSession);
+    if (!session) {
+      toast.error('Session introuvable');
+      return;
+    }
+
+    // Vérifier les places disponibles
+    if (session.status === 'full' || session.reserved_places >= session.max_places) {
+      toast.error('Cette session est complète');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // TOUJOURS récupérer le Price ID depuis la DB pour être sûr qu'il est à jour
-      let priceId = await getStripePriceId('immersion');
+      // Récupérer le Price ID depuis la DB
+      const priceId = await getStripePriceId('immersion');
       
-      // Si la récupération échoue, essayer le cache
-      if (!priceId || priceId.includes('PLACEHOLDER')) {
-        priceId = STRIPE_PRICE_IDS.immersion;
-      }
-      
-      // Si c'est toujours un placeholder, erreur
       if (!priceId || priceId.includes('PLACEHOLDER')) {
         console.error('Price ID invalide ou placeholder:', priceId);
         toast.error('Erreur de configuration. Veuillez réessayer dans quelques instants.');
@@ -63,8 +88,10 @@ export default function ImmersionElitePage() {
           successUrl: getStripeSuccessUrl(),
           cancelUrl: getStripeCancelUrl(),
           metadata: {
+            type: 'immersion',
             sessionId: selectedSession,
-            sessionDate: AVAILABLE_SESSIONS.find(s => s.id === selectedSession)?.date,
+            sessionDateStart: session.session_date_start,
+            sessionDateEnd: session.session_date_end,
           },
         }),
       });
@@ -259,41 +286,56 @@ export default function ImmersionElitePage() {
                     Sélectionnez une session
                   </label>
                   <div className="space-y-3">
-                    {AVAILABLE_SESSIONS.map((session) => {
-                      const isFull = session.places >= session.maxPlaces;
-                      const isSelected = selectedSession === session.id;
-                      return (
-                        <button
-                          key={session.id}
-                          onClick={() => !isFull && setSelectedSession(session.id)}
-                          disabled={isFull}
-                          className={`
-                            w-full p-4 rounded-lg border-2 transition-all text-left
-                            ${isFull 
-                              ? 'border-gray-700 bg-gray-800/50 cursor-not-allowed opacity-50' 
-                              : isSelected
-                              ? 'border-yellow-500 bg-yellow-500/10'
-                              : 'border-gray-700 bg-gray-800/50 hover:border-yellow-500/50'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-white text-base">{session.date}</span>
-                            {isFull ? (
-                              <span className="text-xs text-red-400 font-medium">Complet</span>
-                            ) : (
-                              <span className="text-xs text-green-400 font-medium">
-                                {session.maxPlaces - session.places} places restantes
+                    {loadingSessions ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-yellow-400" />
+                        <span className="ml-2 text-gray-400">Chargement des sessions...</span>
+                      </div>
+                    ) : sessions.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        Aucune session disponible pour le moment
+                      </div>
+                    ) : (
+                      sessions.map((session) => {
+                        const isFull = session.status === 'full' || session.reserved_places >= session.max_places;
+                        const isSelected = selectedSession === session.id;
+                        const availablePlaces = getAvailablePlaces(session);
+                        
+                        return (
+                          <button
+                            key={session.id}
+                            onClick={() => !isFull && setSelectedSession(session.id)}
+                            disabled={isFull}
+                            className={`
+                              w-full p-4 rounded-lg border-2 transition-all text-left
+                              ${isFull 
+                                ? 'border-gray-700 bg-gray-800/50 cursor-not-allowed opacity-50' 
+                                : isSelected
+                                ? 'border-yellow-500 bg-yellow-500/10'
+                                : 'border-gray-700 bg-gray-800/50 hover:border-yellow-500/50'
+                              }
+                            `}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-white text-base">
+                                {formatSessionDates(session.session_date_start, session.session_date_end)}
                               </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
-                            <Users className="w-4 h-4 flex-shrink-0" />
-                            <span>{session.places}/{session.maxPlaces} élèves</span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                              {isFull ? (
+                                <span className="text-xs text-red-400 font-medium">Complet</span>
+                              ) : (
+                                <span className="text-xs text-green-400 font-medium">
+                                  {availablePlaces} {availablePlaces === 1 ? 'place restante' : 'places restantes'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                              <Users className="w-4 h-4 flex-shrink-0" />
+                              <span>{session.reserved_places}/{session.max_places} élèves</span>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 

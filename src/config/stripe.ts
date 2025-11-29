@@ -8,9 +8,9 @@
 
 // Valeurs par défaut (fallback si la DB n'est pas accessible)
 export const STRIPE_PRICE_IDS_DEFAULT = {
-  entree: 'price_ENTREE_PLACEHOLDER', // Entrée - 147€ - À REMPLACER par le vrai Price ID Stripe
-  transformation: 'price_1SXfxaKaUb6KDbNFRgl7y7I5', // Transformation - 497€
-  immersion: 'price_IMMERSION_PLACEHOLDER', // Immersion Élite - 1997€ - À REMPLACER par le vrai Price ID Stripe
+  entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V', // Entrée - 147€
+  transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI', // Transformation - 497€
+  immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW', // Immersion Élite - 1997€
 } as const;
 
 // Cache pour les Price IDs (mis à jour au chargement de l'app)

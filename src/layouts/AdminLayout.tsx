@@ -17,6 +17,7 @@ import {
   LogOut,
   Settings,
   Search,
+  GraduationCap,
 } from 'lucide-react';
 import { useSession } from '../hooks/useSession';
 import CommandPalette from '../components/admin/CommandPalette';
@@ -48,6 +49,7 @@ export default function AdminLayout({ children, activeSection = 'dashboard' }: A
     { id: 'videos', label: 'Vidéos', icon: Video, path: '/admin/videos' },
     { id: 'challenges', label: 'Défis', icon: Target, path: '/admin/challenges' },
     { id: 'events', label: 'Événements', icon: Calendar, path: '/admin/events' },
+    { id: 'immersion', label: 'Immersion Élite', icon: GraduationCap, path: '/admin/immersion' },
     { id: 'preview', label: 'Vue Client', icon: Eye, path: '/admin/preview' },
     { id: 'settings', label: 'Paramètres', icon: Settings, path: '/admin/settings' },
   ];

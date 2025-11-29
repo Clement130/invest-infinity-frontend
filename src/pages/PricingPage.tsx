@@ -390,7 +390,7 @@ export default function PricingPage() {
                   onClick={() => handlePurchase('immersion')}
                   className="w-full py-4 px-6 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-lg font-bold hover:from-yellow-400 hover:to-amber-400 transition-all transform hover:scale-[1.02] shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2"
                 >
-                  <Crown className="w-5 h-5" />
+                      <Crown className="w-5 h-5" />
                   Réserver Immersion Élite — 1 997€
                 </button>
               </div>

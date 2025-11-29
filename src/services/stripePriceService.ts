@@ -24,9 +24,9 @@ export async function getStripePrices(): Promise<Record<string, string>> {
       console.error('Error fetching Stripe prices:', error);
       // Fallback vers les valeurs hardcodées en cas d'erreur
       return {
-        entree: 'price_ENTREE_PLACEHOLDER',
-        transformation: 'price_1SXfxaKaUb6KDbNFRgl7y7I5',
-        immersion: 'price_IMMERSION_PLACEHOLDER',
+        entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V',
+        transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI',
+        immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW',
       };
     }
 
@@ -40,9 +40,9 @@ export async function getStripePrices(): Promise<Record<string, string>> {
     console.error('Error in getStripePrices:', error);
     // Fallback vers les valeurs hardcodées
     return {
-      entree: 'price_ENTREE_PLACEHOLDER',
-      transformation: 'price_1SXfxaKaUb6KDbNFRgl7y7I5',
-      immersion: 'price_IMMERSION_PLACEHOLDER',
+      entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V',
+      transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI',
+      immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW',
     };
   }
 }
