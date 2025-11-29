@@ -42,11 +42,15 @@ export default function ProgressPage() {
     queryKey: ['member-stats', user?.id],
     queryFn: () => getUserStats(user?.id || ''),
     enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
   });
 
   const modulesQuery = useQuery({
     queryKey: ['modules', 'client'],
     queryFn: () => getModules(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
   });
 
   const progressSummaryQuery = useUserProgressSummary(user?.id);

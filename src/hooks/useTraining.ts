@@ -225,6 +225,8 @@ export function useUserProgressSummary(userId: string | undefined) {
     queryKey: PROGRESS_KEYS.summary(userId!),
     queryFn: () => getUserProgressSummary(userId!),
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
   });
 }
 
