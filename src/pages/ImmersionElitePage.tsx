@@ -38,6 +38,7 @@ export default function ImmersionElitePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           priceId: STRIPE_PRICE_IDS.immersion,
