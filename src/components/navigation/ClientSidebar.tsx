@@ -23,6 +23,7 @@ import {
   Award,
   Zap,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
@@ -341,6 +342,26 @@ function ClientSidebar() {
               <p className="text-[11px] text-white/70">+100 traders actifs</p>
             </div>
             <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </a>
+      </div>
+
+      {/* Expert Contact - Module discret consulting IA */}
+      <div className="px-3 pb-2">
+        <a
+          href="mailto:clement.ia.consulting@gmail.com"
+          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 opacity-70 hover:opacity-100 hover:bg-purple-500/10"
+        >
+          <div className="w-8 h-8 rounded-lg bg-white/5 group-hover:bg-purple-500/20 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-purple-500/20">
+            <Sparkles className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-gray-400 group-hover:text-purple-300 transition-colors truncate">
+              Besoin d'un expert IA ?
+            </p>
+            <p className="text-[10px] text-gray-500 group-hover:text-purple-400/70 transition-colors truncate">
+              clement.ia.consulting@gmail.com
+            </p>
           </div>
         </a>
       </div>
