@@ -1,46 +1,65 @@
+/**
+ * ClientApp - Espace Formation refactorisé
+ * 
+ * Structure:
+ * 1. FormationHeader - Header hero avec stats
+ * 2. ContinueModuleCard - Reprise de progression
+ * 3. ModulesFilters - Recherche et filtres
+ * 4. ModuleCards - Grille/Liste de modules
+ * 
+ * Mobile-first:
+ * - Stack vertical avec respiration
+ * - Cards en colonne sur mobile
+ * - Filtres en scroll horizontal
+ * - pb-24 pour éviter le chatbot
+ */
+
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, BookOpen, Sparkles, Grid3X3, List, Filter, Play, Clock, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Search, Play, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
 import { getModules } from '../services/trainingService';
 import { getUserProgressSummary } from '../services/progressService';
-import TrainingModuleCard from '../components/training/TrainingModuleCard';
 import { useSession } from '../hooks/useSession';
-import EmptyState from '../components/common/EmptyState';
-import { ModuleCardSkeleton } from '../components/common/Skeleton';
-import GlassCard from '../components/ui/GlassCard';
-import AnimatedProgress from '../components/ui/AnimatedProgress';
 import clsx from 'clsx';
 
-const FILTERS = [
-  { key: 'all', label: 'Tous', icon: Grid3X3 },
-  { key: 'in-progress', label: 'En cours', icon: Clock },
-  { key: 'completed', label: 'Terminés', icon: CheckCircle2 },
-  { key: 'not-started', label: 'À démarrer', icon: Play },
-] as const;
+// Components
+import FormationHeader from '../components/training/FormationHeader';
+import ContinueModuleCard from '../components/training/ContinueModuleCard';
+import ModulesFilters, { type FilterKey, type ViewMode } from '../components/training/ModulesFilters';
+import TrainingModuleCard from '../components/training/TrainingModuleCard';
+import EmptyState from '../components/common/EmptyState';
+import { ModuleCardSkeleton } from '../components/common/Skeleton';
+import AnimatedProgress from '../components/ui/AnimatedProgress';
 
-type FilterKey = (typeof FILTERS)[number]['key'];
-type ViewMode = 'grid' | 'list';
-
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.08,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: 'easeOut',
+    }
+  },
 };
 
 export default function ClientApp() {
   const navigate = useNavigate();
-  const { user } = useSession();
+  const { user, profile } = useSession();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -61,6 +80,7 @@ export default function ClientApp() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Fetch modules
   const {
     data: modules = [],
     isLoading: loadingModulesQuery,
@@ -72,15 +92,16 @@ export default function ClientApp() {
     retryDelay: 1000,
   });
 
-  // Si timeout atteint, considérer le chargement comme terminé
   const loadingModules = loadingTimeout ? false : loadingModulesQuery;
 
+  // Fetch progress
   const progressSummaryQuery = useQuery({
     queryKey: ['member-progress', user?.id],
     queryFn: () => getUserProgressSummary(user?.id || ''),
     enabled: !!user?.id,
   });
 
+  // Map progress by module
   const moduleProgressMap = useMemo(() => {
     const summary = progressSummaryQuery.data;
     if (!summary) return {};
@@ -93,11 +114,13 @@ export default function ClientApp() {
     );
   }, [progressSummaryQuery.data]);
 
+  // Continue learning info
   const continueInfo = progressSummaryQuery.data?.continueLearning;
   const continueModule = continueInfo
     ? modules.find((module) => module.id === continueInfo.moduleId) ?? null
     : modules[0] ?? null;
 
+  // Filter modules
   const filteredModules = useMemo(() => {
     const term = search.trim().toLowerCase();
     return modules.filter((module) => {
@@ -116,6 +139,7 @@ export default function ClientApp() {
     });
   }, [modules, moduleProgressMap, search, filter]);
 
+  // Continue lesson info
   const continueLessonTitle =
     continueInfo?.lessonTitle ?? (continueModule ? 'Commencer ce module' : 'Aucun module disponible');
   const continueProgress = continueInfo
@@ -124,6 +148,21 @@ export default function ClientApp() {
     ? moduleProgressMap[continueModule.id]?.completionRate ?? 0
     : 0;
 
+  // Stats data
+  const statsData = useMemo(() => {
+    const total = modules.length;
+    const completed = modules.filter((m) => moduleProgressMap[m.id]?.completionRate === 100).length;
+    const inProgress = modules.filter(
+      (m) => {
+        const rate = moduleProgressMap[m.id]?.completionRate ?? 0;
+        return rate > 0 && rate < 100;
+      }
+    ).length;
+    const notStarted = total - completed - inProgress;
+    return { total, completed, inProgress, notStarted };
+  }, [modules, moduleProgressMap]);
+
+  // Handlers
   const handleModuleClick = (moduleId: string) => {
     navigate(`/app/modules/${moduleId}`);
   };
@@ -138,228 +177,88 @@ export default function ClientApp() {
     }
   };
 
-  const statsData = useMemo(() => {
-    const total = modules.length;
-    const completed = modules.filter((m) => moduleProgressMap[m.id]?.completionRate === 100).length;
-    const inProgress = modules.filter(
-      (m) => {
-        const rate = moduleProgressMap[m.id]?.completionRate ?? 0;
-        return rate > 0 && rate < 100;
-      }
-    ).length;
-    const notStarted = total - completed - inProgress;
-    return { total, completed, inProgress, notStarted };
-  }, [modules, moduleProgressMap]);
+  const userName = profile?.full_name?.split(' ')[0];
+  const isFirstTime = !continueInfo && modules.length > 0;
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-2"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Espace Formation</h1>
-            <p className="text-gray-400">Accède à tes modules et progresse à ton rythme</p>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Quick Stats */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
-      >
-        <div className="rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-white/5 p-4">
-          <p className="text-sm text-gray-400">Total</p>
-          <p className="text-2xl font-bold text-white">{statsData.total}</p>
-        </div>
-        <div className="rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4">
-          <p className="text-sm text-green-400">Terminés</p>
-          <p className="text-2xl font-bold text-green-300">{statsData.completed}</p>
-        </div>
-        <div className="rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border border-yellow-500/20 p-4">
-          <p className="text-sm text-yellow-400">En cours</p>
-          <p className="text-2xl font-bold text-yellow-300">{statsData.inProgress}</p>
-        </div>
-        <div className="rounded-xl bg-gradient-to-br from-gray-500/10 to-gray-600/5 border border-gray-500/20 p-4">
-          <p className="text-sm text-gray-400">À démarrer</p>
-          <p className="text-2xl font-bold text-gray-300">{statsData.notStarted}</p>
-        </div>
-      </motion.section>
+    // pb-24 pour éviter le chevauchement avec le chatbot sur mobile
+    <div className="space-y-6 sm:space-y-8 pb-24 lg:pb-8">
+      {/* Header Hero */}
+      <FormationHeader 
+        stats={statsData}
+        userName={userName}
+      />
 
       {/* Continue Learning CTA */}
-      {continueModule ? (
-        <motion.section
+      {continueModule && (
+        <ContinueModuleCard
+          moduleTitle={continueModule.title}
+          lessonTitle={continueLessonTitle}
+          progress={continueProgress}
+          lessonsCount={continueModule.lessons_count}
+          onClick={handleContinueClick}
+          isFirstTime={isFirstTime}
+        />
+      )}
+
+      {/* Welcome message for new users without progress */}
+      {!continueModule && !loadingModules && !progressSummaryQuery.isLoading && modules.length > 0 && (
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-white/10 p-6 sm:p-8"
         >
-          <GlassCard
-            hover
-            glow="pink"
-            padding="none"
-            onClick={handleContinueClick}
-            className="overflow-hidden"
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-pink-500/10 to-transparent" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl" />
-
-              <div className="relative p-6 flex flex-col md:flex-row md:items-center gap-6">
-                <div className="flex-shrink-0">
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-600 flex items-center justify-center shadow-lg shadow-pink-500/30"
-                  >
-                    <span className="text-3xl">🔥</span>
-                  </motion.div>
-                </div>
-
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-pink-400" />
-                    <span className="text-sm font-medium text-pink-400">Reprends où tu t'es arrêté</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white">{continueLessonTitle}</h3>
-                  <p className="text-gray-400">Module : {continueModule.title}</p>
-                  <div className="max-w-md">
-                    <AnimatedProgress
-                      value={continueProgress}
-                      color="gradient"
-                      size="sm"
-                      label="Progression du module"
-                    />
-                  </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-shadow"
-                >
-                  <Play className="w-5 h-5" />
-                  Continuer
-                </motion.button>
-              </div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-xl shadow-purple-500/30">
+              <span className="text-3xl">🎉</span>
             </div>
-          </GlassCard>
-        </motion.section>
-      ) : (
-        !loadingModules && !progressSummaryQuery.isLoading && modules.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <GlassCard hover={false} glow="purple" className="overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white">Bienvenue dans ton espace formation ! 🎉</h3>
-                  <p className="text-gray-400 mt-1">
-                    Commence par explorer les modules ci-dessous et lance-toi dans ta première leçon.
+            <div className="flex-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-white">
+                Bienvenue dans ton espace formation !
+              </h3>
+              <p className="text-gray-400 mt-2">
+                Commence par explorer les modules ci-dessous et lance-toi dans ta première leçon.
               </p>
             </div>
-              </div>
-            </GlassCard>
-          </motion.section>
-        )
+          </div>
+        </motion.div>
       )}
 
       {/* Search & Filters */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="space-y-4"
-      >
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          {/* Search */}
-          <div className="relative flex-1 max-w-xl">
-            <Search className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher un module..."
-              className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/40 transition-all"
-            />
-          </div>
+      <ModulesFilters
+        search={search}
+        onSearchChange={setSearch}
+        filter={filter}
+        onFilterChange={setFilter}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        filteredCount={filteredModules.length}
+        totalCount={modules.length}
+      />
 
-          {/* Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-4 h-4 text-gray-500" />
-            {FILTERS.map((item) => {
-              const Icon = item.icon;
-              return (
-              <button
-                key={item.key}
-                onClick={() => setFilter(item.key)}
-                  className={clsx(
-                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all',
-                  filter === item.key
-                      ? 'bg-pink-500/20 border-pink-500/40 text-pink-300'
-                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20'
-                  )}
-              >
-                  <Icon className="w-4 h-4" />
-                {item.label}
-              </button>
-              );
-            })}
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={clsx(
-                'p-2 rounded-lg transition-all',
-                viewMode === 'grid' ? 'bg-pink-500/20 text-pink-400' : 'text-gray-400 hover:text-white'
-              )}
-            >
-              <Grid3X3 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={clsx(
-                'p-2 rounded-lg transition-all',
-                viewMode === 'list' ? 'bg-pink-500/20 text-pink-400' : 'text-gray-400 hover:text-white'
-              )}
-            >
-              <List className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Modules Grid/List */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
+      {/* Modules Section */}
+      <section className="space-y-5 sm:space-y-6">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center justify-between"
+        >
           <div className="flex items-center gap-3">
-          <span className="text-2xl">🎬</span>
-            <h2 className="text-xl font-bold text-white">Tes modules</h2>
-            <span className="px-2 py-1 rounded-lg bg-white/10 text-sm text-gray-400">
+            <span className="text-2xl sm:text-3xl">🎬</span>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Tes modules</h2>
+            <span className="px-2.5 py-1 rounded-lg bg-white/10 text-sm text-gray-400 font-medium">
               {filteredModules.length} module{filteredModules.length > 1 ? 's' : ''}
             </span>
           </div>
-        </div>
+        </motion.div>
 
+        {/* Loading State */}
         {loadingModules || progressSummaryQuery.isLoading ? (
           <div className={clsx(
             viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
               : 'space-y-4'
           )}>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -390,7 +289,7 @@ export default function ClientApp() {
             action={
               search || filter !== 'all'
                 ? {
-                    label: 'Réinitialiser',
+                    label: 'Réinitialiser les filtres',
                     onClick: () => {
                       setSearch('');
                       setFilter('all');
@@ -402,14 +301,15 @@ export default function ClientApp() {
         ) : (
           <AnimatePresence mode="wait">
             <motion.div
-              key={viewMode}
+              key={`${viewMode}-${filter}`}
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="hidden"
               className={clsx(
                 viewMode === 'grid'
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                  // Mobile: 1 colonne, SM: 2 colonnes, LG: 3 colonnes
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
                   : 'space-y-4'
               )}
             >
@@ -417,43 +317,54 @@ export default function ClientApp() {
                 const progress = moduleProgressMap[module.id]?.completionRate ?? 0;
                 const isCompleted = progress === 100;
                 const isInProgress = progress > 0 && progress < 100;
+                const lastLesson = moduleProgressMap[module.id]?.lastLessonTitle;
 
+                // List view
                 if (viewMode === 'list') {
                   return (
                     <motion.div
                       key={module.id}
                       variants={itemVariants}
                       whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.99 }}
                       onClick={() => handleModuleClick(module.id)}
-                      className="group relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-r from-slate-900/80 to-slate-950/80 p-4 cursor-pointer hover:border-pink-500/30 transition-all"
+                      className={clsx(
+                        'group relative overflow-hidden rounded-xl sm:rounded-2xl',
+                        'border border-white/10 bg-gradient-to-r from-slate-900/80 to-slate-950/80',
+                        'p-4 sm:p-5 cursor-pointer',
+                        'hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10',
+                        'transition-all duration-300'
+                      )}
                     >
                       <div className="flex items-center gap-4">
+                        {/* Icon */}
                         <div className={clsx(
-                          'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0',
+                          'w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg',
                           isCompleted
-                            ? 'bg-gradient-to-br from-green-500 to-emerald-600'
+                            ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-green-500/20'
                             : isInProgress
-                            ? 'bg-gradient-to-br from-yellow-500 to-orange-600'
-                            : 'bg-gradient-to-br from-gray-600 to-gray-700'
+                            ? 'bg-gradient-to-br from-yellow-500 to-orange-600 shadow-yellow-500/20'
+                            : 'bg-gradient-to-br from-pink-500 to-purple-600 shadow-pink-500/20'
                         )}>
                           {isCompleted ? (
                             <CheckCircle2 className="w-6 h-6 text-white" />
+                          ) : isInProgress ? (
+                            <Clock className="w-6 h-6 text-white" />
                           ) : (
                             <BookOpen className="w-6 h-6 text-white" />
                           )}
                         </div>
 
+                        {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-white group-hover:text-pink-200 transition-colors truncate">
+                          <h3 className="font-bold text-white group-hover:text-pink-200 transition-colors truncate">
                             {module.title}
                           </h3>
                           {module.description && (
-                            <p className="text-sm text-gray-400 truncate">{module.description}</p>
+                            <p className="text-sm text-gray-400 truncate mt-0.5">{module.description}</p>
                           )}
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className="w-32 hidden sm:block">
+                          {/* Mobile: show progress inline */}
+                          <div className="sm:hidden mt-2">
                             <AnimatedProgress
                               value={progress}
                               size="sm"
@@ -462,19 +373,40 @@ export default function ClientApp() {
                               animated={false}
                             />
                           </div>
-                          <Play className="w-5 h-5 text-gray-500 group-hover:text-pink-400 transition-colors" />
+                        </div>
+
+                        {/* Desktop: Progress + Arrow */}
+                        <div className="hidden sm:flex items-center gap-4">
+                          <div className="w-32">
+                            <AnimatedProgress
+                              value={progress}
+                              size="sm"
+                              color={isCompleted ? 'green' : 'gradient'}
+                              showValue
+                              animated={false}
+                            />
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
                         </div>
                       </div>
                     </motion.div>
                   );
                 }
 
+                // Grid view - use TrainingModuleCard
                 return (
                   <motion.div key={module.id} variants={itemVariants}>
-              <TrainingModuleCard
-                module={module}
-                onClick={() => handleModuleClick(module.id)}
+                    <TrainingModuleCard
+                      module={module}
+                      onClick={() => handleModuleClick(module.id)}
                       progress={progress}
+                      lastLessonTitle={lastLesson}
+                      // Mark first uncompleted module as recommended
+                      isRecommended={index === 0 && !isCompleted && !isInProgress}
+                      // Mark modules with 0% as "new" if user has progress elsewhere
+                      isNew={progress === 0 && statsData.inProgress > 0}
+                      // Mark essential modules (could be based on module data)
+                      isEssential={(module as any).is_essential}
                     />
                   </motion.div>
                 );
