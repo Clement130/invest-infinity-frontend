@@ -136,7 +136,8 @@ export default function ChatBot() {
 
   // Détecter le contexte : page d'accueil (CTA) vs espace client (Support)
   const isLandingPage = location.pathname === '/' || location.pathname.startsWith('/landing');
-  const chatbotMode = isLandingPage && !user ? 'cta' : 'support';
+  const isClientArea = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/formations') || location.pathname.startsWith('/challenges') || location.pathname.startsWith('/profile') || location.pathname.startsWith('/settings');
+  const chatbotMode = isLandingPage && !user && !isClientArea ? 'cta' : 'support';
   const [isOpen, setIsOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
