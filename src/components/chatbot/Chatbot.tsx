@@ -521,7 +521,20 @@ export default function Chatbot() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Gestion spécifique si non configuré
+        
+        // Gestion rate limit
+        if (response.status === 429) {
+           addBotMessage("Whoops, tu envoies trop de messages à la fois ! Je vais ralentir un peu, réessaie dans quelques instants. ⏳", [], true);
+           return;
+        }
+
+        // Gestion contenu toxique ou trop long
+        if (response.status === 400 && errorData.error) {
+             addBotMessage(errorData.error, [], true);
+             return;
+        }
+
+        // Gestion non configuré
         if (response.status === 503) {
            addBotMessage(errorData.error || "Le chatbot n'est pas encore configuré.", [], true);
            return;

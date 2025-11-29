@@ -161,7 +161,7 @@ export default function ChatWindow({
                 <ChatInput
                   onSend={onSendMessage}
                   disabled={isTyping}
-                  placeholder="Pose ta question..."
+                  placeholder={isTyping ? "Le bot écrit..." : "Pose ta question..."}
                 />
               </motion.div>
             )}
