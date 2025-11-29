@@ -21,11 +21,12 @@ const glowColors = {
   none: '',
 };
 
+// Padding responsive : plus petit sur mobile, plus grand sur desktop
 const paddingClasses = {
   none: '',
-  sm: 'p-4',
-  md: 'p-6',
-  lg: 'p-8',
+  sm: 'p-3 sm:p-4',
+  md: 'p-4 sm:p-6',
+  lg: 'p-5 sm:p-8',
 };
 
 export default function GlassCard({
@@ -45,7 +46,7 @@ export default function GlassCard({
       whileHover={hover ? { y: -4, transition: { duration: 0.2 } } : undefined}
       onClick={onClick}
       className={clsx(
-        'rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-xl transition-all duration-300',
+        'rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-xl transition-all duration-300',
         hover && 'cursor-pointer hover:bg-white/10 hover:shadow-2xl',
         glow !== 'none' && glowColors[glow],
         paddingClasses[padding],
@@ -56,4 +57,3 @@ export default function GlassCard({
     </motion.div>
   );
 }
-

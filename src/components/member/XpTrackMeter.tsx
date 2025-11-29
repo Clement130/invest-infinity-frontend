@@ -24,26 +24,22 @@ interface XpTrackMeterProps {
 export default function XpTrackMeter({ tracks, compact = false }: XpTrackMeterProps) {
   if (!tracks.length) {
     return (
-      <div className="text-center p-6 rounded-2xl border border-white/5 bg-white/5 text-gray-400 text-sm">
-        Aucune donnée XP disponible pour l’instant.
+      <div className="text-center p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/5 bg-white/5 text-gray-400 text-xs sm:text-sm">
+        Aucune donnée XP disponible pour l'instant.
       </div>
     );
   }
 
   return (
-    <div
-      className={clsx(
-        'grid gap-4',
-        compact ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2',
-      )}
-    >
+    // Grille: 1 colonne sur mobile, 2 colonnes sur sm+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
       {tracks.map((track) => {
         const Icon = TRACK_ICON[track.track];
 
         return (
           <div
             key={track.track}
-            className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900/60 to-slate-950/60 p-4"
+            className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900/60 to-slate-950/60 p-3 sm:p-4"
           >
             <div
               className={clsx(
@@ -51,36 +47,41 @@ export default function XpTrackMeter({ tracks, compact = false }: XpTrackMeterPr
                 TRACK_COLORS[track.track],
               )}
             />
-            <div className="relative space-y-3">
+            <div className="relative space-y-2 sm:space-y-3">
+              {/* Header avec icône et infos */}
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <div
                     className={clsx(
-                      'w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg shadow-black/30',
+                      'w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg shadow-black/30 flex-shrink-0',
                       TRACK_COLORS[track.track],
                     )}
                   >
-                    <Icon className="w-5 h-5 text-white" />
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-400 uppercase tracking-wide">{track.label}</p>
-                    <p className="text-lg font-semibold text-white">Niveau {track.level}</p>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide truncate">{track.label}</p>
+                    <p className="text-sm sm:text-base md:text-lg font-semibold text-white">Niv. {track.level}</p>
                   </div>
                 </div>
-                <p className="text-sm font-semibold text-white">{track.xp.toLocaleString()} XP</p>
+                <p className="text-xs sm:text-sm font-semibold text-white whitespace-nowrap">{track.xp.toLocaleString()} XP</p>
               </div>
 
-              <div className="h-3 rounded-full bg-white/10 overflow-hidden">
+              {/* Barre de progression */}
+              <div className="h-2 sm:h-3 rounded-full bg-white/10 overflow-hidden">
                 <div
-                  className={clsx('h-full rounded-full bg-gradient-to-r', TRACK_COLORS[track.track])}
+                  className={clsx('h-full rounded-full bg-gradient-to-r transition-all duration-500', TRACK_COLORS[track.track])}
                   style={{ width: `${track.progress.toFixed(1)}%` }}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs text-gray-400">
+              {/* Info progression */}
+              <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-400">
                 <span>
-                  {Math.round(track.progress)}% – {track.nextLevelXp.toLocaleString()} XP niveau
-                  {` ${track.level + 1}`}
+                  {Math.round(track.progress)}%
+                </span>
+                <span className="truncate ml-2">
+                  {track.nextLevelXp.toLocaleString()} XP niv. {track.level + 1}
                 </span>
               </div>
             </div>
@@ -90,4 +91,3 @@ export default function XpTrackMeter({ tracks, compact = false }: XpTrackMeterPr
     </div>
   );
 }
-
