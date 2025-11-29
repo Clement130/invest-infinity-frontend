@@ -170,16 +170,18 @@ function ModulesFilters({
       </div>
 
       {/* Filters Row */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 w-full overflow-hidden">
         <Filter className="w-4 h-4 text-gray-500 flex-shrink-0 hidden sm:block" />
         
-        {/* Filters - Horizontal scroll on mobile */}
+        {/* Filters - Horizontal scroll on mobile with padding for last item visibility */}
         <div 
           ref={filtersScrollRef}
           className={clsx(
-            'flex items-center gap-2 overflow-x-auto scrollbar-hide',
+            'flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide flex-1',
             'pb-1 -mb-1', // Hide scrollbar but keep scroll
-            'snap-x snap-mandatory scroll-smooth'
+            'snap-x snap-mandatory scroll-smooth',
+            // Padding right pour que le dernier filtre soit visible
+            'pr-4 sm:pr-0'
           )}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
@@ -195,21 +197,23 @@ function ModulesFilters({
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className={clsx(
-                  'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium',
+                  // Mobile-first: padding plus compact, texte plus petit
+                  'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5',
+                  'rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium',
                   'border transition-all duration-300 whitespace-nowrap snap-start',
-                  'min-h-[44px]', // Tap-friendly
+                  'min-h-[40px] sm:min-h-[44px]', // Tap-friendly
                   isActive ? item.activeColor : item.color,
                   isActive && 'shadow-lg'
                 )}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{item.label}</span>
                 {/* Count badge for active filter */}
                 {isActive && filter !== 'all' && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="px-1.5 py-0.5 rounded-full bg-white/20 text-xs font-bold"
+                    className="px-1 sm:px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] sm:text-xs font-bold"
                   >
                     {filteredCount}
                   </motion.span>

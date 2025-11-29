@@ -181,8 +181,11 @@ export default function ClientApp() {
   const isFirstTime = !continueInfo && modules.length > 0;
 
   return (
-    // pb-24 pour éviter le chevauchement avec le chatbot sur mobile
-    <div className="space-y-6 sm:space-y-8 pb-24 lg:pb-8">
+    // Mobile-first layout:
+    // - pb-28 pour éviter le chevauchement avec le chatbot ET la BottomNav sur mobile
+    // - max-w-full et overflow-hidden pour éviter le scroll horizontal
+    // - space-y-5 mobile, space-y-8 desktop pour respiration
+    <div className="space-y-5 sm:space-y-6 lg:space-y-8 pb-28 lg:pb-8 max-w-full overflow-hidden">
       {/* Header Hero */}
       <FormationHeader 
         stats={statsData}

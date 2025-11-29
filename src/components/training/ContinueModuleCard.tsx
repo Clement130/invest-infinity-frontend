@@ -66,14 +66,15 @@ function ContinueModuleCard({
       <div className="absolute inset-0 rounded-2xl sm:rounded-3xl border border-white/10 group-hover:border-pink-500/30 transition-colors duration-300" />
 
       {/* Content */}
-      <div className="relative p-5 sm:p-6 lg:p-8">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
-          {/* Left: Icon/Thumbnail */}
+      {/* Mobile-first: padding réduit, gap réduit */}
+      <div className="relative p-4 sm:p-5 lg:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8">
+          {/* Left: Icon/Thumbnail - plus petit sur mobile */}
           <div className="flex-shrink-0">
             {thumbnail ? (
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shadow-xl shadow-pink-500/20"
+                className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl shadow-pink-500/20"
               >
                 <img
                   src={thumbnail}
@@ -81,8 +82,8 @@ function ContinueModuleCard({
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
-                  <Play className="w-4 h-4 text-white ml-0.5" />
+                <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-pink-500 flex items-center justify-center">
+                  <Play className="w-3 h-3 sm:w-4 sm:h-4 text-white ml-0.5" />
                 </div>
               </motion.div>
             ) : (
@@ -96,24 +97,25 @@ function ContinueModuleCard({
                   duration: 3,
                   ease: 'easeInOut'
                 }}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 flex items-center justify-center shadow-xl shadow-pink-500/30"
+                className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 flex items-center justify-center shadow-xl shadow-pink-500/30"
               >
-                <span className="text-4xl sm:text-5xl">🔥</span>
+                <span className="text-3xl sm:text-4xl lg:text-5xl">🔥</span>
               </motion.div>
             )}
           </div>
 
           {/* Center: Info */}
-          <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
-            {/* Badge */}
-            <div className="flex items-center gap-2 flex-wrap">
+          {/* Mobile-first: espacement réduit */}
+          <div className="flex-1 space-y-2.5 sm:space-y-3 lg:space-y-4 min-w-0 overflow-hidden">
+            {/* Badge - plus compact sur mobile */}
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <motion.div
                 animate={{ opacity: [0.7, 1, 0.7] }}
                 transition={{ repeat: Infinity, duration: 2 }}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-500/30"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-pink-500/20 border border-pink-500/30"
               >
-                <Sparkles className="w-3.5 h-3.5 text-pink-400" />
-                <span className="text-xs sm:text-sm font-semibold text-pink-300">
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400" />
+                <span className="text-[10px] sm:text-xs lg:text-sm font-semibold text-pink-300">
                   {isFirstTime 
                     ? 'Commence ton aventure' 
                     : isAlmostDone 
@@ -122,37 +124,37 @@ function ContinueModuleCard({
                 </span>
               </motion.div>
               
-              {/* Meta info badges */}
-              <div className="flex items-center gap-2">
+              {/* Meta info badges - cachés sur très petits écrans */}
+              <div className="hidden xs:flex items-center gap-1.5 sm:gap-2">
                 {lessonsCount !== undefined && (
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 text-xs text-gray-400">
-                    <BookOpen className="w-3 h-3" />
+                  <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-white/5 text-[10px] sm:text-xs text-gray-400">
+                    <BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     {lessonsCount} leçons
                   </span>
                 )}
                 {estimatedTime && (
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 text-xs text-gray-400">
-                    <Clock className="w-3 h-3" />
+                  <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-white/5 text-[10px] sm:text-xs text-gray-400">
+                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     {estimatedTime}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Title */}
-            <div className="space-y-1">
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white group-hover:text-pink-100 transition-colors line-clamp-2">
+            {/* Title - taille adaptative, line-clamp pour éviter débordement */}
+            <div className="space-y-0.5 sm:space-y-1">
+              <h3 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-white group-hover:text-pink-100 transition-colors line-clamp-2">
                 {lessonTitle}
               </h3>
-              <p className="text-sm sm:text-base text-gray-400">
+              <p className="text-xs sm:text-sm lg:text-base text-gray-400 truncate">
                 Module : <span className="text-gray-300">{moduleTitle}</span>
               </p>
             </div>
 
-            {/* Progress Bar */}
-            <div className="max-w-lg space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Progression du module</span>
+            {/* Progress Bar - plus compact sur mobile */}
+            <div className="max-w-lg space-y-1.5 sm:space-y-2">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-gray-400">Progression</span>
                 <span className={clsx(
                   'font-bold',
                   progress === 100 ? 'text-green-400' : 'text-pink-400'
@@ -160,7 +162,7 @@ function ContinueModuleCard({
                   {progress}%
                 </span>
               </div>
-              <div className="h-2.5 sm:h-3 bg-slate-800/80 rounded-full overflow-hidden">
+              <div className="h-2 sm:h-2.5 lg:h-3 bg-slate-800/80 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -178,7 +180,7 @@ function ContinueModuleCard({
                     <motion.div
                       animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white"
                     />
                   )}
                 </motion.div>
@@ -187,24 +189,25 @@ function ContinueModuleCard({
           </div>
 
           {/* Right: CTA Button */}
-          <div className="flex-shrink-0 w-full lg:w-auto">
+          {/* Mobile-first: bouton plus compact mais toujours tap-friendly */}
+          <div className="flex-shrink-0 w-full lg:w-auto mt-1 sm:mt-0">
             <motion.button
-              whileHover={{ scale: 1.05, x: 5 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03, x: 3 }}
+              whileTap={{ scale: 0.97 }}
               className={clsx(
-                'w-full lg:w-auto flex items-center justify-center gap-3',
-                'px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl',
+                'w-full lg:w-auto flex items-center justify-center gap-2 sm:gap-3',
+                'px-5 sm:px-6 lg:px-8 py-3 sm:py-3.5 lg:py-4 rounded-xl lg:rounded-2xl',
                 'bg-gradient-to-r from-pink-500 to-purple-600',
-                'text-white font-bold text-base sm:text-lg',
+                'text-white font-bold text-sm sm:text-base lg:text-lg',
                 'shadow-xl shadow-pink-500/30',
                 'hover:shadow-pink-500/50 hover:from-pink-400 hover:to-purple-500',
                 'transition-all duration-300',
-                'min-h-[52px] sm:min-h-[56px]' // Tap-friendly
+                'min-h-[48px] sm:min-h-[52px] lg:min-h-[56px]' // Tap-friendly
               )}
             >
-              <Play className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Play className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               <span>{isStarting ? 'Commencer' : 'Continuer'}</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 opacity-70" />
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 opacity-70" />
             </motion.button>
           </div>
         </div>
