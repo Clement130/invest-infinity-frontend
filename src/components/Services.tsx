@@ -12,7 +12,7 @@ const services = [
     title: 'Alertes Trading',
     description:
       'Reçois des alertes de trading chaque jours grâce aux analyses de nos experts pour saisir les meilleures opportunités du marché.',
-    image: 'https://i.postimg.cc/DwdC8NcW/image.png',
+    image: '/images/services/alertes.png',
     stats: [
       { value: '3', label: 'Risk/Reward moyen' },
       { value: '1', label: 'Positions par jours' },
@@ -30,7 +30,7 @@ const services = [
     title: "Live Trading",
     description:
       "Chaque semaine, on trade en direct devant toi. Tu vois exactement comment on analyse le marché, quand on entre, et pourquoi. L'objectif : que tu deviennes autonome rapidement.",
-    image: 'https://i.postimg.cc/8zJ71ydw/image.png',
+    image: '/images/services/live.png',
     stats: [],
     features: [
       'Analyse et identification de la tendance en direct',
@@ -44,7 +44,7 @@ const services = [
     icon: BookOpen,
     title: 'Formation et Accompagnement',
     description: 'Accédez à une formation claire et structurée pour comprendre et appliquer une stratégie qui fonctionne réellement, tout en étant accompagné étape par étape pour progresser efficacement.',
-    image: 'https://i.postimg.cc/zXNhcQqG/image.png',
+    image: '/images/services/formation.png',
     stats: [],
     features: [
       'Modules expliqués simplement, accessibles à tous',
@@ -57,7 +57,7 @@ const services = [
     icon: Users,
     title: 'Communauté ❤️',
     description: "Une communauté unie où l'on progresse et encaisse ensemble.",
-    image: 'https://i.postimg.cc/jdQRMgjK/Screenshot-2025-02-16-155649.png',
+    image: '/images/services/communaute.png',
     stats: [
       { value: '100+', label: 'membres' },
       { value: '7/7', label: 'support' },
