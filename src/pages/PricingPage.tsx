@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone, MapPin, Calendar } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone, MapPin, Calendar, ChevronRight } from 'lucide-react';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
 import { getStripePriceId } from '../services/stripePriceService';
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import SocialProofBanner from '../components/SocialProofBanner';
+import { getAllOffers, type OfferId, type OfferConfig } from '../config/offers';
 
 // URL de la fonction checkout publique (sans vérification JWT)
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
@@ -33,6 +34,43 @@ export default function PricingPage() {
     
     return () => clearTimeout(timeout);
   }, []);
+
+  // Fonction helper pour générer la liste des features depuis la config
+  const getFeaturesList = (offer: OfferConfig): string[] => {
+    const features: string[] = [];
+    
+    if (offer.offerId === 'entree') {
+      features.push('Accès à vie à la formation vidéo complète (50+ heures)');
+      features.push('Communauté privée Discord');
+      features.push('Alertes trading en temps réel');
+      features.push('Support par chat 7j/7');
+      features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
+    } else if (offer.offerId === 'transformation') {
+      features.push('Tout Entrée inclus');
+      features.push('Sessions de trading en direct (lun-ven, 15h-17h30)');
+      features.push('Replays illimités des sessions live');
+      features.push('Zone Premium : analyses marchés quotidiennes');
+      features.push('2 stratégies ICT éprouvées de Mickaël');
+      features.push('1 coaching individuel 30min (visio)');
+    } else if (offer.offerId === 'immersion_elite') {
+      features.push('Tout Transformation inclus');
+      features.push('5 jours de formation en présentiel (9h-17h)');
+      features.push('Coaching personnalisé en petit groupe');
+      features.push('Trading en live avec Mickaël');
+      features.push('Analyse de vos trades en temps réel');
+      features.push('Déjeuners offerts (5 repas)');
+      features.push('Certificat de complétion');
+      features.push('Accès VIP Discord à vie');
+    }
+    
+    return features;
+  };
+
+  // Mapping entre OfferId et PlanType pour Stripe
+  const offerIdToPlanType = (offerId: OfferId): PlanType => {
+    if (offerId === 'immersion_elite') return 'immersion';
+    return offerId as PlanType;
+  };
 
   // Paiement direct sans inscription - Stripe collecte l'email
   const handlePurchase = async (plan: PlanType) => {
@@ -165,12 +203,12 @@ export default function PricingPage() {
               <SocialProofBanner variant="inline" />
             </div>
             
-            <h1 className="text-5xl sm:text-6xl font-bold mb-6">
+            <h1 className="text-4xl font-bold mb-6">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-violet-500">
                 Nos Offres
               </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-6">
+            <p className="text-gray-400 max-w-2xl mx-auto">
               Choisissez la formule qui correspond à vos objectifs de trading
             </p>
             
@@ -194,230 +232,134 @@ export default function PricingPage() {
 
       {/* Cartes de Pricing */}
       <section className="relative pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-            
-            {/* Carte ENTRÉE */}
-            <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-2 border-pink-500/30 rounded-2xl p-8">
-              <div className="mt-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-6 h-6 text-pink-400" />
-                  <h3 className="text-2xl font-bold">Entrée</h3>
-                </div>
-                <p className="text-gray-400 mb-6">Les outils essentiels pour commencer</p>
-                
-                <div className="mb-8">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">147€</span>
-                  </div>
-                  <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
-                </div>
-
-                <ul className="space-y-3.5 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Accès à vie à la formation vidéo complète (50+ heures)</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Communauté privée Discord</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Alertes trading en temps réel</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Support par chat 7j/7</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Tutoriels plateformes (TopStep, Apex, MT4/MT5)</span>
-                  </li>
-                </ul>
-
-                <button
-                  onClick={() => handlePurchase('entree')}
-                  disabled={loading === 'entree'}
-                  className="w-full py-3 px-6 border-2 border-pink-500/50 text-pink-400 rounded-lg font-medium hover:bg-pink-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {getAllOffers().map((offer) => {
+              const features = getFeaturesList(offer);
+              const visibleFeatures = features.slice(0, 7);
+              const hasMoreFeatures = features.length > 7;
+              const isImmersion = offer.offerId === 'immersion_elite';
+              const planType = offerIdToPlanType(offer.offerId);
+              const isLoading = loading === planType;
+              
+              // Icônes selon l'offre
+              const Icon = offer.offerId === 'entree' ? Zap : offer.offerId === 'transformation' ? Star : Crown;
+              const iconColor = offer.offerId === 'entree' ? 'text-pink-400' : offer.offerId === 'transformation' ? 'text-yellow-400' : 'text-yellow-400';
+              
+              // Styles de bordure selon l'offre
+              const borderClass = isImmersion 
+                ? 'border-2 border-yellow-500/50 bg-gradient-to-br from-yellow-900/10 to-amber-900/10'
+                : offer.offerId === 'transformation'
+                ? 'border border-pink-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50'
+                : 'border border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/50';
+              
+              return (
+                <div
+                  key={offer.offerId}
+                  className={`relative rounded-xl ${borderClass} shadow-lg max-w-[360px] mx-auto lg:max-w-none`}
+                  style={{ maxWidth: '360px' }}
                 >
-                  {loading === 'entree' ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Redirection...
-                    </>
-                  ) : (
-                    'Choisir Entrée — 147€'
+                  {/* Badge pour Immersion */}
+                  {isImmersion && offer.badge && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-yellow-500 to-amber-500 text-black flex items-center gap-1">
+                        <Crown className="w-3 h-3" />
+                        {offer.badge.text}
+                      </span>
+                    </div>
                   )}
-                </button>
-              </div>
-            </div>
-
-            {/* Carte TRANSFORMATION */}
-            <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-pink-500/50 rounded-2xl p-8">
-              <div className="mt-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-6 h-6 text-yellow-400" />
-                  <h3 className="text-2xl font-bold">Transformation</h3>
-                </div>
-                <p className="text-gray-400 mb-6">Formation + accompagnement en live</p>
-                
-                <div className="mb-8">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">497€</span>
-                  </div>
-                  <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
-                </div>
-
-                <ul className="space-y-3.5 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Tout Entrée inclus</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Sessions de trading en direct (lun-ven, 15h-17h30)</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Replays illimités des sessions live</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Zone Premium : analyses marchés quotidiennes</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">2 stratégies ICT éprouvées de Mickaël</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Phone className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">1 coaching individuel 30min (visio)</span>
-                  </li>
-                </ul>
-
-                <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <Shield className="w-5 h-5 text-green-400" />
-                  <span className="text-green-400 text-sm font-medium">Garantie 14 jours satisfait ou remboursé</span>
-                </div>
-
-                <button
-                  onClick={() => handlePurchase('transformation')}
-                  disabled={loading === 'transformation'}
-                  className="w-full py-3 px-6 bg-gradient-to-r from-pink-500/80 to-violet-500/80 text-white rounded-lg font-medium hover:from-pink-600 hover:to-violet-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {loading === 'transformation' ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Redirection...
-                    </>
-                  ) : (
-                    'Choisir Transformation — 497€'
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Carte IMMERSION ÉLITE (MEILLEURE OFFRE) */}
-            <div className="relative bg-gradient-to-br from-yellow-900/20 to-amber-900/20 border-2 border-yellow-500 rounded-2xl p-8 scale-105 shadow-2xl shadow-yellow-500/20">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-sm font-bold rounded-full flex items-center gap-1">
-                  <Crown className="w-4 h-4" />
-                  IMMERSION TOTALE
-                </span>
-              </div>
-
-              <div className="mt-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="w-6 h-6 text-yellow-400" />
-                  <h3 className="text-2xl font-bold">Immersion Élite</h3>
-                </div>
-                <p className="text-gray-400 mb-4">Formation présentielle intensive à Marseille</p>
-                
-                <div className="mb-8">
-                  {/* Prix mis en évidence avec fond et gradient */}
-                  <div className="bg-gradient-to-br from-yellow-500/20 via-amber-500/20 to-yellow-500/20 border-2 border-yellow-500/40 rounded-2xl p-6 mb-4 backdrop-blur-sm">
-                    <div className="text-center">
-                      <div className="flex items-baseline justify-center gap-2 mb-2">
-                        <span className="text-6xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400 drop-shadow-lg">
-                          1 997€
+                  
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className={`w-5 h-5 ${iconColor}`} />
+                      <h3 className="text-xl font-bold">{offer.name}</h3>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-4">{offer.description}</p>
+                    
+                    {/* Badge discret pour Transformation */}
+                    {offer.offerId === 'transformation' && offer.badge && (
+                      <div className="mb-4">
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-green-400">
+                          {offer.badge.text}
                         </span>
                       </div>
-                      <span className="text-gray-300 text-sm font-semibold uppercase tracking-wide">paiement unique • 1 semaine intensive</span>
+                    )}
+                    
+                    {/* Prix */}
+                    <div className="mb-6">
+                      <div className="text-4xl font-bold mb-1">
+                        {offer.price.toLocaleString('fr-FR')}€
+                      </div>
+                      <span className="text-sm opacity-70 text-gray-400">{offer.paymentDescription}</span>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-yellow-400/90 font-medium">
-                      <MapPin className="w-4 h-4 flex-shrink-0" />
-                      <span>Près de Halo, Marseille</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-yellow-400/90 font-medium">
-                      <Calendar className="w-4 h-4 flex-shrink-0" />
-                      <span>Lundi au vendredi, 5-8 élèves max</span>
-                    </div>
+                    
+                    {/* Info spéciale pour Immersion */}
+                    {isImmersion && (
+                      <div className="mb-4 space-y-1.5 text-sm">
+                        <div className="flex items-center gap-2 text-yellow-400/90">
+                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>Près de Halo, Marseille</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-yellow-400/90">
+                          <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>Lundi au vendredi, 5-8 élèves max</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Liste des avantages */}
+                    <ul className="space-y-2.5 mb-6">
+                      {visibleFeatures.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isImmersion ? 'text-yellow-500' : 'text-pink-500'}`} />
+                          <span className="text-sm text-gray-300 leading-relaxed">{feature}</span>
+                        </li>
+                      ))}
+                      {hasMoreFeatures && (
+                        <li className="text-xs text-gray-500 pt-1">
+                          + {features.length - 7} autres avantages
+                        </li>
+                      )}
+                    </ul>
+
+                    {/* Bouton CTA */}
+                    <button
+                      onClick={() => handlePurchase(planType)}
+                      disabled={isLoading}
+                      className={`
+                        w-full py-3 px-6 rounded-lg font-medium transition-all 
+                        disabled:opacity-50 disabled:cursor-not-allowed 
+                        flex items-center justify-center gap-2
+                        ${isImmersion
+                          ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-[#1a0f0a] font-bold hover:shadow-lg hover:shadow-orange-500/40'
+                          : offer.offerId === 'transformation'
+                          ? 'bg-gradient-to-r from-pink-500/80 to-violet-500/80 text-white hover:from-pink-600 hover:to-violet-600'
+                          : 'border border-pink-500/50 text-pink-400 hover:bg-pink-500/10'
+                        }
+                      `}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Redirection...</span>
+                        </>
+                      ) : (
+                        <>
+                          {isImmersion && <Crown className="w-4 h-4" />}
+                          <span>
+                            {isImmersion 
+                              ? `Réserver ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`
+                              : `Choisir ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`
+                            }
+                          </span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
-
-                <ul className="space-y-3.5 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Tout Transformation inclus</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">5 jours de formation en présentiel (9h-17h)</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Coaching personnalisé en petit groupe</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Trading en live avec Mickaël</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Analyse de vos trades en temps réel</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Déjeuners offerts (5 repas)</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Certificat de complétion</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300 leading-relaxed">Accès VIP Discord à vie</span>
-                  </li>
-                </ul>
-
-                <button
-                  onClick={() => handlePurchase('immersion')}
-                  className="
-                    w-full py-5 px-6 
-                    bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
-                    text-[#1a0f0a] font-extrabold text-lg
-                    rounded-xl 
-                    transition-all duration-300 
-                    transform hover:scale-[1.02] active:scale-[0.98]
-                    shadow-2xl shadow-orange-500/40 
-                    hover:shadow-orange-500/60
-                    flex items-center justify-center gap-3
-                    relative overflow-hidden
-                    group
-                  "
-                >
-                  {/* Effet de brillance au survol */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  
-                  <Crown className="w-6 h-6 relative z-10" />
-                  <span className="relative z-10">Réserver Immersion Élite — 1 997€</span>
-                </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>

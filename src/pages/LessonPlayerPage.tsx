@@ -8,6 +8,7 @@ import BunnyPlayer from '../components/training/BunnyPlayer';
 import { VideoPlayerSkeleton } from '../components/common/Skeleton';
 import { useSession } from '../hooks/useSession';
 import { useToast } from '../hooks/useToast';
+import { useEntitlements } from '../hooks/useEntitlements';
 import { markLessonAsCompleted } from '../services/progressTrackingService';
 import type { VideoProgressEvent } from '../services/progressTrackingService';
 import { PROGRESS_KEYS } from '../hooks/useTraining';
@@ -15,9 +16,13 @@ import { PROGRESS_KEYS } from '../hooks/useTraining';
 export default function LessonPlayerPage() {
   const { moduleId, lessonId } = useParams<{ moduleId: string; lessonId: string }>();
   const navigate = useNavigate();
-  const { user } = useSession();
+  const { user, role } = useSession();
+  const entitlements = useEntitlements();
   const toast = useToast();
   const queryClient = useQueryClient();
+  
+  // Vérifier si l'utilisateur est admin ou developer
+  const isAdmin = role === 'admin' || role === 'developer';
 
   // Logging pour le débogage
   useEffect(() => {
@@ -78,6 +83,14 @@ export default function LessonPlayerPage() {
       console.warn('[LessonPlayerPage] Aucune leçon disponible après chargement');
     }
   }, [lesson, moduleQuery.isLoading, lessonQuery.isLoading]);
+
+  // Vérifier l'accès au module (sauf pour les admins)
+  useEffect(() => {
+    if (!isAdmin && moduleQuery.data?.module && !entitlements.hasModuleAccess(moduleQuery.data.module)) {
+      toast.error('Vous n\'avez pas accès à ce module. Veuillez mettre à niveau votre offre.');
+      navigate('/app');
+    }
+  }, [moduleQuery.data?.module, entitlements, isAdmin, navigate, toast]);
 
   const allLessons = moduleQuery.data?.lessons ?? [];
   const moduleTitle = moduleQuery.data?.module.title ?? 'Module';

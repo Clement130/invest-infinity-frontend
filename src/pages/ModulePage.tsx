@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getModuleWithLessons, deleteModule } from '../services/trainingService';
 import { useSession } from '../hooks/useSession';
 import { useToast } from '../hooks/useToast';
+import { useEntitlements } from '../hooks/useEntitlements';
 import type { ModuleWithLessons } from '../types/training';
 
 // Structure hiérarchique basée sur les images
@@ -109,6 +110,7 @@ export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
   const { role } = useSession();
+  const entitlements = useEntitlements();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
@@ -143,6 +145,14 @@ export default function ModulePage() {
     enabled: Boolean(moduleId),
     queryFn: () => getModuleWithLessons(moduleId!),
   });
+
+  // Vérifier l'accès au module (sauf pour les admins)
+  useEffect(() => {
+    if (!isAdmin && data?.module && !entitlements.hasModuleAccess(data.module)) {
+      toast.error('Vous n\'avez pas accès à ce module. Veuillez mettre à niveau votre offre.');
+      navigate('/app');
+    }
+  }, [data?.module, entitlements, isAdmin, navigate, toast]);
 
   const sections = useMemo<Section[]>(() => {
     if (!data?.lessons || !data.module) return [];

@@ -22,6 +22,7 @@ import { BookOpen, Search, Play, CheckCircle2, Clock, ArrowRight } from 'lucide-
 import { getModules } from '../services/trainingService';
 import { getUserProgressSummary } from '../services/progressService';
 import { useSession } from '../hooks/useSession';
+import { useEntitlements } from '../hooks/useEntitlements';
 import clsx from 'clsx';
 
 // Components
@@ -60,6 +61,7 @@ const itemVariants = {
 export default function ClientApp() {
   const navigate = useNavigate();
   const { user, profile } = useSession();
+  const entitlements = useEntitlements();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -120,10 +122,14 @@ export default function ClientApp() {
     ? modules.find((module) => module.id === continueInfo.moduleId) ?? null
     : modules[0] ?? null;
 
-  // Filter modules
+  // Filter modules avec vérification des entitlements
   const filteredModules = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return modules.filter((module) => {
+    
+    // Filtrer d'abord par entitlements (droits d'accès)
+    const accessibleModules = entitlements.accessibleModules(modules);
+    
+    return accessibleModules.filter((module) => {
       const completion = moduleProgressMap[module.id]?.completionRate ?? 0;
       const matchesSearch =
         term.length === 0 ||
@@ -137,7 +143,7 @@ export default function ClientApp() {
       if (filter === 'not-started') return completion === 0;
       return true;
     });
-  }, [modules, moduleProgressMap, search, filter]);
+  }, [modules, moduleProgressMap, search, filter, entitlements]);
 
   // Continue lesson info
   const continueLessonTitle =
