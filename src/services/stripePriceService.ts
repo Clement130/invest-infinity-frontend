@@ -52,24 +52,25 @@ export async function getStripePrices(): Promise<Record<string, string>> {
  */
 export async function getStripePriceId(planType: 'entree' | 'transformation' | 'immersion'): Promise<string | null> {
   try {
+    // Utiliser limit(1) au lieu de maybeSingle() pour éviter l'erreur 406
     const { data, error } = await supabase
       .from('stripe_prices')
       .select('stripe_price_id')
       .eq('plan_type', planType)
       .eq('is_active', true)
-      .maybeSingle(); // Utiliser maybeSingle() au lieu de single() pour éviter l'erreur 406
+      .limit(1);
 
     if (error) {
       console.error('Error fetching Stripe price:', error);
       return null;
     }
 
-    if (!data || !data.stripe_price_id) {
+    if (!data || data.length === 0 || !data[0]?.stripe_price_id) {
       console.warn('No Stripe price found for plan type:', planType);
       return null;
     }
 
-    return data.stripe_price_id;
+    return data[0].stripe_price_id;
   } catch (error) {
     console.error('Error in getStripePriceId:', error);
     return null;
