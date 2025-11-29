@@ -531,8 +531,12 @@ export default function ChatBot() {
         className={`
           fixed z-50
           ${isMobile
-            ? 'inset-x-0 bottom-0 top-[10%] w-full rounded-t-3xl'
-            : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] h-[600px] max-h-[80vh] rounded-2xl'
+            ? chatbotMode === 'support'
+              ? 'inset-x-0 bottom-0 top-[25%] w-full rounded-t-3xl'
+              : 'inset-x-0 bottom-0 top-[10%] w-full rounded-t-3xl'
+            : chatbotMode === 'support'
+              ? 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] h-[500px] max-h-[70vh] rounded-2xl'
+              : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] h-[600px] max-h-[80vh] rounded-2xl'
           }
           bg-[#0f0f13]
           ${!isMobile && 'border border-pink-500/20'}
