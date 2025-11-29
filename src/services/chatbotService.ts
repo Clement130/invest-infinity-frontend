@@ -66,9 +66,9 @@ class ChatbotService {
       // Récupérer le profil utilisateur
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, email, role')
+        .select('full_name,email,role')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         this.context.userProfile = profile;

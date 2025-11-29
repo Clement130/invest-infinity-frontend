@@ -14,7 +14,7 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowLeft
-} from './ui/icons';
+} from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { chatbotService, type ChatAction, type ChatMessage } from '../services/chatbotService';
