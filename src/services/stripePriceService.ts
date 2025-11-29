@@ -65,12 +65,19 @@ export async function getStripePriceId(planType: 'entree' | 'transformation' | '
       return null;
     }
 
-    if (!data || data.length === 0 || !data[0]?.stripe_price_id) {
-      console.warn('No Stripe price found for plan type:', planType);
+    if (!data || data.length === 0) {
+      console.warn('No Stripe price found for plan type:', planType, 'data:', data);
       return null;
     }
 
-    return data[0].stripe_price_id;
+    const priceId = data[0]?.stripe_price_id;
+    if (!priceId || priceId === null || priceId === 'null') {
+      console.warn('Stripe price_id is null or invalid for plan type:', planType, 'data:', data);
+      return null;
+    }
+
+    console.log('✅ Price ID récupéré avec succès:', priceId, 'pour plan:', planType);
+    return priceId;
   } catch (error) {
     console.error('Error in getStripePriceId:', error);
     return null;
