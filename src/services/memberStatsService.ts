@@ -102,88 +102,134 @@ export interface Event {
 
 // Récupérer les statistiques de l'utilisateur
 export async function getUserStats(userId: string): Promise<UserStats> {
-  // Récupérer les modules et leçons
-  const modules = await getModules();
-  const totalModules = modules.length;
+  try {
+    // Récupérer les modules et leçons
+    const modules = await getModules();
+    const totalModules = modules.length;
 
-  // Récupérer la progression
-  const { data: progress } = await supabase
-    .from('training_progress')
-    .select('*')
-    .eq('user_id', userId);
+    // Récupérer la progression
+    const { data: progress } = await supabase
+      .from('training_progress')
+      .select('*')
+      .eq('user_id', userId);
 
-  const completedLessons = progress?.filter((p) => p.done).length || 0;
-  
-  // Récupérer le nombre réel de leçons depuis la base de données
-  const { data: allLessons } = await supabase
-    .from('training_lessons')
-    .select('id, module_id');
-  
-  const totalLessons = allLessons?.length || 0;
-
-  // Calculer les modules complétés (toutes les leçons complétées)
-  const { data: moduleProgress } = await supabase
-    .from('training_progress')
-    .select('lesson_id, done')
-    .eq('user_id', userId)
-    .eq('done', true);
-
-  // Récupérer les leçons pour chaque module
-  let completedModules = 0;
-  for (const module of modules) {
-    const { data: lessons } = await supabase
+    const completedLessons = progress?.filter((p) => p.done).length || 0;
+    
+    // Récupérer le nombre réel de leçons depuis la base de données
+    const { data: allLessons } = await supabase
       .from('training_lessons')
-      .select('id')
-      .eq('module_id', module.id);
+      .select('id, module_id');
+    
+    const totalLessons = allLessons?.length || 0;
 
-    const moduleLessons = lessons || [];
-    const completedModuleLessons = moduleProgress?.filter((p) =>
-      moduleLessons.some((l) => l.id === p.lesson_id)
-    ).length || 0;
+    // Calculer les modules complétés (toutes les leçons complétées)
+    const { data: moduleProgress } = await supabase
+      .from('training_progress')
+      .select('lesson_id, done')
+      .eq('user_id', userId)
+      .eq('done', true);
 
-    if (moduleLessons.length > 0 && completedModuleLessons === moduleLessons.length) {
-      completedModules++;
+    // Récupérer les leçons pour chaque module
+    let completedModules = 0;
+    for (const module of modules) {
+      const { data: lessons } = await supabase
+        .from('training_lessons')
+        .select('id')
+        .eq('module_id', module.id);
+
+      const moduleLessons = lessons || [];
+      const completedModuleLessons = moduleProgress?.filter((p) =>
+        moduleLessons.some((l) => l.id === p.lesson_id)
+      ).length || 0;
+
+      if (moduleLessons.length > 0 && completedModuleLessons === moduleLessons.length) {
+        completedModules++;
+      }
     }
+
+    // Calculer XP et niveau
+    const xp = completedLessons * 10 + completedModules * 50;
+    const level = Math.floor(xp / 100) + 1;
+    const nextLevelXp = level * 100;
+
+    // Badges (simplifié, à améliorer) - avec gestion d'erreur
+    let badges: Badge[] = [];
+    try {
+      badges = await getUserBadges(userId, {
+        completedLessons,
+        completedModules,
+        xp,
+      });
+    } catch (error) {
+      console.error('[getUserStats] Erreur lors de la récupération des badges:', error);
+    }
+
+    // Calculer le streak (jours consécutifs d'activité) - avec gestion d'erreur
+    let streak = 0;
+    try {
+      streak = await calculateStreak(userId);
+    } catch (error) {
+      console.error('[getUserStats] Erreur lors du calcul du streak:', error);
+    }
+
+    // Récupérer les données additionnelles avec gestion d'erreur
+    let xpTracks: XpTrackStats[] = [];
+    let dailyQuests: DailyQuest[] = [];
+    let freezePasses = 0;
+    let activeBooster: ActiveBooster | null = null;
+
+    try {
+      const results = await Promise.allSettled([
+        fetchXpTrackStats(userId, xp),
+        fetchUserQuests(userId),
+        fetchFreezePassCount(userId),
+        fetchActiveBooster(userId),
+      ]);
+
+      if (results[0].status === 'fulfilled') xpTracks = results[0].value;
+      if (results[1].status === 'fulfilled') dailyQuests = results[1].value;
+      if (results[2].status === 'fulfilled') freezePasses = results[2].value;
+      if (results[3].status === 'fulfilled') activeBooster = results[3].value;
+    } catch (error) {
+      console.error('[getUserStats] Erreur lors de la récupération des données additionnelles:', error);
+    }
+
+    return {
+      totalModules,
+      completedModules,
+      totalLessons,
+      completedLessons,
+      totalTimeSpent: completedLessons * 15, // Estimation : 15 min par leçon
+      badges,
+      level,
+      xp: xp % 100,
+      nextLevelXp: 100,
+      streak,
+      xpTracks,
+      dailyQuests,
+      freezePasses,
+      activeBooster,
+    };
+  } catch (error) {
+    console.error('[getUserStats] Erreur globale:', error);
+    // Retourner des valeurs par défaut en cas d'erreur
+    return {
+      totalModules: 0,
+      completedModules: 0,
+      totalLessons: 0,
+      completedLessons: 0,
+      totalTimeSpent: 0,
+      badges: [],
+      level: 1,
+      xp: 0,
+      nextLevelXp: 100,
+      streak: 0,
+      xpTracks: [],
+      dailyQuests: [],
+      freezePasses: 0,
+      activeBooster: null,
+    };
   }
-
-  // Calculer XP et niveau
-  const xp = completedLessons * 10 + completedModules * 50;
-  const level = Math.floor(xp / 100) + 1;
-  const nextLevelXp = level * 100;
-
-  // Badges (simplifié, à améliorer)
-  const badges = await getUserBadges(userId, {
-    completedLessons,
-    completedModules,
-    xp,
-  });
-
-  // Calculer le streak (jours consécutifs d'activité)
-  const streak = await calculateStreak(userId);
-
-  const [xpTracks, dailyQuests, freezePasses, activeBooster] = await Promise.all([
-    fetchXpTrackStats(userId, xp),
-    fetchUserQuests(userId),
-    fetchFreezePassCount(userId),
-    fetchActiveBooster(userId),
-  ]);
-
-  return {
-    totalModules,
-    completedModules,
-    totalLessons,
-    completedLessons,
-    totalTimeSpent: completedLessons * 15, // Estimation : 15 min par leçon
-    badges,
-    level,
-    xp: xp % 100,
-    nextLevelXp: 100,
-    streak,
-    xpTracks,
-    dailyQuests,
-    freezePasses,
-    activeBooster,
-  };
 }
 
 // Calculer le streak de l'utilisateur
