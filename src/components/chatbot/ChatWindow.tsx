@@ -11,6 +11,7 @@ interface ChatWindowProps {
   isTyping: boolean;
   onSendMessage: (message: string) => void;
   onQuickReply: (action: string) => void;
+  onFeedback: (messageId: string, isPositive: boolean) => void;
   onReset: () => void;
   botName: string;
   isMinimized: boolean;
@@ -23,6 +24,7 @@ export default function ChatWindow({
   isTyping,
   onSendMessage,
   onQuickReply,
+  onFeedback,
   onReset,
   botName,
   isMinimized,
@@ -36,6 +38,12 @@ export default function ChatWindow({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping, isMinimized]);
+
+  // Trouver le dernier message du bot pour afficher le feedback
+  const lastBotMessageIndex = [...messages].reverse().findIndex(m => m.sender === 'bot' && m.type !== 'loading');
+  const lastBotMessageId = lastBotMessageIndex !== -1 
+    ? messages[messages.length - 1 - lastBotMessageIndex]?.id 
+    : null;
 
   return (
     <AnimatePresence>
@@ -128,6 +136,8 @@ export default function ChatWindow({
                       key={message.id}
                       message={message}
                       onQuickReply={onQuickReply}
+                      onFeedback={onFeedback}
+                      isLastBotMessage={message.id === lastBotMessageId}
                     />
                   ))}
                   
@@ -170,4 +180,3 @@ export default function ChatWindow({
     </AnimatePresence>
   );
 }
-

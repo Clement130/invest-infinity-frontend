@@ -7,9 +7,11 @@ export interface Message {
   content: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  type?: 'text' | 'quick-reply' | 'card' | 'loading';
+  type?: 'text' | 'quick-reply' | 'card' | 'loading' | 'feedback';
   quickReplies?: QuickReply[];
   cards?: Card[];
+  showFeedback?: boolean;
+  feedbackGiven?: 'positive' | 'negative' | null;
 }
 
 export interface QuickReply {
@@ -17,6 +19,9 @@ export interface QuickReply {
   label: string;
   action: string;
   icon?: string;
+  requiresAuth?: boolean;      // Nécessite d'être connecté
+  requiresLicense?: boolean;   // Nécessite un abonnement actif
+  requiresAdmin?: boolean;     // Nécessite d'être admin
 }
 
 export interface Card {
@@ -46,6 +51,21 @@ export interface FAQItem {
   question: string;
   answer: string;
   followUp?: QuickReply[];
+  requiresAuth?: boolean;
+}
+
+// Types pour le logging/analytics
+export interface ChatbotLogEvent {
+  timestamp: Date;
+  sessionId: string;
+  userType: UserType;
+  userId?: string;
+  eventType: 'open' | 'close' | 'message_sent' | 'message_received' | 'quick_reply_click' | 'action_executed' | 'feedback' | 'error';
+  action?: string;
+  content?: string;
+  success: boolean;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // Configuration par type d'utilisateur
@@ -69,9 +89,9 @@ export const chatbotConfigs: Record<UserType, ChatbotConfig> = {
     botAvatar: "/logo.png",
     primaryColor: "#ec4899",
     quickReplies: [
-      { id: "training", label: "Accéder à la formation", action: "go_training", icon: "📚" },
-      { id: "account", label: "Mon compte", action: "go_account", icon: "👤" },
-      { id: "subscription", label: "Mon abonnement", action: "show_subscription", icon: "💳" },
+      { id: "training", label: "Accéder à la formation", action: "go_training", icon: "📚", requiresAuth: true },
+      { id: "account", label: "Mon compte", action: "go_account", icon: "👤", requiresAuth: true },
+      { id: "subscription", label: "Mon abonnement", action: "show_subscription", icon: "💳", requiresAuth: true },
       { id: "support", label: "Support technique", action: "tech_support", icon: "🔧" },
       { id: "discord", label: "Rejoindre Discord", action: "join_discord", icon: "💬" },
     ],
@@ -82,11 +102,11 @@ export const chatbotConfigs: Record<UserType, ChatbotConfig> = {
     botAvatar: "/logo.png",
     primaryColor: "#8b5cf6",
     quickReplies: [
-      { id: "stats", label: "Statistiques", action: "show_stats", icon: "📊" },
-      { id: "users", label: "Utilisateurs", action: "list_users", icon: "👥" },
-      { id: "subscriptions", label: "Abonnements", action: "show_subscriptions", icon: "💰" },
-      { id: "reports", label: "Rapports", action: "generate_report", icon: "📈" },
-      { id: "alerts", label: "Alertes", action: "show_alerts", icon: "🔔" },
+      { id: "stats", label: "Statistiques", action: "show_stats", icon: "📊", requiresAdmin: true },
+      { id: "users", label: "Utilisateurs", action: "list_users", icon: "👥", requiresAdmin: true },
+      { id: "subscriptions", label: "Abonnements", action: "show_subscriptions", icon: "💰", requiresAdmin: true },
+      { id: "reports", label: "Rapports", action: "generate_report", icon: "📈", requiresAdmin: true },
+      { id: "alerts", label: "Alertes", action: "show_alerts", icon: "🔔", requiresAdmin: true },
     ],
   },
 };
@@ -126,7 +146,7 @@ export const faqDatabase: FAQItem[] = [
     question: "Comment est organisée la formation ?",
     answer: "La formation est divisée en deux parties :\n\n📱 **Sur Discord** : Lives trading, zone chill, et zone premium pour échanger avec nous et les autres élèves.\n\n💻 **Sur le site** : Dans ton espace membre dédié, avec toute la formation incluse (vidéos, modules, exercices).",
     followUp: [
-      { id: "training", label: "Accéder à la formation", action: "go_training", icon: "📚" },
+      { id: "training", label: "Accéder à la formation", action: "go_training", icon: "📚", requiresAuth: true },
     ],
   },
   {
@@ -181,16 +201,33 @@ export const faqDatabase: FAQItem[] = [
     question: "Comment annuler mon abonnement ?",
     answer: "Tu peux annuler ton abonnement à tout moment depuis ton espace membre, section \"Mon abonnement\".\n\nL'annulation prend effet à la fin de ta période en cours. Tu conserves l'accès jusqu'à cette date.",
     followUp: [
-      { id: "account", label: "Gérer mon compte", action: "go_account", icon: "👤" },
+      { id: "account", label: "Gérer mon compte", action: "go_account", icon: "👤", requiresAuth: true },
     ],
+    requiresAuth: true,
   },
 ];
 
 // Réponses par défaut
 export const defaultResponses = {
-  notUnderstood: "Je n'ai pas bien compris ta question. Peux-tu reformuler ou choisir une option ci-dessous ?",
+  notUnderstood: "Je n'ai pas bien compris ta question. Peux-tu reformuler ?",
   disclaimer: "\n\n⚠️ **Disclaimer** : Je suis un assistant virtuel (IA). Pour les sujets liés au trading et à l'investissement, rappelle-toi que ces informations sont à titre éducatif uniquement et ne constituent pas un conseil financier.",
   humanEscalation: "Je comprends que tu aies besoin d'une aide plus personnalisée. Tu peux contacter notre équipe directement sur Discord en mentionnant @investinfinity, ou nous écrire à support@investinfinity.com.",
-  accessDenied: "Désolé, tu n'as pas les permissions nécessaires pour cette action.",
+  accessDenied: "🔐 Désolé, tu n'as pas les permissions nécessaires pour cette action.",
+  authRequired: "🔐 Tu dois être connecté pour accéder à cette fonctionnalité.\n\nConnecte-toi via 'Mon Compte' en haut à droite, ou crée un compte si tu n'en as pas encore.",
+  licenseRequired: "💎 Cette fonctionnalité est réservée aux membres avec un abonnement actif.\n\nDécouvre nos formules pour accéder à tous les contenus !",
+  fallbackHint: "\n\n💡 *Si tu ne trouves pas ce que tu cherches, tape librement ta question ou contacte notre équipe.*",
+  feedbackRequest: "\n\n---\n*Cette réponse t'a-t-elle été utile ?*",
 };
 
+// Actions disponibles avec leurs prérequis
+export const actionRequirements: Record<string, { requiresAuth?: boolean; requiresLicense?: boolean; requiresAdmin?: boolean }> = {
+  go_training: { requiresAuth: true },
+  go_account: { requiresAuth: true },
+  show_subscription: { requiresAuth: true },
+  show_stats: { requiresAdmin: true },
+  list_users: { requiresAdmin: true },
+  show_subscriptions: { requiresAdmin: true },
+  generate_report: { requiresAdmin: true },
+  show_alerts: { requiresAdmin: true },
+  go_admin: { requiresAdmin: true },
+};
