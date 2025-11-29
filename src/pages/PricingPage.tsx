@@ -264,7 +264,7 @@ export default function PricingPage() {
                 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">347€</span>
+                    <span className="text-4xl font-bold">497€</span>
                   </div>
                   <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
                 </div>
@@ -312,7 +312,7 @@ export default function PricingPage() {
                       Redirection...
                     </>
                   ) : (
-                    'Choisir Transformation — 347€'
+                    'Choisir Transformation — 497€'
                   )}
                 </button>
               </div>

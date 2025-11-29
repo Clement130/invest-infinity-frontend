@@ -37,9 +37,9 @@ async function fixStripeData() {
           plan_type: 'transformation',
           plan_name: 'Transformation',
           stripe_price_id: 'price_1SXfxaKaUb6KDbNFRgl7y7I5',
-          amount_euros: 347.00,
+          amount_euros: 497.00,
           is_active: true,
-          description: 'Formule Transformation - 347€'
+          description: 'Formule Transformation - 497€'
         },
         {
           plan_type: 'immersion',
