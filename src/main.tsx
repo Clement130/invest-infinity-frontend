@@ -9,8 +9,18 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { queryClient } from './lib/react-query.ts';
 import { initStripePriceIds } from './config/stripe.ts';
 
-// Initialiser les Price IDs Stripe au démarrage
-initStripePriceIds().catch(console.error);
+// Initialiser les Price IDs Stripe en arrière-plan (non bloquant)
+// Utilise requestIdleCallback pour ne pas bloquer le rendu initial
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(() => {
+    initStripePriceIds().catch(console.error);
+  });
+} else {
+  // Fallback pour les navigateurs sans requestIdleCallback
+  setTimeout(() => {
+    initStripePriceIds().catch(console.error);
+  }, 100);
+}
 
 const rootElement = document.getElementById('root');
 

@@ -532,7 +532,7 @@ export default function ChatBot() {
           fixed z-50
           ${isMobile
             ? 'inset-x-0 bottom-0 top-[10%] w-full rounded-t-3xl'
-            : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] rounded-2xl'
+            : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] h-[600px] max-h-[80vh] rounded-2xl'
           }
           bg-[#0f0f13]
           ${!isMobile && 'border border-pink-500/20'}
@@ -545,7 +545,7 @@ export default function ChatBot() {
               : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
           }
           ${isMobile && isOpen ? 'max-h-[90vh]' : ''}
-          flex flex-col
+          flex flex-col overflow-hidden
         `}
         style={isMobile ? {
           contain: 'layout style paint',
@@ -639,11 +639,11 @@ export default function ChatBot() {
         {/* Messages */}
         <div 
           className={`flex-1 overflow-y-auto space-y-3 scrollbar-thin ${
-            isMobile ? 'px-3 py-2' : 'h-[400px] p-4'
+            isMobile ? 'px-3 py-2' : 'p-4'
           }`}
-          style={isMobile ? {
-            minHeight: 0, // Important pour flex
-          } : undefined}
+          style={{
+            minHeight: 0, // Important pour flex - permet au conteneur de rétrécir
+          }}
         >
           {messages.map((message) => (
             <div
