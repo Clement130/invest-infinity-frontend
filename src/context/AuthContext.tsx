@@ -89,10 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Pour les erreurs 400 ou autres erreurs réseau, créer un profil par défaut
         // pour ne pas bloquer l'application
-        const { data: authUser } = await supabase.auth.getUser();
+          const { data: authUser } = await supabase.auth.getUser();
         if (authUser?.user) {
           const defaultProfile = {
-            id: userId,
+                id: userId,
             email: authUser.user.email || '',
             role: 'client' as const,
             license: 'none' as const,
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('[AuthContext] Erreur Supabase, utilisation du profil par défaut:', defaultProfile);
           setProfile(defaultProfile as ProfileRow);
           profileRef.current = defaultProfile as ProfileRow;
-          return;
+            return;
         }
         
         setProfile(null);
@@ -122,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .from('profiles')
             .insert({
               id: userId,
+              user_id: userId,
               email: authUser.user.email,
               role: 'client',
               })
