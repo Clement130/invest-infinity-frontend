@@ -108,6 +108,72 @@ serve(async (req) => {
         );
       }
 
+      // ============================================================================
+      // SÉCURITÉ : VÉRIFICATION DES DROITS D'ACCÈS
+      // ============================================================================
+      // On ne génère un token que si l'utilisateur a le droit de voir cette vidéo.
+      // 1. La vidéo est une "preview" (gratuit)
+      // 2. L'utilisateur a un enregistrement "training_access" pour le module parent
+      // 3. L'utilisateur est admin
+
+      // Récupérer la leçon et son module
+      const { data: lesson, error: lessonError } = await supabase
+        .from('training_lessons')
+        .select('id, is_preview, module_id')
+        .eq('bunny_video_id', videoId)
+        .single();
+
+      if (lessonError || !lesson) {
+        // Si on ne trouve pas la leçon dans notre BDD, c'est que la vidéo n'est pas censée être là
+        // ou que l'ID est invalide.
+        console.warn(`Video ID ${videoId} not linked to any lesson.`);
+        return new Response(
+          JSON.stringify({ error: 'Video not found or access denied' }),
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      let hasAccess = false;
+
+      // Cas 1 : Preview publique
+      if (lesson.is_preview) {
+        hasAccess = true;
+      } else {
+        // Cas 2 : Admin / Developer ?
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role === 'admin' || profile?.role === 'developer') {
+            hasAccess = true;
+        } else {
+            // Cas 3 : Vérifier training_access
+            const { data: access } = await supabase
+                .from('training_access')
+                .select('id')
+                .eq('module_id', lesson.module_id)
+                .eq('user_id', user.id)
+                .single();
+
+            if (access) {
+                hasAccess = true;
+            }
+        }
+      }
+
+      if (!hasAccess) {
+        return new Response(
+            JSON.stringify({ error: 'Vous n’avez pas accès à ce contenu.' }),
+            { status: 403, headers: corsHeaders },
+        );
+      }
+      
+      // ============================================================================
+      // FIN SÉCURITÉ
+      // ============================================================================
+
       // Calculer l'expiration (timestamp UNIX)
       const expires = Math.floor(Date.now() / 1000) + (expiryHours * 3600);
 

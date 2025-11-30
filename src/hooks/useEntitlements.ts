@@ -13,8 +13,10 @@ import {
   type OfferId,
   type OfferConfig,
   getAllOffers,
+  OFFERS,
 } from '../config/offers';
 import type { TrainingModule } from '../types/training';
+import { isSuperAdmin } from '../lib/auth';
 
 export interface UserEntitlements {
   /** Licence système de l'utilisateur */
@@ -38,6 +40,18 @@ export function useEntitlements(): UserEntitlements {
   const { profile } = useSession();
   
   const entitlements = useMemo(() => {
+    // Check Super Admin
+    if (isSuperAdmin(profile)) {
+      return {
+        systemLicense: 'elite' as const,
+        profileLicense: 'immersion' as const,
+        offer: OFFERS.immersion_elite,
+        hasModuleAccess: (_module: TrainingModule) => true,
+        hasFeatureAccess: (_feature: keyof OfferConfig['includedFeatures']) => true,
+        accessibleModules: (modules: TrainingModule[]) => modules,
+      };
+    }
+
     const profileLicense = (profile?.license as 'entree' | 'transformation' | 'immersion' | 'none') || 'none';
     const systemLicense = profileLicenseToSystemLicense(profileLicense);
     
