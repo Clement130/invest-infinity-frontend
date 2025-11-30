@@ -380,7 +380,6 @@ export default function ImmersionElitePage() {
                   prefillName={profile?.full_name || undefined}
                   prefillEmail={user?.email || undefined}
                   buttonText="Planifier un rendez-vous"
-                  price="1 997€"
                 />
 
                 {/* Badge de sécurité */}

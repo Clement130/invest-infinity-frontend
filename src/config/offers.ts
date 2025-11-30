@@ -150,7 +150,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     description: 'Formation présentielle intensive',
     price: 1997,
     paymentType: 'weekly',
-    paymentDescription: 'paiement unique • 1 semaine intensive (Lundi au vendredi)',
+    paymentDescription: 'paiement unique • 1 semaine intensive',
     installmentsText: 'ou 3x 666€/mois sans frais',
     license: 'elite',
     includedModules: [], // À remplir avec les IDs réels des modules

@@ -363,7 +363,7 @@ export default function CalendlyEliteModal({
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
         
         {showCrownIcon && <Crown className="w-6 h-6 relative z-10" />}
-        <span className="relative z-10">{buttonText} — {price}</span>
+        <span className="relative z-10">{buttonText}</span>
       </button>
 
       {/* Modal via Portal pour éviter les conflits de z-index */}

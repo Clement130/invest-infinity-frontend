@@ -342,7 +342,6 @@ export default function PricingPage() {
                         prefillName={profile?.full_name || undefined}
                         prefillEmail={user?.email || undefined}
                         buttonText="Planifier un rendez-vous"
-                        price={`${offer.price.toLocaleString('fr-FR')}€`}
                         buttonClassName="
                           w-full py-3.5 px-6 rounded-xl font-bold transition-all duration-300
                           bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
