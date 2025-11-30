@@ -48,21 +48,19 @@ export default function PricingPage() {
       features.push('Support par chat 7j/7');
       features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
     } else if (offer.offerId === 'transformation') {
-      features.push('Tout Entrée inclus');
+      features.push('Tout Starter inclus');
       features.push('Sessions de trading en direct (lun-ven, 15h-17h30)');
       features.push('Replays illimités des sessions live');
       features.push('Zone Premium : analyses marchés quotidiennes');
       features.push('2 stratégies ICT éprouvées de Mickaël');
       features.push('1 coaching individuel 30min (visio)');
     } else if (offer.offerId === 'immersion_elite') {
-      features.push('Tout Transformation inclus');
-      features.push('5 jours de formation en présentiel (9h-17h)');
-      features.push('Coaching personnalisé en petit groupe');
+      features.push('Tout Premium inclus');
+      features.push('Horaire de la formation : 9h-18h');
+      features.push('Programme théorique et pratique');
       features.push('Trading en live avec Mickaël');
       features.push('Analyse de vos trades en temps réel');
-      features.push('Déjeuners offerts (5 repas)');
-      features.push('Certificat de complétion');
-      features.push('Accès VIP Discord à vie');
+      features.push('Certificat fin de semaine');
     }
     
     return features;
@@ -250,15 +248,15 @@ export default function PricingPage() {
               
               // Styles de bordure selon l'offre
               const borderClass = isImmersion 
-                ? 'border-2 border-yellow-500/50 bg-gradient-to-br from-yellow-900/10 to-amber-900/10'
+                ? 'border-2 border-yellow-500/60 bg-gradient-to-br from-yellow-950/30 via-amber-950/20 to-orange-950/30 shadow-xl shadow-yellow-500/10 ring-1 ring-yellow-500/20'
                 : offer.offerId === 'transformation'
-                ? 'border border-pink-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50'
-                : 'border border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/50';
+                ? 'border-2 border-violet-500/40 bg-gradient-to-br from-violet-950/20 via-slate-900/50 to-pink-950/20 shadow-lg shadow-violet-500/5 ring-1 ring-violet-500/10'
+                : 'border border-pink-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/80 ring-1 ring-pink-500/10';
               
               return (
                 <div
                   key={offer.offerId}
-                  className={`relative rounded-xl ${borderClass} shadow-lg max-w-[360px] mx-auto lg:max-w-none`}
+                  className={`relative rounded-2xl ${borderClass} max-w-[360px] mx-auto lg:max-w-none transition-all duration-300 hover:scale-[1.02]`}
                   style={{ maxWidth: '360px' }}
                 >
                   {/* Badge pour Immersion */}
@@ -271,18 +269,28 @@ export default function PricingPage() {
                     </div>
                   )}
                   
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className={`w-5 h-5 ${iconColor}`} />
-                      <h3 className="text-xl font-bold">{offer.name}</h3>
+                  <div className="p-6 pt-8">
+                    {/* Header amélioré */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2 rounded-lg ${
+                          isImmersion 
+                            ? 'bg-gradient-to-br from-yellow-500/20 to-amber-500/20 ring-1 ring-yellow-500/30' 
+                            : offer.offerId === 'transformation'
+                            ? 'bg-gradient-to-br from-violet-500/20 to-pink-500/20 ring-1 ring-violet-500/30'
+                            : 'bg-gradient-to-br from-pink-500/20 to-rose-500/20 ring-1 ring-pink-500/30'
+                        }`}>
+                          <Icon className={`w-6 h-6 ${iconColor}`} />
+                        </div>
+                        <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">{offer.name}</h3>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-400 leading-relaxed">{offer.description}</p>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">{offer.description}</p>
                     
-                    {/* Badge discret pour Transformation */}
+                    {/* Badge discret pour Premium */}
                     {offer.offerId === 'transformation' && offer.badge && (
                       <div className="mb-4">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-green-400">
+                        <span className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 text-green-400">
                           {offer.badge.text}
                         </span>
                       </div>
@@ -302,16 +310,16 @@ export default function PricingPage() {
                       )}
                     </div>
                     
-                    {/* Info spéciale pour Immersion */}
+                    {/* Info spéciale pour Bootcamp */}
                     {isImmersion && (
                       <div className="mb-4 space-y-1.5 text-sm">
                         <div className="flex items-center gap-2 text-yellow-400/90">
                           <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Près de Halo, Marseille</span>
+                          <span>Marseille</span>
                         </div>
                         <div className="flex items-center gap-2 text-yellow-400/90">
                           <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Lundi au vendredi, 5-8 élèves max</span>
+                          <span>5-8 élèves max par session</span>
                         </div>
                       </div>
                     )}

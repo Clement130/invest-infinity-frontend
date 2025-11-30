@@ -95,7 +95,7 @@ export interface OfferConfig {
 export const OFFERS: Record<OfferId, OfferConfig> = {
   entree: {
     offerId: 'entree',
-    name: 'Entrée',
+    name: 'Starter',
     description: 'Les outils essentiels pour commencer',
     price: 147,
     paymentType: 'one-time',
@@ -118,7 +118,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
   },
   transformation: {
     offerId: 'transformation',
-    name: 'Transformation',
+    name: 'Premium',
     description: 'Formation + accompagnement en live',
     price: 497,
     paymentType: 'one-time',
@@ -146,11 +146,11 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
   },
   immersion_elite: {
     offerId: 'immersion_elite',
-    name: 'Immersion Élite',
+    name: 'Bootcamp Élite',
     description: 'Formation présentielle intensive à Marseille',
     price: 1997,
     paymentType: 'weekly',
-    paymentDescription: 'paiement unique • accès à vie',
+    paymentDescription: 'paiement unique • 1 semaine intensive (Lundi au vendredi)',
     installmentsText: 'ou 3x 666€/mois sans frais',
     license: 'elite',
     includedModules: [], // À remplir avec les IDs réels des modules
@@ -168,7 +168,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
       vipDiscord: true,
     },
     badge: {
-      text: 'IMMERSION TOTALE',
+      text: 'Bootcamp Élite',
       color: 'yellow',
     },
   },
