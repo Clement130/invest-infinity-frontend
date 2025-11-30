@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PopupModal } from 'react-calendly';
+import { InlineWidget } from 'react-calendly';
 import { Calendar, X, AlertCircle, ExternalLink } from 'lucide-react';
 
 // ============================================
@@ -36,40 +36,41 @@ export default function CalendlyContactModal({
 }: CalendlyContactModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
-
-  // Récupérer l'élément root pour le modal (côté client uniquement)
-  useEffect(() => {
-    const root = document.getElementById('root') || document.body;
-    setRootElement(root);
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Gestion des erreurs de chargement Calendly
   useEffect(() => {
     if (isOpen) {
+      setIsLoading(true);
       const timeout = setTimeout(() => {
-        const calendlyFrame = document.querySelector('.calendly-popup-content iframe');
+        setIsLoading(false);
+      }, 2000);
+
+      const errorTimeout = setTimeout(() => {
+        const calendlyFrame = document.querySelector('.calendly-inline-widget iframe');
         if (!calendlyFrame) {
           setHasError(true);
         }
-      }, 10000);
+      }, 15000);
 
-      return () => clearTimeout(timeout);
+      return () => {
+        clearTimeout(timeout);
+        clearTimeout(errorTimeout);
+      };
     }
   }, [isOpen]);
 
-  // Configuration du prefill Calendly
-  const prefill = {
-    name: prefillName || '',
-    email: prefillEmail || '',
-  };
-
-  // UTM pour le tracking
-  const utm = {
-    utmSource: 'website',
-    utmMedium: 'contact_page',
-    utmCampaign: 'contact_call',
-  };
+  // Bloquer le scroll du body quand le modal est ouvert
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   // Style par défaut du bouton (gradient rose/violet)
   const defaultButtonClass = `
@@ -95,73 +96,6 @@ export default function CalendlyContactModal({
     setHasError(false);
   };
 
-  // Modal d'erreur personnalisé
-  if (hasError && isOpen) {
-    return (
-      <>
-        <button
-          onClick={handleOpenModal}
-          className={buttonClassName || defaultButtonClass}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-          <Calendar className="w-5 h-5 relative z-10" />
-          <span className="relative z-10">{buttonText}</span>
-        </button>
-
-        {/* Modal d'erreur */}
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={handleCloseModal}
-          />
-          
-          <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-8 max-w-md w-full border border-red-500/30 shadow-2xl">
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 p-2 rounded-full bg-slate-700/50 hover:bg-slate-700 transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
-
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 text-red-400" />
-              </div>
-              
-              <h3 className="text-xl font-bold text-white mb-3">
-                Impossible de charger le calendrier
-              </h3>
-              
-              <p className="text-gray-400 mb-6">
-                Le calendrier de réservation n'est pas disponible pour le moment. 
-                Tu peux accéder directement à Calendly.
-              </p>
-
-              <div className="flex flex-col gap-3">
-                <a
-                  href={calendlyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold rounded-xl hover:scale-[1.02] transition-transform"
-                >
-                  <ExternalLink className="w-5 h-5" />
-                  Ouvrir Calendly directement
-                </a>
-                
-                <button
-                  onClick={handleCloseModal}
-                  className="px-6 py-3 bg-slate-700/50 text-gray-300 font-medium rounded-xl hover:bg-slate-700 transition-colors"
-                >
-                  Fermer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       {/* Bouton principal */}
@@ -176,24 +110,114 @@ export default function CalendlyContactModal({
         <span className="relative z-10">{buttonText}</span>
       </button>
 
-      {/* Modal Calendly */}
-      {rootElement && (
-        <PopupModal
-          url={calendlyUrl}
-          prefill={prefill}
-          utm={utm}
-          onModalClose={handleCloseModal}
-          open={isOpen}
-          rootElement={rootElement}
-          pageSettings={{
-            backgroundColor: '0f0f13',
-            hideEventTypeDetails: false,
-            hideLandingPageDetails: false,
-            primaryColor: 'ec4899', // Pink-500
-            textColor: 'ffffff',
-            hideGdprBanner: false,
-          }}
-        />
+      {/* Modal avec InlineWidget Calendly */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={handleCloseModal}
+          />
+          
+          {/* Modal Container */}
+          <div className="relative w-full max-w-4xl h-[85vh] max-h-[750px] bg-[#0a0a14] rounded-3xl border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            {/* Header du modal */}
+            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4 bg-gradient-to-b from-[#0a0a14] to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500/20 to-amber-500/20 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-pink-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Réserver un appel</h3>
+                  <p className="text-sm text-slate-400">Bootcamp Élite - Appel Découverte</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700 transition-colors border border-white/10"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Contenu Calendly */}
+            <div className="h-full pt-16">
+              {hasError ? (
+                // Affichage d'erreur
+                <div className="flex flex-col items-center justify-center h-full p-8">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <AlertCircle className="w-8 h-8 text-red-400" />
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Impossible de charger le calendrier
+                  </h3>
+                  
+                  <p className="text-gray-400 mb-6 text-center max-w-md">
+                    Le calendrier de réservation n'est pas disponible pour le moment. 
+                    Tu peux accéder directement à Calendly.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a
+                      href={calendlyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold rounded-xl hover:scale-[1.02] transition-transform"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                      Ouvrir Calendly directement
+                    </a>
+                    
+                    <button
+                      onClick={handleCloseModal}
+                      className="px-6 py-3 bg-slate-700/50 text-gray-300 font-medium rounded-xl hover:bg-slate-700 transition-colors"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Widget Calendly Inline
+                <>
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a14] z-20 pt-16">
+                      <div className="text-center">
+                        <div className="w-12 h-12 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-slate-400 text-sm">Chargement du calendrier...</p>
+                      </div>
+                    </div>
+                  )}
+                  <InlineWidget
+                    url={calendlyUrl}
+                    styles={{
+                      height: '100%',
+                      width: '100%',
+                    }}
+                    pageSettings={{
+                      backgroundColor: '0a0a14',
+                      hideEventTypeDetails: false,
+                      hideLandingPageDetails: false,
+                      primaryColor: 'ec4899', // Pink-500
+                      textColor: 'ffffff',
+                      hideGdprBanner: false,
+                    }}
+                    prefill={{
+                      name: prefillName || '',
+                      email: prefillEmail || '',
+                    }}
+                    utm={{
+                      utmSource: 'website',
+                      utmMedium: 'contact_page',
+                      utmCampaign: 'contact_call',
+                      utmContent: 'inline_modal',
+                    }}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
