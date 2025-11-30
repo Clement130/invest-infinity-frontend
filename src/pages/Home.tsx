@@ -7,6 +7,7 @@ import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
 import TestimonialCarousel from '../components/TestimonialCarousel';
 import FinalCTA from '../components/FinalCTA';
+import DisclaimerSection from '../components/DisclaimerSection';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -34,6 +35,9 @@ export default function Home() {
       
       {/* 6. CTA Final */}
       <FinalCTA onOpenRegister={() => setIsRegisterOpen(true)} />
+      
+      {/* 7. Disclaimer légal */}
+      <DisclaimerSection />
       
       <AuthModal
         isOpen={isRegisterOpen}
