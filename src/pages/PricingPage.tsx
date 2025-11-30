@@ -72,11 +72,23 @@ export default function PricingPage() {
     return offerId as PlanType;
   };
 
+  // Ouvre le chatbot avec le contexte de réservation Bootcamp Élite
+  const handleReserveBootcamp = () => {
+    window.dispatchEvent(new CustomEvent('openChatbot', {
+      detail: {
+        flow: 'reservation_bootcamp_elite',
+        offerId: 'immersion_elite',
+        offerName: 'Bootcamp Élite',
+        source: 'pricing_page_cta',
+      },
+    }));
+  };
+
   // Paiement direct sans inscription - Stripe collecte l'email
   const handlePurchase = async (plan: PlanType) => {
-    // Pour Immersion Élite, rediriger vers la page dédiée
+    // Pour Immersion Élite, ouvrir le chatbot pour planifier un RDV
     if (plan === 'immersion') {
-      navigate('/immersion-elite');
+      handleReserveBootcamp();
       return;
     }
 
@@ -363,6 +375,7 @@ export default function PricingPage() {
                       ) : (
                         <>
                           {isImmersion && <Crown className="w-4 h-4" />}
+                          {isImmersion && <MessageCircle className="w-4 h-4" />}
                           <span>
                             {isImmersion 
                               ? `Réserver ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`

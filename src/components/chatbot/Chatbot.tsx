@@ -22,6 +22,17 @@ import {
   logActionExecuted,
   logFeedback,
 } from './chatbotLogger';
+import {
+  submitAppointmentRequest,
+  validateEmail,
+  validatePhone,
+} from '../../services/appointmentService';
+import type {
+  RdvFlowStep,
+  CreateAppointmentPayload,
+  AppointmentType,
+  AppointmentSource,
+} from '../../types/appointment';
 
 // Générer un ID unique
 const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -36,6 +47,24 @@ export default function Chatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
+  
+  // État pour le flux de planification RDV (machine à états complète)
+  const [rdvFlow, setRdvFlow] = useState<{
+    active: boolean;
+    step: RdvFlowStep;
+    data: Partial<CreateAppointmentPayload>;
+    context?: {
+      offerId?: string;
+      offerName?: string;
+      source?: AppointmentSource;
+      sessionId?: string;
+    };
+  }>({
+    active: false,
+    step: 'ASK_NAME',
+    data: {},
+    context: undefined,
+  });
 
   // Déterminer le type d'utilisateur
   const getUserType = useCallback((): UserType => {
@@ -81,18 +110,81 @@ export default function Chatbot() {
 
   // Écouter l'événement custom pour ouvrir le chatbot
   useEffect(() => {
-    const handleOpenChatbot = () => {
+    const handleOpenChatbot = (event: Event) => {
       setIsOpen(true);
       setIsMinimized(false);
+      
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || {};
+      
+      // Si c'est pour planifier un RDV Bootcamp Élite (nouveau flow)
+      if (detail.flow === 'reservation_bootcamp_elite') {
+        setRdvFlow({
+          active: true,
+          step: 'ASK_NAME',
+          data: {
+            offerId: detail.offerId || 'immersion_elite',
+            offerName: detail.offerName || 'Bootcamp Élite',
+            source: (detail.source as AppointmentSource) || 'pricing_page_cta',
+          },
+          context: {
+            offerId: detail.offerId || 'immersion_elite',
+            offerName: detail.offerName || 'Bootcamp Élite',
+            source: (detail.source as AppointmentSource) || 'pricing_page_cta',
+            sessionId: detail.sessionId,
+          },
+        });
+        setHasShownWelcome(false);
+        return;
+      }
+      
+      // Ancien format (compatibilité avec ImmersionElitePage)
+      if (detail.action === 'planifier_rdv') {
+        setRdvFlow({
+          active: true,
+          step: 'ASK_NAME',
+          data: {
+            offerId: 'immersion_elite',
+            offerName: 'Bootcamp Élite',
+            source: 'immersion_page_cta',
+          },
+          context: {
+            offerId: 'immersion_elite',
+            offerName: 'Bootcamp Élite',
+            source: 'immersion_page_cta',
+            sessionId: detail.sessionId,
+          },
+        });
+        setHasShownWelcome(false);
+      }
     };
 
-    window.addEventListener('openChatbot', handleOpenChatbot);
-    return () => window.removeEventListener('openChatbot', handleOpenChatbot);
+    window.addEventListener('openChatbot', handleOpenChatbot as EventListener);
+    return () => window.removeEventListener('openChatbot', handleOpenChatbot as EventListener);
   }, []);
 
-  // Message de bienvenue au premier ouverture
+  // Message de bienvenue au premier ouverture ou démarrage du flux RDV
   useEffect(() => {
     if (isOpen && !hasShownWelcome) {
+      // Si c'est pour planifier un RDV Bootcamp Élite
+      if (rdvFlow.active && rdvFlow.step === 'ASK_NAME') {
+        const offerName = rdvFlow.context?.offerName || 'Bootcamp Élite';
+        const rdvMessage: Message = {
+          id: generateId(),
+          content: `Salut 👋 On va planifier ton rendez-vous pour le **${offerName}**.\n\n` +
+            `Je vais te poser quelques questions rapides pour que notre équipe puisse te recontacter.\n\n` +
+            `🏷️ *Planification RDV - ${offerName}*\n\n` +
+            `Pour commencer, peux-tu me donner ton **prénom et nom** ?`,
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+        setMessages([rdvMessage]);
+        setHasShownWelcome(true);
+        logChatOpen(userType, user?.id);
+        return;
+      }
+      
+      // Message de bienvenue normal
       const filteredReplies = filterQuickReplies(config.quickReplies);
       const welcomeMessage: Message = {
         id: generateId(),
@@ -105,7 +197,7 @@ export default function Chatbot() {
       setHasShownWelcome(true);
       logChatOpen(userType, user?.id);
     }
-  }, [isOpen, hasShownWelcome, config, filterQuickReplies, userType, user?.id]);
+  }, [isOpen, hasShownWelcome, config, filterQuickReplies, userType, user?.id, rdvFlow]);
 
   // Reset unread count when opening
   useEffect(() => {
@@ -438,6 +530,172 @@ export default function Chatbot() {
         );
         break;
 
+      // === Actions du flux RDV ===
+      case 'rdv_type_decouverte':
+        if (rdvFlow.active && rdvFlow.step === 'ASK_TYPE_RDV') {
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_AVAILABILITIES',
+            data: { ...prev.data, type: 'appel_decouverte' },
+          }));
+          addBotMessage(
+            "Parfait, un **appel découverte** (15 min) ! 📞\n\n" +
+            "Quelles sont tes **disponibilités** pour ce rendez-vous ?\n\n" +
+            "_(Tu peux indiquer des jours/heures précis ou tes préférences générales : matin, après-midi, soir, week-end...)_",
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'rdv_type_qualification':
+        if (rdvFlow.active && rdvFlow.step === 'ASK_TYPE_RDV') {
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_AVAILABILITIES',
+            data: { ...prev.data, type: 'appel_qualification' },
+          }));
+          addBotMessage(
+            "Parfait, un **appel qualification** (30 min) ! 🎯\n\n" +
+            "Quelles sont tes **disponibilités** pour ce rendez-vous ?\n\n" +
+            "_(Tu peux indiquer des jours/heures précis ou tes préférences générales : matin, après-midi, soir, week-end...)_",
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'rdv_confirm_yes':
+        if (rdvFlow.active && rdvFlow.step === 'SUMMARY_CONFIRM') {
+          // Passer à l'étape de soumission directement
+          setRdvFlow(prev => ({ ...prev, step: 'SUBMIT_TO_BACKEND' }));
+          
+          // Soumettre la demande
+          (async () => {
+            const payload: CreateAppointmentPayload = {
+              offerId: rdvFlow.context?.offerId || 'immersion_elite',
+              offerName: rdvFlow.context?.offerName || 'Bootcamp Élite',
+              firstName: rdvFlow.data.firstName || '',
+              lastName: rdvFlow.data.lastName || '',
+              email: rdvFlow.data.email || '',
+              phone: rdvFlow.data.phone || '',
+              location: rdvFlow.data.location,
+              type: rdvFlow.data.type || 'appel_decouverte',
+              availability: rdvFlow.data.availability || '',
+              goals: rdvFlow.data.goals,
+              source: rdvFlow.context?.source || 'chatbot_direct',
+              sessionId: rdvFlow.context?.sessionId,
+              userId: user?.id,
+            };
+            
+            try {
+              const result = await submitAppointmentRequest(payload);
+              
+              if (result.success) {
+                setRdvFlow({ active: false, step: 'ASK_NAME', data: {}, context: undefined });
+                
+                addBotMessage(
+                  `🎉 **Merci ${rdvFlow.data.firstName} !**\n\n` +
+                  `Ta demande de rendez-vous pour le **${rdvFlow.context?.offerName || 'Bootcamp Élite'}** est bien enregistrée !\n\n` +
+                  `📩 Tu vas recevoir un email de confirmation à **${rdvFlow.data.email}**.\n\n` +
+                  `Notre équipe te recontactera très rapidement pour confirmer le créneau.\n\n` +
+                  `À très vite ! 👋`,
+                  [
+                    { id: 'other', label: 'Autre question', action: 'other_question', icon: '❓' },
+                  ],
+                  true
+                );
+              } else {
+                throw new Error(result.error || 'Erreur inconnue');
+              }
+            } catch (error) {
+              console.error('Erreur envoi RDV:', error);
+              addBotMessage(
+                `😔 Désolé, ta demande n'a pas pu être enregistrée.\n\n` +
+                `Réessaie dans quelques minutes ou contacte-nous directement sur Discord.`,
+                [
+                  { id: 'retry', label: 'Réessayer', action: 'rdv_retry', icon: '🔄' },
+                  { id: 'contact', label: 'Contacter support', action: 'contact_human', icon: '💬' },
+                ],
+                false
+              );
+            }
+          })();
+        }
+        break;
+
+      case 'rdv_confirm_no':
+        if (rdvFlow.active && rdvFlow.step === 'SUMMARY_CONFIRM') {
+          // Recommencer le flux
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_NAME',
+            data: {
+              offerId: prev.context?.offerId,
+              offerName: prev.context?.offerName,
+              source: prev.context?.source,
+            },
+          }));
+          addBotMessage(
+            "Pas de souci ! On reprend depuis le début. 📝\n\n" +
+            "Peux-tu me redonner ton **prénom et nom** ?",
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'rdv_retry':
+        // Réinitialiser et relancer le flux RDV
+        setRdvFlow({
+          active: true,
+          step: 'ASK_NAME',
+          data: {
+            offerId: 'immersion_elite',
+            offerName: 'Bootcamp Élite',
+            source: 'chatbot_direct',
+          },
+          context: {
+            offerId: 'immersion_elite',
+            offerName: 'Bootcamp Élite',
+            source: 'chatbot_direct',
+          },
+        });
+        addBotMessage(
+          "On reprend ! 🔄\n\n" +
+          "Peux-tu me donner ton **prénom et nom** ?",
+          [],
+          false
+        );
+        break;
+
+      case 'start_rdv_bootcamp':
+        // Démarrer le flux RDV depuis un quick reply
+        logActionExecuted(userType, action, true, user?.id);
+        setRdvFlow({
+          active: true,
+          step: 'ASK_NAME',
+          data: {
+            offerId: 'immersion_elite',
+            offerName: 'Bootcamp Élite',
+            source: 'chatbot_direct',
+          },
+          context: {
+            offerId: 'immersion_elite',
+            offerName: 'Bootcamp Élite',
+            source: 'chatbot_direct',
+          },
+        });
+        addBotMessage(
+          "Salut 👋 On va planifier ton rendez-vous pour le **Bootcamp Élite** !\n\n" +
+          "Je vais te poser quelques questions rapides.\n\n" +
+          "🏷️ *Planification RDV - Bootcamp Élite*\n\n" +
+          "Pour commencer, peux-tu me donner ton **prénom et nom** ?",
+          [],
+          false
+        );
+        break;
+
       default:
         logActionExecuted(userType, action, false, user?.id, 'unknown_action');
         addBotMessage(
@@ -446,7 +704,7 @@ export default function Chatbot() {
           true
         );
     }
-  }, [navigate, user, profile, role, userType, config.quickReplies, checkActionPermission, filterQuickReplies]);
+  }, [navigate, user, profile, role, userType, config.quickReplies, checkActionPermission, filterQuickReplies, rdvFlow, addBotMessage]);
 
   // Ajouter un message du bot avec délai de frappe
   const addBotMessage = useCallback((content: string, quickReplies?: QuickReply[], showFeedback: boolean = false) => {
@@ -487,6 +745,299 @@ export default function Chatbot() {
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, userMessage]);
+
+    // 0. Gérer le flux de planification RDV (machine à états complète)
+    if (rdvFlow.active) {
+      const trimmedContent = content.trim();
+      const lowerContent = trimmedContent.toLowerCase();
+      
+      // Permettre à l'utilisateur de corriger ou annuler
+      if (lowerContent === 'annuler' || lowerContent === 'cancel') {
+        setRdvFlow({ active: false, step: 'ASK_NAME', data: {}, context: undefined });
+        addBotMessage(
+          "Pas de souci ! Ta demande a été annulée. 👋\n\nSi tu as d'autres questions, je suis là !",
+          filterQuickReplies(config.quickReplies),
+          false
+        );
+        return;
+      }
+      
+      switch (rdvFlow.step) {
+        case 'ASK_NAME': {
+          // Validation : au moins 2 caractères, avec prénom et nom
+          if (trimmedContent.length < 2) {
+            addBotMessage("Merci de me donner ton prénom et nom complet. 📝", [], false);
+            return;
+          }
+          
+          const nameParts = trimmedContent.split(' ');
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_EMAIL',
+            data: { ...prev.data, firstName, lastName },
+          }));
+          
+          addBotMessage(
+            `Enchanté ${firstName} ! 👋\n\nMaintenant, peux-tu me donner ton **adresse email** ?\n\n_(Nous l'utiliserons uniquement pour te contacter concernant ton rendez-vous)_`,
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_EMAIL': {
+          if (!validateEmail(trimmedContent)) {
+            addBotMessage(
+              "Hmm, cette adresse email ne semble pas valide. 🤔\n\nPeux-tu vérifier et me la redonner ? (exemple : prenom@email.com)",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_PHONE',
+            data: { ...prev.data, email: trimmedContent.toLowerCase().trim() },
+          }));
+          
+          addBotMessage(
+            "Parfait ! 📧\n\nPeux-tu maintenant me donner ton **numéro de téléphone** avec l'indicatif pays si tu es hors de France ?\n\n_(Exemple : 06 12 34 56 78 ou +33 6 12 34 56 78)_",
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_PHONE': {
+          if (!validatePhone(trimmedContent)) {
+            addBotMessage(
+              "Ce numéro ne semble pas valide. 📱\n\nMerci de me donner un numéro de téléphone valide (exemple : 06 12 34 56 78 ou +33 6 12 34 56 78).",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_LOCATION',
+            data: { ...prev.data, phone: trimmedContent },
+          }));
+          
+          addBotMessage(
+            "Super ! 📱\n\nDans quelle **ville / pays** te trouves-tu ?\n\n_(Cela nous aide à adapter le créneau horaire si nécessaire)_",
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_LOCATION': {
+          if (trimmedContent.length < 2) {
+            addBotMessage("Merci d'indiquer ta ville ou ton pays. 🌍", [], false);
+            return;
+          }
+          
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_TYPE_RDV',
+            data: { ...prev.data, location: trimmedContent },
+          }));
+          
+          addBotMessage(
+            "Merci ! 🌍\n\nQuel **type de rendez-vous** préfères-tu ?\n\n" +
+            "1️⃣ **Appel découverte** (15 min) - Pour faire connaissance\n" +
+            "2️⃣ **Appel qualification** (30 min) - Pour discuter de tes objectifs en détail\n\n" +
+            "_(Réponds 1 ou 2, ou tape le nom complet)_",
+            [
+              { id: 'rdv_1', label: 'Appel découverte', action: 'rdv_type_decouverte', icon: '📞' },
+              { id: 'rdv_2', label: 'Appel qualification', action: 'rdv_type_qualification', icon: '🎯' },
+            ],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_TYPE_RDV': {
+          let rdvType: AppointmentType = 'appel_decouverte';
+          
+          if (lowerContent === '1' || lowerContent.includes('découverte') || lowerContent.includes('decouverte') || lowerContent.includes('15')) {
+            rdvType = 'appel_decouverte';
+          } else if (lowerContent === '2' || lowerContent.includes('qualification') || lowerContent.includes('30')) {
+            rdvType = 'appel_qualification';
+          }
+          
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_AVAILABILITIES',
+            data: { ...prev.data, type: rdvType },
+          }));
+          
+          addBotMessage(
+            `Parfait, un **${rdvType === 'appel_decouverte' ? 'appel découverte' : 'appel qualification'}** ! 📞\n\n` +
+            `Quelles sont tes **disponibilités** pour ce rendez-vous ?\n\n` +
+            `_(Tu peux indiquer des jours/heures précis ou tes préférences générales : matin, après-midi, soir, week-end...)_`,
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_AVAILABILITIES': {
+          if (trimmedContent.length < 3) {
+            addBotMessage(
+              "Merci d'indiquer au moins une disponibilité ou préférence horaire. 📅",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'ASK_GOALS',
+            data: { ...prev.data, availability: trimmedContent },
+          }));
+          
+          addBotMessage(
+            "Noté ! 📅\n\nEn quelques mots, quel est ton **objectif principal** avec le Bootcamp Élite ?\n\n_(Cela nous aide à mieux préparer notre échange)_",
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_GOALS': {
+          setRdvFlow(prev => ({
+            ...prev,
+            step: 'SUMMARY_CONFIRM',
+            data: { ...prev.data, goals: trimmedContent || 'Non précisé' },
+          }));
+          
+          const data = rdvFlow.data;
+          const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+          const rdvTypeLabel = data.type === 'appel_qualification' ? 'Appel qualification (30 min)' : 'Appel découverte (15 min)';
+          
+          addBotMessage(
+            `Super ! 🎯\n\n` +
+            `**📋 Récapitulatif de ta demande :**\n\n` +
+            `👤 **Nom** : ${fullName}\n` +
+            `📧 **Email** : ${data.email}\n` +
+            `📱 **Téléphone** : ${data.phone}\n` +
+            `🌍 **Localisation** : ${data.location}\n` +
+            `📞 **Type de RDV** : ${rdvTypeLabel}\n` +
+            `📅 **Disponibilités** : ${data.availability}\n` +
+            `🎯 **Objectif** : ${trimmedContent || 'Non précisé'}\n` +
+            `🏷️ **Formule** : ${rdvFlow.context?.offerName || 'Bootcamp Élite'}\n\n` +
+            `Est-ce que tout est correct ? ✅\n\n` +
+            `_(Réponds "Oui" pour confirmer ou "Non" pour modifier)_`,
+            [
+              { id: 'confirm_yes', label: 'Oui, c\'est bon !', action: 'rdv_confirm_yes', icon: '✅' },
+              { id: 'confirm_no', label: 'Non, modifier', action: 'rdv_confirm_no', icon: '✏️' },
+            ],
+            false
+          );
+          return;
+        }
+
+        case 'SUMMARY_CONFIRM': {
+          if (lowerContent === 'oui' || lowerContent === 'yes' || lowerContent === 'ok' || lowerContent === 'confirmer') {
+            // Passer à l'étape de soumission
+            setRdvFlow(prev => ({ ...prev, step: 'SUBMIT_TO_BACKEND' }));
+            
+            // Soumettre la demande
+            const payload: CreateAppointmentPayload = {
+              offerId: rdvFlow.context?.offerId || 'immersion_elite',
+              offerName: rdvFlow.context?.offerName || 'Bootcamp Élite',
+              firstName: rdvFlow.data.firstName || '',
+              lastName: rdvFlow.data.lastName || '',
+              email: rdvFlow.data.email || '',
+              phone: rdvFlow.data.phone || '',
+              location: rdvFlow.data.location,
+              type: rdvFlow.data.type || 'appel_decouverte',
+              availability: rdvFlow.data.availability || '',
+              goals: rdvFlow.data.goals,
+              source: rdvFlow.context?.source || 'chatbot_direct',
+              sessionId: rdvFlow.context?.sessionId,
+              userId: user?.id,
+            };
+            
+            try {
+              const result = await submitAppointmentRequest(payload);
+              
+              if (result.success) {
+                setRdvFlow({ active: false, step: 'ASK_NAME', data: {}, context: undefined });
+                
+                addBotMessage(
+                  `🎉 **Merci ${rdvFlow.data.firstName} !**\n\n` +
+                  `Ta demande de rendez-vous pour le **${rdvFlow.context?.offerName || 'Bootcamp Élite'}** est bien enregistrée !\n\n` +
+                  `📩 Tu vas recevoir un email de confirmation à **${rdvFlow.data.email}**.\n\n` +
+                  `Notre équipe te recontactera très rapidement pour confirmer le créneau.\n\n` +
+                  `À très vite ! 👋`,
+                  [
+                    { id: 'other', label: 'Autre question', action: 'other_question', icon: '❓' },
+                  ],
+                  true
+                );
+              } else {
+                throw new Error(result.error || 'Erreur inconnue');
+              }
+            } catch (error) {
+              console.error('Erreur envoi RDV:', error);
+              addBotMessage(
+                `😔 Désolé, ta demande n'a pas pu être enregistrée.\n\n` +
+                `Réessaie dans quelques minutes ou contacte-nous directement sur Discord.\n\n` +
+                `_(Erreur technique : ${error instanceof Error ? error.message : 'Connexion impossible'})_`,
+                [
+                  { id: 'retry', label: 'Réessayer', action: 'rdv_retry', icon: '🔄' },
+                  { id: 'contact', label: 'Contacter support', action: 'contact_human', icon: '💬' },
+                ],
+                false
+              );
+            }
+            return;
+          } else if (lowerContent === 'non' || lowerContent === 'no' || lowerContent === 'modifier') {
+            // Recommencer le flux
+            setRdvFlow(prev => ({
+              ...prev,
+              step: 'ASK_NAME',
+              data: {
+                offerId: prev.context?.offerId,
+                offerName: prev.context?.offerName,
+                source: prev.context?.source,
+              },
+            }));
+            
+            addBotMessage(
+              "Pas de souci ! On reprend depuis le début. 📝\n\n" +
+              "Peux-tu me redonner ton **prénom et nom** ?",
+              [],
+              false
+            );
+            return;
+          } else {
+            addBotMessage(
+              "Merci de répondre par **Oui** pour confirmer ou **Non** pour modifier tes informations. 🙂",
+              [
+                { id: 'confirm_yes', label: 'Oui, c\'est bon !', action: 'rdv_confirm_yes', icon: '✅' },
+                { id: 'confirm_no', label: 'Non, modifier', action: 'rdv_confirm_no', icon: '✏️' },
+              ],
+              false
+            );
+            return;
+          }
+        }
+
+        default:
+          // État inattendu, réinitialiser
+          setRdvFlow({ active: false, step: 'ASK_NAME', data: {}, context: undefined });
+          break;
+      }
+    }
 
     // 1. Chercher d'abord dans les intents locaux
     const localIntent = findLocalIntent(content);
@@ -556,7 +1107,7 @@ export default function Chatbot() {
       setIsTyping(false);
       addBotMessage("Désolé, une erreur est survenue lors de la communication avec l'assistant.", [], false);
     }
-  }, [addBotMessage, userType, user?.id]);
+  }, [addBotMessage, userType, user?.id, rdvFlow]);
 
   // Gérer le quick reply
   const handleQuickReply = useCallback((action: string) => {
@@ -578,6 +1129,9 @@ export default function Chatbot() {
 
   // Reset la conversation
   const handleReset = useCallback(() => {
+    // Réinitialiser le flux RDV si actif
+    setRdvFlow({ active: false, step: 'ASK_NAME', data: {}, context: undefined });
+    
     const filteredReplies = filterQuickReplies(config.quickReplies);
     const welcomeMessage: Message = {
       id: generateId(),

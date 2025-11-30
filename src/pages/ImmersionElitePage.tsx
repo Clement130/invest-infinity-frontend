@@ -394,10 +394,20 @@ export default function ImmersionElitePage() {
                   </div>
                 </div>
 
-                {/* Bouton de réservation premium */}
+                {/* Bouton de planification RDV */}
                 <button
-                  onClick={handleReservation}
-                  disabled={!selectedSession || loading}
+                  onClick={() => {
+                    // Ouvrir le chatbot avec le contexte de réservation Bootcamp Élite
+                    window.dispatchEvent(new CustomEvent('openChatbot', { 
+                      detail: { 
+                        flow: 'reservation_bootcamp_elite',
+                        offerId: 'immersion_elite',
+                        offerName: 'Bootcamp Élite',
+                        source: 'immersion_page_cta',
+                        sessionId: selectedSession,
+                      } 
+                    }));
+                  }}
                   className="
                     w-full py-5 px-6 
                     bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
@@ -407,7 +417,6 @@ export default function ImmersionElitePage() {
                     transform hover:scale-[1.02] active:scale-[0.98]
                     shadow-2xl shadow-orange-500/40 
                     hover:shadow-orange-500/60
-                    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                     flex items-center justify-center gap-3
                     relative overflow-hidden
                     group
@@ -416,17 +425,8 @@ export default function ImmersionElitePage() {
                   {/* Effet de brillance au survol */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                   
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-6 h-6 animate-spin relative z-10" />
-                      <span className="relative z-10">Redirection...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="w-6 h-6 relative z-10" />
-                      <span className="relative z-10">Réserver Immersion Élite — 1 997€</span>
-                    </>
-                  )}
+                  <Crown className="w-6 h-6 relative z-10" />
+                  <span className="relative z-10">Réserver Bootcamp Élite — 1 997€</span>
                 </button>
 
                 {/* Badge de sécurité */}

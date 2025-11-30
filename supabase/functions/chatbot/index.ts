@@ -164,44 +164,18 @@ serve(async (req) => {
       );
     }
 
-    // 4. CHECK LICENSE ENTITLEMENTS (Security Hardening)
-    // Seuls les utilisateurs avec une licence (ou admin) peuvent utiliser le chatbot (coûteux)
-    const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('license, role')
-        .eq('id', user.id)
-        .single();
-
-    if (profileError || !profile) {
-        return new Response(
-            JSON.stringify({ error: 'Profile not found' }),
-            { status: 403, headers: corsHeaders }
-        );
-    }
-
-    const hasLicense = profile.license && profile.license !== 'none';
-    const isAdmin = profile.role === 'admin' || profile.role === 'developer';
-
-    if (!hasLicense && !isAdmin) {
-         return new Response(
-            JSON.stringify({ error: 'Cette fonctionnalité est réservée aux membres de la formation.' }),
-            { status: 403, headers: corsHeaders }
-        );
-    }
+    // 4. Chatbot accessible à tous les utilisateurs connectés
+    // Pas de vérification de licence - accessible selon le statut de connexion uniquement
 
 
-    // 5. Fetch OpenAI API Key from settings
-    const { data: settingsData, error: settingsError } = await supabaseAdmin
-      .from('settings')
-      .select('value')
-      .eq('key', 'openai_api_key')
-      .single()
+    // 5. Get OpenAI API Key from environment variable
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
 
-    if (settingsError || !settingsData?.value) {
-      console.error('API Key missing or error:', settingsError)
+    if (!openaiApiKey) {
+      console.error('OPENAI_API_KEY environment variable is not set')
       return new Response(
         JSON.stringify({ 
-          error: 'Le service chatbot n’est pas encore configuré. Merci de contacter votre administrateur.' 
+          error: 'Le service chatbot n'est pas encore configuré. Merci de contacter votre administrateur.' 
         }),
         { 
           status: 503, 
@@ -209,8 +183,6 @@ serve(async (req) => {
         }
       )
     }
-
-    const openaiApiKey = settingsData.value
 
     // 6. Optimize Context (Last 10 messages max)
     const contextMessages = messages.slice(-10);
@@ -232,9 +204,10 @@ serve(async (req) => {
 
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.text()
-      console.error('OpenAI Error:', errorData)
+      console.error('OpenAI Error Status:', openaiResponse.status)
+      console.error('OpenAI Error Body:', errorData)
       return new Response(
-        JSON.stringify({ error: 'Erreur lors de la communication avec le fournisseur IA.' }),
+        JSON.stringify({ error: `Erreur OpenAI (${openaiResponse.status}): ${errorData}` }),
         { 
           status: 502, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

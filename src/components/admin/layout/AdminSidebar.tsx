@@ -21,6 +21,7 @@ import {
   Target,
   Video,
   Calendar,
+  CalendarCheck,
   Settings,
   GraduationCap,
   X,
@@ -70,6 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'challenges', label: 'Défis', icon: Target, path: '/admin/challenges' },
       { id: 'events', label: 'Événements', icon: Calendar, path: '/admin/events' },
       { id: 'immersion', label: 'Immersion Élite', icon: GraduationCap, path: '/admin/immersion' },
+      { id: 'appointments', label: 'Demandes RDV', icon: CalendarCheck, path: '/admin/appointments' },
     ],
   },
   {

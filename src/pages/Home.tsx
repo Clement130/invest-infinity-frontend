@@ -6,7 +6,6 @@ import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
 import TestimonialCarousel from '../components/TestimonialCarousel';
-import FinalCTA from '../components/FinalCTA';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -32,8 +31,7 @@ export default function Home() {
       {/* 5. Trustpilot - Dernier argument avant conversion */}
       <TestimonialCarousel />
       
-      {/* 6. CTA Final */}
-      <FinalCTA onOpenRegister={() => setIsRegisterOpen(true)} />
+      {/* Le CTA Final et Disclaimer sont maintenant dans le Footer */}
       
       <AuthModal
         isOpen={isRegisterOpen}
