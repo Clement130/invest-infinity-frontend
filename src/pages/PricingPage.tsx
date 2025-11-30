@@ -41,16 +41,19 @@ export default function PricingPage() {
   }, []);
 
   // Fonction helper pour générer la liste des features depuis la config
+  // MISE À JOUR : Nouveaux contenus (Novembre 2025)
   const getFeaturesList = (offer: OfferConfig): string[] => {
     const features: string[] = [];
     
     if (offer.offerId === 'entree') {
+      // Starter - 147€
       features.push('Sessions de trading en direct');
       features.push('Communauté privée Discord');
       features.push('Alertes trading en temps réel');
       features.push('Échanges avec les membres');
       features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
     } else if (offer.offerId === 'transformation') {
+      // Premium - 497€
       features.push('Offre Starter incluse');
       features.push('Accès à l\'intégralité de la formation');
       features.push('Groupe exclusif');
@@ -58,8 +61,10 @@ export default function PricingPage() {
       features.push('2 stratégies de trading rentables');
       features.push('1 coaching individuel de 30 min en visio');
     } else if (offer.offerId === 'immersion_elite') {
+      // Bootcamp Élite - 1997€
       features.push('Tout Premium inclus');
-      features.push('Horaire de la formation : 9h–18h');
+      features.push('Horaires de la formation : 9h–18h');
+      features.push('5–8 élèves max');
       features.push('Ateliers guidés pour comprendre et appliquer');
       features.push('Trading en live avec Mickaël');
       features.push('Analyse en direct des marchés');

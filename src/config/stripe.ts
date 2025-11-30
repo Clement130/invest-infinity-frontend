@@ -7,10 +7,14 @@
  */
 
 // Valeurs par défaut (fallback si la DB n'est pas accessible)
+// MISE À JOUR Novembre 2025 - Nouveaux prix :
+// - Starter : 147€
+// - Premium : 497€
+// - Bootcamp Élite : 1997€
 export const STRIPE_PRICE_IDS_DEFAULT = {
-  entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V', // Entrée - 147€
-  transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI', // Transformation - 497€
-  immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW', // Immersion Élite - 1997€
+  entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V', // Starter - 147€
+  transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI', // Premium - 497€
+  immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW', // Bootcamp Élite - 1997€
 } as const;
 
 // Cache pour les Price IDs (mis à jour au chargement de l'app)

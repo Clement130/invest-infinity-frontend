@@ -91,6 +91,11 @@ export interface OfferConfig {
 
 /**
  * Configuration complète de toutes les offres
+ * 
+ * MISE À JOUR : Nouveaux prix et contenus (Novembre 2025)
+ * - Starter : 147€ (paiement unique)
+ * - Premium : 497€ (ou 3x 166€/mois)
+ * - Bootcamp Élite : 1997€ (ou 3x 666€/mois)
  */
 export const OFFERS: Record<OfferId, OfferConfig> = {
   entree: {
@@ -101,10 +106,10 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     paymentType: 'one-time',
     paymentDescription: 'paiement unique • accès à vie',
     license: 'starter',
-    includedModules: [], // À remplir avec les IDs réels des modules
+    includedModules: [],
     includedFeatures: {
       discord: true,
-      liveSessions: false,
+      liveSessions: true,
       alerts: true,
       immersionWeek: false,
       support: true,
@@ -125,7 +130,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     paymentDescription: 'paiement 3 fois • accès à vie',
     installmentsText: 'ou 3x 166€/mois sans frais',
     license: 'pro',
-    includedModules: [], // À remplir avec les IDs réels des modules
+    includedModules: [],
     includedFeatures: {
       discord: true,
       liveSessions: true,
@@ -153,7 +158,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     paymentDescription: 'paiement unique • 1 semaine intensive',
     installmentsText: 'ou 3x 666€/mois sans frais',
     license: 'elite',
-    includedModules: [], // À remplir avec les IDs réels des modules
+    includedModules: [],
     includedFeatures: {
       discord: true,
       liveSessions: true,

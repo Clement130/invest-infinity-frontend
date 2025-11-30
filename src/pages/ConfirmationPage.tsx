@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Users, Clock, ArrowRight, Shield, Loader2, Star, Zap, Crown, Phone } from 'lucide-react';
+import { CheckCircle, Users, Clock, ArrowRight, Shield, Loader2, Star, Zap, Crown, Phone, Check } from 'lucide-react';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
+import { getStripePriceId } from '../services/stripePriceService';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../hooks/useToast';
 import CountdownTimer from '../components/CountdownTimer';
+import CalendlyEliteModal from '../components/CalendlyEliteModal';
 
 // URL de la fonction checkout publique (sans vérification JWT)
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
@@ -29,9 +31,80 @@ const reviews = [
   },
 ];
 
+// ============================================================================
+// CONFIGURATION DES OFFRES (source unique de vérité pour cette page)
+// ============================================================================
+const OFFERS_CONFIG = {
+  starter: {
+    id: 'entree' as PlanType,
+    name: 'Starter',
+    subtitle: 'Les outils essentiels pour commencer',
+    price: 147,
+    priceText: '147€',
+    paymentDescription: 'paiement unique • accès à vie',
+    features: [
+      'Sessions de trading en direct',
+      'Communauté privée Discord',
+      'Alertes trading en temps réel',
+      'Échanges avec les membres',
+      'Tutoriels plateformes (TopStep, Apex, MT4/MT5)',
+    ],
+    icon: Zap,
+    iconColor: 'text-blue-400',
+    borderClass: 'border-white/10',
+    bgClass: 'bg-white/5',
+  },
+  premium: {
+    id: 'transformation' as PlanType,
+    name: 'Premium',
+    subtitle: 'Formation + accompagnement en live',
+    price: 497,
+    priceText: '497€',
+    paymentDescription: 'paiement 3 fois • accès à vie',
+    installmentsText: 'ou 3x 166€/mois sans frais',
+    badge: { text: 'Garantie 14 jours', color: 'green' },
+    features: [
+      'Offre Starter incluse',
+      'Accès à l\'intégralité de la formation',
+      'Groupe exclusif',
+      'Accompagnement 7j/7',
+      '2 stratégies de trading rentables',
+      '1 coaching individuel de 30 min en visio',
+    ],
+    icon: Star,
+    iconColor: 'text-pink-400',
+    borderClass: 'border-pink-500/30',
+    bgClass: 'bg-white/5',
+  },
+  bootcamp: {
+    id: 'immersion' as PlanType,
+    name: 'Bootcamp Élite',
+    subtitle: 'Formation présentielle intensive',
+    price: 1997,
+    priceText: '1997€',
+    paymentDescription: 'paiement unique • 1 semaine intensive',
+    installmentsText: 'ou 3x 666€/mois sans frais',
+    badge: { text: 'Bootcamp Élite', color: 'yellow' },
+    features: [
+      'Tout Premium inclus',
+      'Horaires de la formation : 9h–18h',
+      '5–8 élèves max',
+      'Ateliers guidés pour comprendre et appliquer',
+      'Trading en live avec Mickaël',
+      'Analyse en direct des marchés',
+      'Ma stratégie rentable expliquée de A à Z',
+    ],
+    icon: Crown,
+    iconColor: 'text-yellow-400',
+    borderClass: 'border-2 border-yellow-500/50',
+    bgClass: 'bg-gradient-to-br from-yellow-500/10 via-amber-500/10 to-yellow-600/10',
+    isBootcamp: true,
+  },
+};
+
 export default function ConfirmationPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signIn } = useAuth();
+  const { user, loading: authLoading, signIn, profile } = useAuth();
   const toast = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPrenom, setUserPrenom] = useState<string | null>(null);
@@ -88,6 +161,16 @@ export default function ConfirmationPage() {
     setLoading(plan);
     
     try {
+      // Récupérer le Price ID depuis la DB
+      const priceId = await getStripePriceId(plan);
+      
+      if (!priceId || !priceId.startsWith('price_')) {
+        console.error('❌ Price ID invalide:', priceId);
+        toast.error('Erreur: configuration Stripe manquante. Contactez le support.');
+        setLoading(null);
+        return;
+      }
+
       let { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -144,7 +227,7 @@ export default function ConfirmationPage() {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          priceId: STRIPE_PRICE_IDS[plan],
+          priceId: priceId,
           userId: session?.user?.id || 'pending',
           userEmail: finalEmail,
           successUrl: getStripeSuccessUrl(),
@@ -171,35 +254,124 @@ export default function ConfirmationPage() {
     }
   };
 
-  const renderButton = (plan: PlanType, price: string, variant: 'default' | 'gold' = 'default') => {
-    const isLoading = loading === plan;
+  // Composant de carte d'offre
+  const OfferCard = ({ offer, variant }: { offer: typeof OFFERS_CONFIG.starter; variant: 'starter' | 'premium' | 'bootcamp' }) => {
+    const isLoading = loading === offer.id;
     const isDisabled = loading !== null || waitingForAuth;
-    
-    const baseClasses = "w-full px-6 py-4 font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg";
-    const variantClasses = variant === 'gold' 
-      ? "bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-600 hover:via-amber-600 hover:to-yellow-700 text-black shadow-lg shadow-yellow-500/25"
-      : "bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white";
+    const Icon = offer.icon;
+    const isBootcamp = variant === 'bootcamp';
     
     return (
-      <button
-        onClick={() => handlePurchase(plan)}
-        disabled={isDisabled}
-        className={`${baseClasses} ${variantClasses}`}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Redirection...
-          </>
-        ) : waitingForAuth ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Chargement...
-          </>
-        ) : (
-          `Choisir — ${price}`
+      <div className={`relative rounded-2xl p-6 ${offer.bgClass} ${offer.borderClass} border flex flex-col h-full transition-all duration-300 hover:scale-[1.02] ${isBootcamp ? 'lg:scale-105 lg:-my-2 shadow-xl shadow-yellow-500/10' : ''}`}>
+        {/* Badge en haut de la carte */}
+        {isBootcamp && offer.badge && (
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <span className="px-4 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-sm font-bold rounded-full flex items-center gap-1">
+              <Crown className="w-4 h-4" />
+              {offer.badge.text}
+            </span>
+          </div>
         )}
-      </button>
+        
+        <div className={`mb-4 ${isBootcamp ? 'mt-2' : ''}`}>
+          {/* Titre avec icône */}
+          <div className="flex items-center gap-2 mb-2">
+            <Icon className={`w-5 h-5 ${offer.iconColor}`} />
+            <h3 className="text-xl font-bold text-white">{offer.name}</h3>
+          </div>
+          
+          {/* Sous-titre */}
+          <p className="text-gray-400 text-sm mb-3">{offer.subtitle}</p>
+          
+          {/* Prix */}
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className={`text-4xl font-bold ${isBootcamp ? 'text-yellow-400' : 'text-white'}`}>
+              {offer.priceText}
+            </span>
+          </div>
+          
+          {/* Description du paiement */}
+          <span className="text-gray-400 text-sm">{offer.paymentDescription}</span>
+          
+          {/* Option paiement en plusieurs fois */}
+          {offer.installmentsText && (
+            <p className={`text-sm mt-1 ${isBootcamp ? 'text-yellow-400/80' : 'text-amber-400/80'}`}>
+              {offer.installmentsText}
+            </p>
+          )}
+        </div>
+        
+        {/* Badge Garantie pour Premium */}
+        {variant === 'premium' && offer.badge && (
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-400" />
+              <span className="text-green-400 text-sm font-semibold">{offer.badge.text}</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Liste des avantages */}
+        <ul className="space-y-3 mb-6 flex-grow">
+          {offer.features.map((feature, idx) => {
+            const isIncluded = feature.includes('inclus') || feature.includes('incluse');
+            return (
+              <li key={idx} className="flex items-start gap-2">
+                <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isBootcamp ? 'text-yellow-400' : isIncluded ? 'text-pink-400' : 'text-green-400'}`} />
+                <span className={`text-sm ${isIncluded ? 'text-white font-semibold' : 'text-gray-300'}`}>
+                  {feature}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        
+        {/* Bouton CTA */}
+        {isBootcamp ? (
+          <CalendlyEliteModal
+            prefillName={profile?.full_name || userPrenom || undefined}
+            prefillEmail={user?.email || userEmail || undefined}
+            buttonText="Planifier un rendez-vous"
+            price="1 997€"
+            buttonClassName="
+              w-full py-4 px-6 rounded-xl font-bold transition-all duration-300
+              bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 
+              hover:from-yellow-600 hover:via-amber-600 hover:to-yellow-700
+              text-black shadow-lg shadow-yellow-500/25
+              flex items-center justify-center gap-2
+              relative overflow-hidden group
+            "
+          />
+        ) : (
+          <button
+            onClick={() => handlePurchase(offer.id)}
+            disabled={isDisabled}
+            className={`
+              w-full px-6 py-4 font-bold rounded-xl transition-all 
+              disabled:opacity-50 disabled:cursor-not-allowed 
+              flex items-center justify-center gap-2 text-lg
+              ${variant === 'premium' 
+                ? 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white' 
+                : 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white'
+              }
+            `}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Redirection...
+              </>
+            ) : waitingForAuth ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Chargement...
+              </>
+            ) : (
+              `Choisir — ${offer.priceText}`
+            )}
+          </button>
+        )}
+      </div>
     );
   };
 
@@ -239,140 +411,9 @@ export default function ConfirmationPage() {
 
         {/* 3 PLANS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-          
-          {/* STARTER - 97€ */}
-          <div className="bg-white/5 rounded-2xl p-6 border border-white/10 flex flex-col">
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-blue-400" />
-                <h3 className="text-xl font-bold text-white">Starter</h3>
-              </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-lg text-gray-500 line-through">149€</span>
-                <span className="text-4xl font-bold text-white">97€</span>
-                <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-35%</span>
-              </div>
-              <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
-            </div>
-            
-            <ul className="space-y-3 mb-6 flex-grow">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Alertes trading en temps réel (Discord)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Communauté privée Discord</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Support par chat 7j/7</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Tutoriels plateformes (TopStep, Apex, MT4/MT5)</span>
-              </li>
-            </ul>
-            
-            {renderButton('starter', '97€')}
-          </div>
-
-          {/* PRO - 347€ */}
-          <div className="bg-white/5 rounded-2xl p-6 border border-pink-500/30 flex flex-col">
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-pink-400" />
-                <h3 className="text-xl font-bold text-white">Pro</h3>
-              </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-lg text-gray-500 line-through">497€</span>
-                <span className="text-4xl font-bold text-white">347€</span>
-                <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">-30%</span>
-              </div>
-              <span className="text-gray-400 text-sm">paiement unique • accès à vie</span>
-            </div>
-            
-            <ul className="space-y-3 mb-6 flex-grow">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-pink-400 flex-shrink-0 mt-0.5" />
-                <span className="text-white font-semibold text-sm">Tout Starter inclus</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Sessions de trading en direct (lun-ven, 15h-17h30)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Replays illimités des sessions live</span>
-              </li>
-            </ul>
-            
-            {renderButton('pro', '347€')}
-          </div>
-
-          {/* ELITE - 497€ ⭐ MEILLEURE OFFRE */}
-          <div className="bg-gradient-to-br from-yellow-500/10 via-amber-500/10 to-yellow-600/10 rounded-2xl p-6 border-2 border-yellow-500/50 flex flex-col relative lg:scale-105 lg:-my-2 shadow-xl shadow-yellow-500/10">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="px-4 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-sm font-bold rounded-full flex items-center gap-1">
-                <Crown className="w-4 h-4" />
-                MEILLEURE OFFRE
-              </span>
-            </div>
-            
-            <div className="mb-4 mt-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Crown className="w-5 h-5 text-yellow-400" />
-                <h3 className="text-xl font-bold text-white">Elite</h3>
-              </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-lg text-gray-500 line-through">1656€</span>
-                <span className="text-4xl font-bold text-yellow-400">497€</span>
-                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">-70%</span>
-              </div>
-              <span className="text-gray-300 text-sm">paiement unique • accès à vie</span>
-              <p className="text-yellow-400/80 text-xs mt-1 flex items-center gap-1">
-                <span>ou 3x 166€/mois sans frais</span>
-                <span className="text-gray-500">(via Klarna)</span>
-              </p>
-            </div>
-            
-            <ul className="space-y-3 mb-4 flex-grow">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span className="text-white font-semibold text-sm">Tout Pro inclus</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Zone Premium : analyses marchés quotidiennes</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Formation vidéo complète (50+ heures)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">2 stratégies de trading éprouvées</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">Toutes les futures mises à jour incluses</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span className="text-yellow-300 font-semibold text-sm">🎁 BONUS : Coaching individuel 30min (valeur 200€)</span>
-              </li>
-            </ul>
-            
-            {/* Garantie Elite */}
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 text-sm font-semibold">Garantie 14 jours satisfait ou remboursé</span>
-              </div>
-            </div>
-            
-            {renderButton('elite', '497€', 'gold')}
-          </div>
+          <OfferCard offer={OFFERS_CONFIG.starter} variant="starter" />
+          <OfferCard offer={OFFERS_CONFIG.premium} variant="premium" />
+          <OfferCard offer={OFFERS_CONFIG.bootcamp} variant="bootcamp" />
         </div>
 
         {/* Garantie générale */}
