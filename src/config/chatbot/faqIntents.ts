@@ -42,20 +42,20 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offers_overview',
     category: 'Tarifs',
     patterns: ['tarifs', 'prix', 'offres', 'formules', 'combien ça coûte', 'abonnement', 'payer'],
-    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Starter (97€)** : Pour débuter sereinement avec les alertes et la communauté.\n🔹 **Pro (347€)** : Pour progresser avec les lives trading et replays.\n🔹 **Elite (497€)** : La meilleure offre ! Formation complète + coaching 1-to-1.\n\n💡 Paiement en 3x sans frais disponible sur Pro et Elite.\n\nQuelle formule vous intéresse ?",
+    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Entrée (147€)** : Pour débuter avec les bases et la communauté.\n🔹 **Transformation (497€)** : La plus populaire, avec formation complète et lives.\n🔹 **Immersion Élite (1997€)** : Accompagnement premium en présentiel.\n\nQuelle formule vous intéresse ?",
     followUps: [
-      { id: 'entree', label: 'Offre Starter', action: 'show_entree', icon: '🌱' },
-      { id: 'transfo', label: 'Offre Pro', action: 'show_transformation', icon: '🚀' },
-      { id: 'immersion', label: 'Offre Elite', action: 'show_immersion', icon: '👑' }
+      { id: 'entree', label: 'Offre Entrée', action: 'show_entree', icon: '🌱' },
+      { id: 'transfo', label: 'Offre Transformation', action: 'show_transformation', icon: '🚀' },
+      { id: 'immersion', label: 'Immersion Élite', action: 'show_immersion', icon: '👑' }
     ]
   },
   {
     id: 'offer_entree_details',
     category: 'Tarifs',
     patterns: ['offre entrée', 'starter', 'formule entrée', 'détail entrée', 'entrée contient quoi'],
-    answer: "L'offre **Starter (97€ au lieu de 149€)** est idéale pour débuter sereinement.\n\n✅ Alertes de trading\n✅ Accès à la communauté\n✅ Support 7/7\n✅ Vidéos TopStepX/Apex/Metatrader\n\n💰 -35% de réduction ! Paiement unique, accès à vie.",
+    answer: "L'offre **Entrée (147€)** est idéale pour découvrir notre écosystème.\n\n✅ Accès à la communauté Discord\n✅ Alertes trading\n✅ Support complet\n✅ Tutoriels plateformes\n\n❌ Pas de lives ni de replays dans cette formule.\n\nC'est un paiement unique pour un accès à vie.",
     followUps: [
-      { id: 'buy_entree', label: 'Choisir Starter', action: 'go_pricing', icon: '🛒' },
+      { id: 'buy_entree', label: 'Choisir Entrée', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer les offres', action: 'show_pricing', icon: '⚖️' }
     ]
   },
@@ -63,9 +63,9 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offer_transformation_details',
     category: 'Tarifs',
     patterns: ['offre transformation', 'pro', 'formule transformation', 'transformation contient quoi', 'intermédiaire'],
-    answer: "L'offre **Pro (347€ au lieu de 497€)** pour progresser rapidement ! 🚀\n\n✅ Tout ce qui est dans Starter\n✅ Lives trading (15h-17h30, lun-ven)\n✅ Accès aux replays\n\n💰 -30% de réduction ! Ou 3x 116€/mois sans frais.",
+    answer: "L'offre **Transformation (497€)** est notre best-seller ! 🏆\n\nEn plus de tout le contenu de l'offre Entrée, vous avez :\n✅ Accès aux sessions LIVE hebdomadaires\n✅ Replays illimités\n✅ Zone Premium & Coaching individuel\n✅ Garantie satisfait ou remboursé 14 jours\n\nPaiement unique, accès à vie.",
     followUps: [
-      { id: 'buy_transfo', label: 'Choisir Pro', action: 'go_pricing', icon: '🛒' },
+      { id: 'buy_transfo', label: 'Choisir Transformation', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer', action: 'show_pricing', icon: '⚖️' }
     ]
   },
@@ -73,10 +73,10 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offer_immersion_details',
     category: 'Tarifs',
     patterns: ['offre immersion', 'élite', 'formule immersion', 'présentiel', 'marseille', 'immersion contient quoi'],
-    answer: "L'offre **Elite (497€ au lieu de 1656€)** est notre MEILLEURE OFFRE ! 👑\n\n✅ Tout ce qui est dans Pro\n✅ Zone Premium (analyses avancées)\n✅ Formation complète Invest Infinity\n✅ 2 stratégies rentables\n✅ Mises à jour à vie\n🎁 **BONUS** : Appel 1-to-1 de 30min (valeur 200€)\n\n💰 -70% de réduction ! Ou 3x 166€/mois sans frais.\n🛡️ Garantie 14 jours satisfait ou remboursé.",
+    answer: "L'offre **Immersion Élite (1997€)** est l'expérience ultime.\n\n🌊 **Une semaine intensive en présentiel à Marseille** avec nos experts.\n✅ Tout le contenu Transformation inclus\n✅ Accès VIP Discord\n✅ Certificat de complétion\n✅ Stratégies avancées exclusives\n\nAttention, les places sont limitées !",
     followUps: [
-      { id: 'buy_immersion', label: 'Choisir Elite', action: 'go_pricing', icon: '👑' },
-      { id: 'compare', label: 'Comparer les offres', action: 'show_pricing', icon: '⚖️' }
+      { id: 'buy_immersion', label: 'Candidater', action: 'go_pricing', icon: '📝' },
+      { id: 'logistics', label: 'Lieu & Dates', action: 'ask_immersion_logistics', icon: '📍' }
     ]
   },
   {
@@ -103,7 +103,7 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'access_duration',
     category: 'Formation',
     patterns: ['combien de temps', 'durée accès', 'accès à vie', 'limite de temps', 'expiration'],
-    answer: "L'accès à nos formations est **à vie** pour toutes les offres ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
+    answer: "L'accès à nos formations est **à vie** pour les offres Entrée et Transformation ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
   },
   {
     id: 'what_is_included_client_area',
