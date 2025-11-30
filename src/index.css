@@ -252,3 +252,86 @@ section {
     content-visibility: auto;
   }
 }
+
+/* ============================================ */
+/* CALENDLY - Styles responsive pour mobile */
+/* ============================================ */
+
+/* Container Calendly responsive */
+.calendly-inline-widget {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+/* L'iframe Calendly doit prendre toute la hauteur disponible */
+.calendly-inline-widget iframe {
+  min-height: 100% !important;
+  width: 100% !important;
+  border: none !important;
+}
+
+/* Fix pour le scroll sur mobile iOS */
+@supports (-webkit-touch-callout: none) {
+  .calendly-inline-widget {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .calendly-inline-widget iframe {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Optimisations mobile spécifiques pour Calendly */
+@media (max-width: 768px) {
+  /* S'assurer que le widget prend bien toute la largeur */
+  .calendly-inline-widget {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Éviter les débordements */
+  .calendly-inline-widget iframe {
+    max-width: 100vw !important;
+  }
+  
+  /* Fix pour les modals Calendly sur mobile */
+  .calendly-popup-content {
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+  
+  .calendly-popup-close {
+    top: 12px !important;
+    right: 12px !important;
+  }
+}
+
+/* Animations d'entrée pour les modals Calendly */
+@keyframes calendly-modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-in-from-top-2 {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.slide-in-from-top-2 {
+  animation: slide-in-from-top-2 0.2s ease-out forwards;
+}

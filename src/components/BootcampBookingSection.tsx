@@ -106,13 +106,14 @@ export default function BootcampBookingSection({
           </p>
         </div>
 
-        {/* Carte principale 2 colonnes */}
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)] rounded-3xl bg-[#0c0c18]/95 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-sm">
+        {/* Carte principale 2 colonnes - Stack sur mobile */}
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)] rounded-2xl sm:rounded-3xl bg-[#0c0c18]/95 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-sm">
           
           {/* ============================================ */}
           {/* COLONNE GAUCHE - Informations */}
+          {/* Padding réduit sur mobile */}
           {/* ============================================ */}
-          <div className="p-8 lg:p-10 xl:p-12 flex flex-col">
+          <div className="p-5 sm:p-8 lg:p-10 xl:p-12 flex flex-col">
             {/* Titre de l'événement */}
             <div className="mb-8">
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-rose-400 to-amber-400 bg-clip-text text-transparent mb-4">
@@ -211,16 +212,24 @@ export default function BootcampBookingSection({
 
           {/* ============================================ */}
           {/* COLONNE DROITE - Widget Calendly */}
+          {/* Responsive : hauteur adaptée mobile/desktop */}
           {/* ============================================ */}
           <div className="bg-black/40 lg:border-l border-t lg:border-t-0 border-white/5">
-            <div className="h-full min-h-[650px] lg:min-h-[700px]">
+            {/* Conteneur avec hauteur responsive - plus grand sur mobile pour le scroll */}
+            <div 
+              className="w-full overflow-hidden"
+              style={{ 
+                height: 'clamp(550px, 80vh, 750px)',
+                minHeight: '550px',
+              }}
+            >
               {isClient ? (
                 <InlineWidget
                   url={calendlyUrl}
                   styles={{
                     height: '100%',
-                    minHeight: '650px',
                     width: '100%',
+                    minHeight: '100%',
                   }}
                   pageSettings={{
                     backgroundColor: '0a0a14',
@@ -228,7 +237,7 @@ export default function BootcampBookingSection({
                     hideLandingPageDetails: false,
                     primaryColor: 'ec4899', // Pink-500
                     textColor: 'ffffff',
-                    hideGdprBanner: false,
+                    hideGdprBanner: true,
                   }}
                   prefill={{
                     name: userName,
@@ -243,9 +252,9 @@ export default function BootcampBookingSection({
                 />
               ) : (
                 // Skeleton loader pendant le chargement
-                <div className="flex items-center justify-center h-full min-h-[650px] bg-slate-900/50">
+                <div className="flex items-center justify-center h-full bg-slate-900/50">
                   <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-slate-400 text-sm">Chargement du calendrier...</p>
                   </div>
                 </div>

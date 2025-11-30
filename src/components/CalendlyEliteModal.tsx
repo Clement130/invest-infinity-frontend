@@ -12,7 +12,8 @@ import {
   Sparkles,
   Users,
   ExternalLink,
-  Loader2
+  Loader2,
+  ChevronDown
 } from 'lucide-react';
 
 // ============================================
@@ -55,6 +56,7 @@ export default function CalendlyEliteModal({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [showInfoOnMobile, setShowInfoOnMobile] = useState(false);
 
   // S'assurer que le composant est monté côté client
   useEffect(() => {
@@ -64,18 +66,28 @@ export default function CalendlyEliteModal({
   // Bloquer le scroll du body quand le modal est ouvert
   useEffect(() => {
     if (isOpen) {
+      // Sauvegarder la position de scroll actuelle
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
+      
       setIsLoading(true);
-      // Simuler un temps de chargement minimum pour le skeleton
       const timer = setTimeout(() => setIsLoading(false), 1500);
+      
       return () => {
-        document.body.style.overflow = 'unset';
+        // Restaurer la position de scroll
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
         clearTimeout(timer);
       };
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen]);
 
   // Fermer avec Escape
@@ -123,47 +135,95 @@ export default function CalendlyEliteModal({
   // Contenu du modal
   const modalContent = (
     <div 
-      className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 flex items-center justify-center p-0 sm:p-4 md:p-6"
       style={{ 
         zIndex: 999999,
-        position: 'fixed',
-        width: '100vw',
-        height: '100vh',
       }}
     >
       {/* Backdrop sombre avec blur */}
       <div 
-        className="absolute top-0 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-lg"
+        className="absolute inset-0 bg-black/95 backdrop-blur-lg"
         onClick={() => setIsOpen(false)}
-        style={{ position: 'absolute' }}
       />
       
-      {/* Contenu du Modal */}
+      {/* Contenu du Modal - Plein écran sur mobile */}
       <div 
-        className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#0a0a14] via-[#0f0f1a] to-[#0a0a14] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.95)]"
-        style={{ 
-          maxHeight: 'calc(100vh - 48px)',
-          position: 'relative',
-          zIndex: 1,
-        }}
+        className="relative w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-5xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0a14] via-[#0f0f1a] to-[#0a0a14] border-0 sm:border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.95)]"
       >
         
-        {/* Bouton fermer */}
+        {/* Bouton fermer - Plus visible sur mobile */}
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-red-500/80 hover:bg-red-500 border border-white/20 transition-all duration-200 hover:scale-110 shadow-lg"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-50 p-3 sm:p-2.5 rounded-full bg-red-500/90 hover:bg-red-500 border border-white/20 transition-all duration-200 hover:scale-110 shadow-lg"
           aria-label="Fermer"
         >
-          <X className="w-5 h-5 text-white" />
+          <X className="w-6 h-6 sm:w-5 sm:h-5 text-white" />
         </button>
 
-        {/* Layout 2 colonnes avec scroll */}
-        <div className="grid lg:grid-cols-[1fr_1.3fr] overflow-hidden" style={{ maxHeight: 'calc(100vh - 48px)' }}>
+        {/* Layout responsive - Colonne unique sur mobile, 2 colonnes sur desktop */}
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1.3fr] h-full sm:h-auto overflow-hidden">
           
           {/* ============================================ */}
-          {/* COLONNE GAUCHE - Texte descriptif */}
+          {/* SUR MOBILE : Header compact avec toggle */}
           {/* ============================================ */}
-          <div className="p-6 sm:p-8 lg:p-10 overflow-y-auto border-b lg:border-b-0 lg:border-r border-white/5" style={{ maxHeight: 'calc(100vh - 48px)' }}>
+          <div className="lg:hidden flex-shrink-0 p-4 pt-16 bg-gradient-to-b from-[#0a0a14] to-transparent border-b border-white/5">
+            {/* Badge + Titre compact */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 px-2 py-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 rounded-full">
+                <Crown className="w-3 h-3 text-amber-400" />
+                <span className="text-xs font-semibold text-amber-300">Bootcamp Élite</span>
+              </div>
+              <div className="flex items-center gap-1 text-slate-400 text-xs">
+                <Clock className="w-3 h-3" />
+                <span>30 min</span>
+              </div>
+            </div>
+            <h2 className="text-xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-pink-400 via-rose-400 to-amber-400 bg-clip-text text-transparent">
+                Appel Découverte
+              </span>
+            </h2>
+            
+            {/* Toggle pour voir plus d'infos sur mobile */}
+            <button
+              onClick={() => setShowInfoOnMobile(!showInfoOnMobile)}
+              className="flex items-center gap-2 text-sm text-slate-400 hover:text-pink-400 transition-colors"
+            >
+              <span>{showInfoOnMobile ? 'Masquer les détails' : 'Voir les détails'}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showInfoOnMobile ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {/* Infos dépliables sur mobile */}
+            {showInfoOnMobile && (
+              <div className="mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Réserve ton appel avec l'équipe <strong className="text-white">Invest Infinity</strong>.
+                </p>
+                <div className="space-y-2">
+                  {eligibilityCriteria.map((criteria, index) => (
+                    <div key={index} className="flex items-center gap-2 text-xs text-slate-300">
+                      <criteria.icon className="w-3 h-3 text-pink-400" />
+                      <span>{criteria.text}</span>
+                    </div>
+                  ))}
+                </div>
+                <a
+                  href={calendlyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-slate-500 hover:text-pink-400 text-xs transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Ouvrir dans un nouvel onglet
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* ============================================ */}
+          {/* COLONNE GAUCHE - Texte descriptif (Desktop uniquement) */}
+          {/* ============================================ */}
+          <div className="hidden lg:block p-6 sm:p-8 lg:p-10 overflow-y-auto border-b lg:border-b-0 lg:border-r border-white/5 max-h-[95vh]">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 rounded-full mb-4">
               <Crown className="w-4 h-4 text-amber-400" />
@@ -243,8 +303,9 @@ export default function CalendlyEliteModal({
 
           {/* ============================================ */}
           {/* COLONNE DROITE - Widget Calendly */}
+          {/* Prend tout l'espace restant sur mobile */}
           {/* ============================================ */}
-          <div className="relative bg-[#0a0a12] overflow-hidden" style={{ minHeight: '550px', maxHeight: 'calc(100vh - 48px)' }}>
+          <div className="relative flex-1 lg:flex-none bg-[#0a0a12] overflow-hidden min-h-0">
             {/* Skeleton loader */}
             {isLoading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a12] z-10">
@@ -253,8 +314,11 @@ export default function CalendlyEliteModal({
               </div>
             )}
 
-            {/* Widget Calendly */}
-            <div className={`h-full transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+            {/* Widget Calendly - Hauteur dynamique sur mobile */}
+            <div 
+              className={`h-full transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+              style={{ minHeight: '100%' }}
+            >
               <InlineWidget
                 url={calendlyUrl}
                 styles={{
