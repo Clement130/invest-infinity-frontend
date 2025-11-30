@@ -5,7 +5,7 @@ import { Crown, X, AlertCircle, ExternalLink } from 'lucide-react';
 // ============================================
 // CONFIGURATION - Modifiez l'URL ici
 // ============================================
-export const CALENDLY_BOOTCAMP_URL = 'https://calendly.com/clement-ia-consulting/bootcamp-elite-appel-decouverte';
+export const CALENDLY_BOOTCAMP_URL = 'https://calendly.com/investinfinityfr/30min';
 
 // ============================================
 // Types
