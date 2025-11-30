@@ -208,22 +208,42 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
       localStorage.setItem('userPrenom', formData.prenom);
       sessionStorage.setItem('tempPassword', tempPassword); // Temporaire, nettoyé à la fermeture
 
-      // 4. Connecter automatiquement l'utilisateur si le compte est créé
+      // 4. Envoyer l'email de création de mot de passe immédiatement
+      // (permet au client de créer son mot de passe même s'il ne paie pas tout de suite)
+      if (signUpData.user) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-password-email', {
+            body: {
+              userId: signUpData.user.id,
+              email: formData.email,
+              prenom: formData.prenom,
+            },
+          });
+          if (emailError) {
+            console.error('[AuthModal] Erreur envoi email mot de passe:', emailError);
+          } else {
+            console.log('[AuthModal] Email de création de mot de passe envoyé');
+          }
+        } catch (emailErr) {
+          console.error('[AuthModal] Exception envoi email:', emailErr);
+        }
+      }
+
+      // 5. Connecter automatiquement l'utilisateur si le compte est créé
       if (signUpData.user && signUpData.session) {
         // L'utilisateur est déjà connecté via signUp
         console.log('[AuthModal] Compte créé et utilisateur connecté automatiquement');
-        toast.success('Compte créé avec succès ! 🎉', { duration: 2000 });
+        toast.success('Compte créé ! Vérifie tes emails pour créer ton mot de passe 📧', { duration: 4000 });
       } else if (signUpData.user && !signUpData.session) {
         // Email de confirmation requis - on essaie de se connecter directement
-        // (si le projet Supabase n'a pas la confirmation email obligatoire)
         try {
           await signIn(formData.email, tempPassword);
           console.log('[AuthModal] Connexion automatique réussie');
-          toast.success('Compte créé avec succès ! 🎉', { duration: 2000 });
+          toast.success('Compte créé ! Vérifie tes emails pour créer ton mot de passe 📧', { duration: 4000 });
         } catch (loginError) {
-          // Si la connexion échoue (email non confirmé), on continue quand même
-          console.log('[AuthModal] Connexion auto impossible, confirmation email requise');
-          toast.info('Compte créé ! Vérifie tes emails pour te connecter.', { duration: 4000 });
+          // Si la connexion échoue, on continue quand même
+          console.log('[AuthModal] Connexion auto impossible');
+          toast.info('Compte créé ! Vérifie tes emails pour créer ton mot de passe 📧', { duration: 4000 });
         }
       }
 
