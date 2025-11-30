@@ -38,31 +38,28 @@ export default function PricingPage() {
   }, []);
 
   // Fonction helper pour générer la liste des features depuis la config
-  const getFeaturesList = (offer: OfferConfig): string[] => {
-    const features: string[] = [];
+  const getFeaturesList = (offer: OfferConfig): { text: string; highlight?: boolean; isBonus?: boolean }[] => {
+    const features: { text: string; highlight?: boolean; isBonus?: boolean }[] = [];
     
     if (offer.offerId === 'entree') {
-      features.push('Sessions de trading en direct');
-      features.push('Communauté privée Discord');
-      features.push('Alertes trading en temps réel');
-      features.push('Echange avec les membres');
-      features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
+      // Starter
+      features.push({ text: 'Alertes de trading' });
+      features.push({ text: 'Accès à la communauté' });
+      features.push({ text: 'Support 7/7' });
+      features.push({ text: 'Vidéos TopStepX/Apex/Metatrader' });
     } else if (offer.offerId === 'transformation') {
-      features.push('Offre Starter incluse');
-      features.push('Accès à l\'intégralité de la formation');
-      features.push('Groupe exclusif (questions + analyses)');
-      features.push('Accompagnement 7j/7');
-      features.push('2 stratégies de trading rentables');
-      features.push('1 coaching individuel de 30 min en visio');
+      // Pro
+      features.push({ text: 'Tout ce qui est dans Starter', highlight: true });
+      features.push({ text: 'Lives trading (15h-17h30, lun-ven)' });
+      features.push({ text: 'Accès aux replays' });
     } else if (offer.offerId === 'immersion_elite') {
-      features.push('Tout Premium inclus');
-      features.push('5 jours de formation en présentiel (9h-17h)');
-      features.push('Coaching personnalisé en petit groupe');
-      features.push('Trading en live avec Mickaël');
-      features.push('Analyse de vos trades en temps réel');
-      features.push('Déjeuners offerts (5 repas)');
-      features.push('Certificat de complétion');
-      features.push('Accès VIP Discord à vie');
+      // Elite
+      features.push({ text: 'Tout ce qui est dans Pro', highlight: true });
+      features.push({ text: 'Zone Premium (analyses avancées)' });
+      features.push({ text: 'Formation complète Invest Infinity' });
+      features.push({ text: '2 stratégies rentables' });
+      features.push({ text: 'Mises à jour à vie' });
+      features.push({ text: 'BONUS : Appel 1-to-1 de 30min (200€)', isBonus: true });
     }
     
     return features;
@@ -232,112 +229,134 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Cartes de Pricing */}
+      {/* Cartes de Pricing - Design Premium */}
       <section className="relative pb-20">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-4 items-start">
             {getAllOffers().map((offer) => {
               const features = getFeaturesList(offer);
-              const visibleFeatures = features.slice(0, 7);
-              const hasMoreFeatures = features.length > 7;
-              const isImmersion = offer.offerId === 'immersion_elite';
+              const isElite = offer.offerId === 'immersion_elite';
+              const isPro = offer.offerId === 'transformation';
               const planType = offerIdToPlanType(offer.offerId);
               const isLoading = loading === planType;
               
               // Icônes selon l'offre
               const Icon = offer.offerId === 'entree' ? Zap : offer.offerId === 'transformation' ? Star : Crown;
-              const iconColor = offer.offerId === 'entree' ? 'text-pink-400' : offer.offerId === 'transformation' ? 'text-yellow-400' : 'text-yellow-400';
+              const iconColor = offer.offerId === 'entree' ? 'text-cyan-400' : isPro ? 'text-purple-400' : 'text-yellow-400';
               
-              // Styles de bordure selon l'offre
-              const borderClass = isImmersion 
-                ? 'border-2 border-yellow-500/50 bg-gradient-to-br from-yellow-900/10 to-amber-900/10'
-                : offer.offerId === 'transformation'
-                ? 'border border-pink-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50'
-                : 'border border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/50';
+              // Styles de bordure selon l'offre - Elite avec bordure jaune/or
+              const cardClass = isElite 
+                ? 'border-2 border-yellow-500/60 bg-gradient-to-b from-[#1a1a1f] to-[#0d0d10] shadow-[0_0_30px_rgba(234,179,8,0.15)]'
+                : 'border border-cyan-500/20 bg-gradient-to-b from-[#0f1419] to-[#0a0d12]';
               
               return (
                 <div
                   key={offer.offerId}
-                  className={`relative rounded-xl ${borderClass} shadow-lg max-w-[360px] mx-auto lg:max-w-none`}
-                  style={{ maxWidth: '360px' }}
+                  className={`relative rounded-2xl ${cardClass} overflow-hidden max-w-[380px] mx-auto lg:max-w-none transition-all duration-300 hover:scale-[1.02]`}
                 >
-                  {/* Badge pour Immersion */}
-                  {isImmersion && offer.badge && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-yellow-500 to-amber-500 text-black flex items-center gap-1">
-                        <Crown className="w-3 h-3" />
+                  {/* Badge "MEILLEURE OFFRE" pour Elite */}
+                  {isElite && offer.badge && (
+                    <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg">
+                        <Crown className="w-3.5 h-3.5" />
                         {offer.badge.text}
                       </span>
                     </div>
                   )}
                   
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex items-center gap-2 mb-2">
+                  <div className="p-6 pt-8">
+                    {/* Header avec icône */}
+                    <div className="flex items-center gap-2 mb-1">
                       <Icon className={`w-5 h-5 ${iconColor}`} />
-                      <h3 className="text-xl font-bold">{offer.name}</h3>
+                      <h3 className="text-xl font-bold text-white">{offer.name}</h3>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">{offer.description}</p>
+                    <p className="text-sm text-gray-400 mb-5">{offer.description}</p>
                     
-                    {/* Badge discret pour Transformation */}
-                    {offer.offerId === 'transformation' && offer.badge && (
-                      <div className="mb-4">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-green-400">
-                          {offer.badge.text}
-                        </span>
+                    {/* Section Prix avec ancien prix barré et réduction */}
+                    <div className="mb-1">
+                      {/* Ancien prix barré + badge réduction */}
+                      <div className="flex items-center gap-3 mb-1">
+                        {offer.oldPrice && (
+                          <span className="text-sm text-gray-500 line-through">
+                            {offer.oldPrice.toLocaleString('fr-FR')}€
+                          </span>
+                        )}
+                        {offer.discountPercent && (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                            isElite 
+                              ? 'bg-yellow-500/20 text-yellow-400' 
+                              : isPro 
+                              ? 'bg-purple-500/20 text-purple-400'
+                              : 'bg-cyan-500/20 text-cyan-400'
+                          }`}>
+                            -{offer.discountPercent}%
+                          </span>
+                        )}
                       </div>
-                    )}
-                    
-                    {/* Prix */}
-                    <div className="mb-6">
-                      <div className="text-4xl font-bold mb-1">
+                      
+                      {/* Prix actuel */}
+                      <div className="text-4xl font-bold text-white mb-1">
                         {offer.price.toLocaleString('fr-FR')}€
                       </div>
-                      <span className="text-sm opacity-70 text-gray-400">{offer.paymentDescription}</span>
-                    </div>
-                    
-                    {/* Info spéciale pour Immersion */}
-                    {isImmersion && (
-                      <div className="mb-4 space-y-1.5 text-sm">
-                        <div className="flex items-center gap-2 text-yellow-400/90">
-                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Près de Halo, Marseille</span>
+                      
+                      {/* Description paiement */}
+                      <span className="text-sm text-gray-400">{offer.paymentDescription}</span>
+                      
+                      {/* Paiement en 3x sans frais */}
+                      {offer.installmentsText && (
+                        <div className={`text-sm mt-1 ${isElite ? 'text-amber-400' : 'text-purple-400'}`}>
+                          {offer.installmentsText}
                         </div>
-                        <div className="flex items-center gap-2 text-yellow-400/90">
-                          <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Lundi au vendredi, 5-8 élèves max</span>
+                      )}
+                    </div>
+
+                    {/* Liste des avantages */}
+                    <ul className="space-y-3 my-6">
+                      {features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          {feature.isBonus ? (
+                            <Phone className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isElite ? 'text-amber-400' : 'text-cyan-400'}`} />
+                          ) : feature.highlight ? (
+                            <div className={`w-4 h-4 flex-shrink-0 mt-0.5 rounded ${isElite ? 'bg-yellow-500' : isPro ? 'bg-purple-500' : 'bg-cyan-500'} flex items-center justify-center`}>
+                              <Check className="w-3 h-3 text-black" />
+                            </div>
+                          ) : (
+                            <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isElite ? 'text-yellow-500' : isPro ? 'text-purple-400' : 'text-cyan-400'}`} />
+                          )}
+                          <span className={`text-sm leading-relaxed ${
+                            feature.isBonus 
+                              ? (isElite ? 'text-amber-400 font-semibold' : 'text-cyan-400 font-semibold')
+                              : 'text-gray-300'
+                          }`}>
+                            {feature.text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* Garantie pour Elite */}
+                    {isElite && (
+                      <div className="mb-4 p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                        <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                          <Shield className="w-4 h-4" />
+                          <span>Garantie 14 jours satisfait ou remboursé</span>
                         </div>
                       </div>
                     )}
-
-                    {/* Liste des avantages */}
-                    <ul className="space-y-2.5 mb-6">
-                      {visibleFeatures.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2.5">
-                          <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isImmersion ? 'text-yellow-500' : 'text-pink-500'}`} />
-                          <span className="text-sm text-gray-300 leading-relaxed">{feature}</span>
-                        </li>
-                      ))}
-                      {hasMoreFeatures && (
-                        <li className="text-xs text-gray-500 pt-1">
-                          + {features.length - 7} autres avantages
-                        </li>
-                      )}
-                    </ul>
 
                     {/* Bouton CTA */}
                     <button
                       onClick={() => handlePurchase(planType)}
                       disabled={isLoading}
                       className={`
-                        w-full py-3 px-6 rounded-lg font-medium transition-all 
+                        w-full py-3.5 px-6 rounded-lg font-semibold transition-all duration-300
                         disabled:opacity-50 disabled:cursor-not-allowed 
                         flex items-center justify-center gap-2
-                        ${isImmersion
-                          ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-[#1a0f0a] font-bold hover:shadow-lg hover:shadow-orange-500/40'
-                          : offer.offerId === 'transformation'
-                          ? 'bg-gradient-to-r from-pink-500/80 to-violet-500/80 text-white hover:from-pink-600 hover:to-violet-600'
-                          : 'border border-pink-500/50 text-pink-400 hover:bg-pink-500/10'
+                        ${isElite
+                          ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black hover:shadow-lg hover:shadow-yellow-500/30 hover:scale-[1.02]'
+                          : isPro
+                          ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:shadow-lg hover:shadow-purple-500/30'
+                          : 'border-2 border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400/60'
                         }
                       `}
                     >
@@ -348,12 +367,9 @@ export default function PricingPage() {
                         </>
                       ) : (
                         <>
-                          {isImmersion && <Crown className="w-4 h-4" />}
+                          {isElite && <Crown className="w-4 h-4" />}
                           <span>
-                            {isImmersion 
-                              ? `Réserver ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`
-                              : `Choisir ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`
-                            }
+                            Choisir {offer.name} — {offer.price.toLocaleString('fr-FR')}€
                           </span>
                         </>
                       )}

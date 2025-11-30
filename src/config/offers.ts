@@ -36,12 +36,18 @@ export interface OfferConfig {
   name: string;
   /** Description courte */
   description: string;
+  /** Ancien prix barré (optionnel) */
+  oldPrice?: number;
   /** Prix en euros */
   price: number;
+  /** Pourcentage de réduction (optionnel) */
+  discountPercent?: number;
   /** Type de paiement */
   paymentType: 'one-time' | 'weekly';
   /** Description du paiement */
   paymentDescription: string;
+  /** Texte pour paiement en plusieurs fois (optionnel) */
+  installmentsText?: string;
   /** ID Stripe Price (optionnel, récupéré depuis la DB) */
   stripePriceId?: string;
   /** Licence système correspondante */
@@ -85,6 +91,8 @@ export interface OfferConfig {
     text: string;
     color: string;
   };
+  /** Offre mise en avant (highlight) */
+  highlight?: boolean;
 }
 
 /**
@@ -94,15 +102,17 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
   entree: {
     offerId: 'entree',
     name: 'Starter',
-    description: 'Les outils essentiels pour commencer',
-    price: 147,
+    description: 'Pour débuter sereinement',
+    oldPrice: 149,
+    price: 97,
+    discountPercent: 35,
     paymentType: 'one-time',
     paymentDescription: 'paiement unique • accès à vie',
     license: 'starter',
-    includedModules: [], // À remplir avec les IDs réels des modules
+    includedModules: [],
     includedFeatures: {
       discord: true,
-      liveSessions: true,
+      liveSessions: false,
       alerts: true,
       immersionWeek: false,
       support: true,
@@ -116,13 +126,42 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
   },
   transformation: {
     offerId: 'transformation',
-    name: 'Premium',
-    description: 'Formation + accompagnement en live',
-    price: 497,
+    name: 'Pro',
+    description: 'Pour progresser rapidement',
+    oldPrice: 497,
+    price: 347,
+    discountPercent: 30,
     paymentType: 'one-time',
-    paymentDescription: 'paiement 3 fois',
+    paymentDescription: 'paiement unique • accès à vie',
+    installmentsText: 'ou 3x 116€/mois sans frais',
     license: 'pro',
-    includedModules: [], // À remplir avec les IDs réels des modules
+    includedModules: [],
+    includedFeatures: {
+      discord: true,
+      liveSessions: true,
+      alerts: true,
+      immersionWeek: false,
+      support: true,
+      platformTutorials: true,
+      premiumZone: false,
+      individualCoaching: false,
+      unlimitedReplays: true,
+      certificate: false,
+      vipDiscord: false,
+    },
+  },
+  immersion_elite: {
+    offerId: 'immersion_elite',
+    name: 'Elite',
+    description: 'Pour la maîtrise complète',
+    oldPrice: 1656,
+    price: 497,
+    discountPercent: 70,
+    paymentType: 'one-time',
+    paymentDescription: 'paiement unique • accès à vie',
+    installmentsText: 'ou 3x 166€/mois sans frais',
+    license: 'elite',
+    includedModules: [],
     includedFeatures: {
       discord: true,
       liveSessions: true,
@@ -137,36 +176,10 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
       vipDiscord: false,
     },
     badge: {
-      text: 'Garantie 14 jours',
-      color: 'green',
-    },
-  },
-  immersion_elite: {
-    offerId: 'immersion_elite',
-    name: 'Immersion Élite',
-    description: 'Formation présentielle intensive à Marseille',
-    price: 1997,
-    paymentType: 'weekly',
-    paymentDescription: 'paiement unique • 1 semaine intensive',
-    license: 'elite',
-    includedModules: [], // À remplir avec les IDs réels des modules
-    includedFeatures: {
-      discord: true,
-      liveSessions: true,
-      alerts: true,
-      immersionWeek: true,
-      support: true,
-      platformTutorials: true,
-      premiumZone: true,
-      individualCoaching: true,
-      unlimitedReplays: true,
-      certificate: true,
-      vipDiscord: true,
-    },
-    badge: {
-      text: 'IMMERSION TOTALE',
+      text: 'MEILLEURE OFFRE',
       color: 'yellow',
     },
+    highlight: true,
   },
 };
 
