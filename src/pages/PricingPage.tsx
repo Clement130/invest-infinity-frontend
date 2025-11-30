@@ -189,9 +189,10 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[#0f0f13] text-white">
       {/* Header */}
       <section className="relative pt-32 pb-20 overflow-hidden">
+        {/* Background glow effects - désactivés/ralentis sur mobile via CSS */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-500/20 rounded-full filter blur-[100px] animate-pulse delay-1000" />
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse md:animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-500/20 rounded-full filter blur-[100px] animate-pulse md:animate-pulse md:delay-1000" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -253,7 +254,7 @@ export default function PricingPage() {
               return (
                 <div
                   key={offer.offerId}
-                  className={`relative rounded-2xl ${borderClass} max-w-[360px] mx-auto lg:max-w-none transition-all duration-300 hover:scale-[1.02]`}
+                  className={`relative rounded-2xl ${borderClass} max-w-[360px] mx-auto lg:max-w-none transition-all duration-500 md:duration-300 md:hover:scale-[1.02]`}
                   style={{ maxWidth: '360px' }}
                 >
                   {/* Badge pour Immersion */}
@@ -387,11 +388,12 @@ export default function PricingPage() {
 
       {/* Section FAQ - Design premium identique à la page d'accueil */}
       <section className="relative bg-[#0f0f13] py-16 sm:py-24 lg:py-32 overflow-hidden">
-        {/* Dégradés d'arrière-plan */}
+        {/* Dégradés d'arrière-plan - animations désactivées sur mobile via CSS global */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full filter blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse" style={{ animationDelay: '0.5s' }} />
+          {/* Sur mobile : opacité réduite et animation plus lente via CSS */}
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] hidden md:block md:animate-pulse" style={{ animationDelay: '0.5s' }} />
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -438,8 +440,8 @@ export default function PricingPage() {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     className="relative group"
                   >
-                    {/* Glow effect au hover */}
-                    <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500" />
+                    {/* Glow effect au hover - désactivé sur mobile */}
+                    <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500 hidden md:block" />
                     
                     {/* Conteneur de l'accordéon */}
                     <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500 hover:border-pink-500/20">
@@ -507,7 +509,7 @@ export default function PricingPage() {
                 // Déclencher un événement personnalisé pour ouvrir le chatbot
                 window.dispatchEvent(new CustomEvent('openChatbot'));
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 hover:scale-105 active:scale-95"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium transition-all duration-500 md:duration-300 hover:shadow-lg hover:shadow-pink-500/25 md:hover:scale-105 active:scale-95"
               aria-label="Ouvrir le chatbot pour poser une question"
             >
               <MessageCircle className="w-5 h-5" />

@@ -155,25 +155,84 @@ section {
   will-change: transform, opacity;
 }
 
-/* Optimisations pour mobile et animations réduites */
+/* ============================================ */
+/* OPTIMISATIONS MOBILE - Animations plus douces */
+/* ============================================ */
+
+/* Animations personnalisées lentes pour mobile */
+@keyframes pulse-mobile {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer-mobile {
+  0% { background-position: -500px 0; }
+  100% { background-position: 500px 0; }
+}
+
+@keyframes gradient-mobile {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes bounce-mobile {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Classes utilitaires pour animations mobiles */
+.animate-pulse-mobile {
+  animation: pulse-mobile 4s ease-in-out infinite;
+}
+
+.animate-shimmer-mobile {
+  animation: shimmer-mobile 4s linear infinite;
+}
+
+.animate-gradient-mobile {
+  animation: gradient-mobile 12s ease infinite;
+}
+
+.animate-bounce-mobile {
+  animation: bounce-mobile 3s ease-in-out infinite;
+}
+
+/* Mobile : Ralentir TOUTES les animations */
 @media (max-width: 768px) {
-  /* Réduire les animations sur mobile */
+  /* Transitions plus longues sur mobile */
   * {
-    animation-duration: 0.2s !important;
-    transition-duration: 0.2s !important;
+    transition-duration: 0.4s !important;
   }
 
-  /* Désactiver les animations complexes sur mobile */
+  /* Désactiver complètement les animations agressives sur mobile */
+  .animate-pulse {
+    animation: pulse-mobile 5s ease-in-out infinite !important;
+  }
+  
+  .animate-bounce {
+    animation: bounce-mobile 4s ease-in-out infinite !important;
+  }
+  
+  .animate-spin {
+    animation-duration: 2s !important;
+  }
+
+  /* Désactiver les animations de background complexes */
   .animate-pulse-slow,
   .animate-float,
   .animate-move-right,
-  .animate-move-left,
-  .animate-gradient {
+  .animate-move-left {
     animation: none !important;
+  }
+  
+  /* Ralentir l'animation gradient au lieu de la désactiver */
+  .animate-gradient {
+    animation: gradient-mobile 15s ease infinite !important;
   }
 
   /* Optimiser les éléments qui se transforment */
-  .transform, .hover\\:scale-110, .hover\\:scale-105 {
+  .transform {
     will-change: transform;
   }
 }

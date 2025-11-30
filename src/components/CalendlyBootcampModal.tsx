@@ -86,15 +86,15 @@ export default function CalendlyBootcampModal({
     utmContent: sessionId || 'no_session',
   };
 
-  // Style par défaut du bouton (gradient orange/jaune avec effet brillance)
+  // Style par défaut du bouton (gradient orange/jaune avec effet brillance) - animations plus douces sur mobile
   const defaultButtonClass = `
     w-full py-5 px-6 
     bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
     text-[#1a0f0a] font-extrabold text-lg
     rounded-xl 
-    transition-all duration-300 
-    transform hover:scale-[1.02] active:scale-[0.98]
-    shadow-2xl shadow-orange-500/40 
+    transition-all duration-500 md:duration-300 
+    transform md:hover:scale-[1.02] active:scale-[0.98]
+    shadow-xl md:shadow-2xl md:shadow-orange-500/40 
     hover:shadow-orange-500/60
     flex items-center justify-center gap-3
     relative overflow-hidden
@@ -120,8 +120,8 @@ export default function CalendlyBootcampModal({
           onClick={handleOpenModal}
           className={buttonClassName || defaultButtonClass}
         >
-          {/* Effet de brillance au survol */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          {/* Effet de brillance au survol - plus lent sur mobile */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2000ms] md:duration-1000 hidden sm:block" />
           
           {showCrownIcon && <Crown className="w-6 h-6 relative z-10" />}
           <span className="relative z-10">{buttonText} — {price}</span>
@@ -190,8 +190,8 @@ export default function CalendlyBootcampModal({
         onClick={handleOpenModal}
         className={buttonClassName || defaultButtonClass}
       >
-        {/* Effet de brillance au survol */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+        {/* Effet de brillance au survol - plus lent sur mobile, désactivé sur très petits écrans */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2000ms] md:duration-1000 hidden sm:block" />
         
         {showCrownIcon && <Crown className="w-6 h-6 relative z-10" />}
         <span className="relative z-10">{buttonText} — {price}</span>

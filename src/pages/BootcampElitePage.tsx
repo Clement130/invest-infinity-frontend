@@ -20,11 +20,13 @@ export default function BootcampElitePage() {
       {/* HERO SECTION */}
       {/* ============================================ */}
       <section className="relative pt-28 pb-12 lg:pt-36 lg:pb-16 overflow-hidden">
-        {/* Background effects */}
+        {/* Background effects - désactivés/simplifiés sur mobile */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-pink-500/20 via-purple-500/10 to-transparent rounded-full filter blur-[100px]" />
-          <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-amber-500/15 rounded-full filter blur-[80px] animate-pulse" />
-          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-500/15 rounded-full filter blur-[80px] animate-pulse delay-1000" />
+          {/* Gradient statique sur mobile, complet sur desktop */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] md:w-[800px] h-[300px] md:h-[600px] bg-gradient-to-b from-pink-500/20 via-purple-500/10 to-transparent rounded-full filter blur-[80px] md:blur-[100px]" />
+          {/* Effets animés uniquement sur desktop */}
+          <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-amber-500/15 rounded-full filter blur-[80px] hidden md:block md:animate-pulse" />
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-500/15 rounded-full filter blur-[80px] hidden md:block md:animate-pulse md:delay-1000" />
         </div>
 
         {/* Grid pattern overlay */}
@@ -224,7 +226,7 @@ export default function BootcampElitePage() {
                 window.scrollTo({ top: 800, behavior: 'smooth' });
               }
             }}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white font-bold text-lg rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-xl shadow-pink-500/30 hover:shadow-pink-500/50"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white font-bold text-lg rounded-xl md:hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 md:duration-300 shadow-lg md:shadow-xl md:shadow-pink-500/30 md:hover:shadow-pink-500/50"
           >
             <Crown className="w-6 h-6" />
             Réserver mon appel gratuit

@@ -32,11 +32,14 @@ export default function Hero({ onOpenRegister }: HeroProps) {
         {/* Overlay principal avec effet de parallaxe */}
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-black/40" />
           
-          {/* Effets de lumière dynamiques */}
+          {/* Effets de lumière dynamiques - désactivés sur mobile pour performance */}
           <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse delay-1000" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-pink-400/10 rounded-full filter blur-[120px] animate-pulse delay-500" />
+            {/* Sur mobile : effets statiques ou très lents, sur desktop : animations normales */}
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse md:delay-1000" />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-pink-400/10 rounded-full filter blur-[120px] hidden md:block md:animate-pulse md:delay-500" />
+            {/* Version mobile simplifiée - un seul élément statique */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-pink-500/15 rounded-full filter blur-[80px] md:hidden" />
           </div>
       </div>
 
@@ -47,23 +50,26 @@ export default function Hero({ onOpenRegister }: HeroProps) {
 <div className="mb-6 relative text-center">
   <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight">
     <span className="relative inline-block">
-      <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-        <span className="absolute text-pink-500 opacity-0 animate-pulse filter blur-sm">REJOINS</span>
+      {/* Effet glitch désactivé sur mobile */}
+      <div className="absolute top-0 left-0 w-full h-full items-center justify-center hidden md:flex">
+        <span className="absolute text-pink-500 opacity-0 md:animate-pulse filter blur-sm">REJOINS</span>
       </div>
       REJOINS
     </span>
     {' '}
     <span className="relative inline-block">
       UNE COMMUNAUTÉ
-      <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-        <span className="absolute text-pink-500 opacity-0 animate-pulse filter blur-sm">UNE COMMUNAUTÉ</span>
+      {/* Effet glitch désactivé sur mobile */}
+      <div className="absolute top-0 left-0 w-full h-full items-center justify-center hidden md:flex">
+        <span className="absolute text-pink-500 opacity-0 md:animate-pulse filter blur-sm">UNE COMMUNAUTÉ</span>
       </div>
     </span>
   </h1>
 
   {/* Deuxième ligne avec une plus grande taille et bien centrée */}
 {/* Deuxième ligne avec une taille identique au titre */}
-<h2 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-pink-500 to-pink-500 animate-gradient mt-2">
+{/* Gradient animé - plus lent sur mobile via CSS global */}
+<h2 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-pink-500 to-pink-500 md:animate-gradient mt-2">
   DE TRADERS PERFORMANTS
 </h2>
 
@@ -82,8 +88,8 @@ export default function Hero({ onOpenRegister }: HeroProps) {
               onClick={() => navigate('/pricing')}
               className="group relative px-8 py-4 bg-gradient-to-r from-pink-500 to-pink-500 text-white rounded-xl overflow-hidden"
             >
-              {/* Effet de brillance */}
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-400/0 via-pink-400/50 to-pink-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              {/* Effet de brillance - plus lent sur mobile */}
+              <div className="absolute inset-0 bg-gradient-to-r from-pink-400/0 via-pink-400/50 to-pink-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2000ms] md:duration-1000" />
               
               {/* Contenu du bouton */}
               <div className="relative flex items-center justify-center gap-2">
@@ -118,6 +124,7 @@ export default function Hero({ onOpenRegister }: HeroProps) {
               {/* Cercle pulsant */}
               <div className="absolute inset-0 bg-pink-500/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-700 ease-out" />
               <div className="relative bg-pink-500/10 rounded-full p-2 transition-colors group-hover:bg-pink-500/20">
+                {/* Bounce plus lent sur mobile via CSS global */}
                 <ChevronDown className="w-6 h-6 text-white animate-bounce" />
               </div>
             </div>

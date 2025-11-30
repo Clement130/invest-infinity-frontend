@@ -123,8 +123,11 @@ export default function ImmersionElitePage() {
       {/* Header avec bouton retour */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full filter blur-[100px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-amber-500/20 rounded-full filter blur-[100px] animate-pulse delay-1000" />
+          {/* Effets de glow animés uniquement sur desktop */}
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-amber-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse md:delay-1000" />
+          {/* Version mobile simplifiée - statique */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-amber-500/10 rounded-full filter blur-[60px] md:hidden" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">

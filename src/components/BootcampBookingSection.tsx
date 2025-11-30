@@ -79,11 +79,14 @@ export default function BootcampBookingSection({
 
   return (
     <section className="relative py-16 lg:py-24 overflow-hidden">
-      {/* Background avec effets */}
+      {/* Background avec effets - désactivés sur mobile */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#050816] via-[#0a0a1a] to-[#050816]" />
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-pink-500/10 rounded-full filter blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[120px] animate-pulse delay-1000" />
+        {/* Effets de glow animés uniquement sur desktop */}
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-pink-500/10 rounded-full filter blur-[120px] hidden md:block md:animate-pulse" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/10 rounded-full filter blur-[120px] hidden md:block md:animate-pulse md:delay-1000" />
+        {/* Version mobile simplifiée - statique */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-pink-500/5 rounded-full filter blur-[60px] md:hidden" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
