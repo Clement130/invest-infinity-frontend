@@ -294,6 +294,12 @@ export default function PricingPage() {
                         {offer.price.toLocaleString('fr-FR')}€
                       </div>
                       <span className="text-sm opacity-70 text-gray-400">{offer.paymentDescription}</span>
+                      {/* Option paiement en 3x sans frais */}
+                      {offer.installmentsText && (
+                        <div className={`text-sm mt-1 ${isImmersion ? 'text-amber-400' : 'text-amber-400'}`}>
+                          {offer.installmentsText}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Info spéciale pour Immersion */}

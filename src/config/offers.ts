@@ -42,6 +42,8 @@ export interface OfferConfig {
   paymentType: 'one-time' | 'weekly';
   /** Description du paiement */
   paymentDescription: string;
+  /** Texte pour paiement en plusieurs fois (optionnel) */
+  installmentsText?: string;
   /** ID Stripe Price (optionnel, récupéré depuis la DB) */
   stripePriceId?: string;
   /** Licence système correspondante */
@@ -121,6 +123,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     price: 497,
     paymentType: 'one-time',
     paymentDescription: 'paiement unique • accès à vie',
+    installmentsText: 'ou 3x 166€/mois sans frais',
     license: 'pro',
     includedModules: [], // À remplir avec les IDs réels des modules
     includedFeatures: {
@@ -147,7 +150,8 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     description: 'Formation présentielle intensive à Marseille',
     price: 1997,
     paymentType: 'weekly',
-    paymentDescription: 'paiement unique • 1 semaine intensive',
+    paymentDescription: 'paiement unique • accès à vie',
+    installmentsText: 'ou 3x 666€/mois sans frais',
     license: 'elite',
     includedModules: [], // À remplir avec les IDs réels des modules
     includedFeatures: {
