@@ -2,7 +2,6 @@ import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Send, 
-  Calendar, 
   Loader2, 
   CheckCircle, 
   AlertCircle,
@@ -10,9 +9,10 @@ import {
   User,
   Mail,
   Phone,
-  FileText
+  FileText,
+  Bot,
+  Zap
 } from 'lucide-react';
-import CalendlyContactModal from '../components/CalendlyContactModal';
 
 // ============================================
 // Icônes SVG personnalisées pour les réseaux sociaux
@@ -318,22 +318,29 @@ export default function ContactPage() {
                   ))}
                 </div>
 
-                {/* Séparateur */}
+                {/* Encart Chatbot */}
                 <div className="border-t border-white/10 pt-6">
-                  {/* Encart appel rapide */}
-                  <div className="bg-gradient-to-br from-pink-500/10 via-violet-500/10 to-purple-500/10 rounded-2xl p-5 border border-pink-500/20">
+                  <div className="bg-gradient-to-br from-violet-500/10 via-pink-500/10 to-purple-500/10 rounded-2xl p-5 border border-violet-500/20">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-pink-400" />
+                      <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center">
+                        <Bot className="w-5 h-5 text-violet-400" />
                       </div>
-                      <h3 className="font-semibold text-white">Tu préfères un appel direct ?</h3>
+                      <h3 className="font-semibold text-white">Une question ? Demande à notre assistant !</h3>
                     </div>
                     <p className="text-gray-400 text-sm mb-4">
-                      Réserve un créneau de 30 min avec un coach pour discuter de tes objectifs.
+                      Notre chatbot est disponible 24h/24 pour répondre à toutes tes questions sur nos formations, le trading, et plus encore.
                     </p>
                     
-                    {/* Bouton Calendly */}
-                    <CalendlyContactModal />
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('openChatbot'))}
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 
+                        bg-gradient-to-r from-violet-500 to-pink-500 
+                        text-white font-bold rounded-xl 
+                        hover:scale-[1.02] transition-transform shadow-lg shadow-violet-500/20"
+                    >
+                      <Zap className="w-5 h-5" />
+                      Discuter avec l'assistant
+                    </button>
                   </div>
                 </div>
               </div>
