@@ -42,10 +42,10 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offers_overview',
     category: 'Tarifs',
     patterns: ['tarifs', 'prix', 'offres', 'formules', 'combien ça coûte', 'abonnement', 'payer'],
-    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Starter (147€)** : Pour débuter avec les bases et la communauté.\n🔹 **Transformation (497€)** : La plus populaire, avec formation complète et lives.\n🔹 **Immersion Élite (1997€)** : Accompagnement premium en présentiel.\n\nQuelle formule vous intéresse ?",
+    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Starter (147€)** : Pour débuter avec les bases et la communauté.\n🔹 **Premium (497€)** : La plus populaire, avec formation complète et lives.\n🔹 **Immersion Élite (1997€)** : Accompagnement premium en présentiel.\n\nQuelle formule vous intéresse ?",
     followUps: [
       { id: 'entree', label: 'Offre Starter', action: 'show_entree', icon: '🌱' },
-      { id: 'transfo', label: 'Offre Transformation', action: 'show_transformation', icon: '🚀' },
+      { id: 'transfo', label: 'Offre Premium', action: 'show_transformation', icon: '🚀' },
       { id: 'immersion', label: 'Immersion Élite', action: 'show_immersion', icon: '👑' }
     ]
   },
@@ -63,9 +63,9 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offer_transformation_details',
     category: 'Tarifs',
     patterns: ['offre transformation', 'pro', 'formule transformation', 'transformation contient quoi', 'intermédiaire'],
-    answer: "L'offre **Transformation (497€)** est notre best-seller ! 🏆\n\nEn plus de tout le contenu de l'offre Starter, vous avez :\n✅ Accès aux sessions LIVE hebdomadaires\n✅ Replays illimités\n✅ Zone Premium & Coaching individuel\n✅ Garantie satisfait ou remboursé 14 jours\n\nPaiement unique, accès à vie.",
+    answer: "L'offre **Premium (497€)** est notre best-seller ! 🏆\n\n✅ Offre Starter incluse\n✅ Accès à l'intégralité de la formation\n✅ Groupe exclusif (questions + analyses)\n✅ Accompagnement 7j/7\n✅ 2 stratégies de trading rentables\n✅ 1 coaching individuel de 30 min en visio\n\nPaiement 3 fois.",
     followUps: [
-      { id: 'buy_transfo', label: 'Choisir Transformation', action: 'go_pricing', icon: '🛒' },
+      { id: 'buy_transfo', label: 'Choisir Premium', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer', action: 'show_pricing', icon: '⚖️' }
     ]
   },
@@ -73,7 +73,7 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offer_immersion_details',
     category: 'Tarifs',
     patterns: ['offre immersion', 'élite', 'formule immersion', 'présentiel', 'marseille', 'immersion contient quoi'],
-    answer: "L'offre **Immersion Élite (1997€)** est l'expérience ultime.\n\n🌊 **Une semaine intensive en présentiel à Marseille** avec nos experts.\n✅ Tout le contenu Transformation inclus\n✅ Accès VIP Discord\n✅ Certificat de complétion\n✅ Stratégies avancées exclusives\n\nAttention, les places sont limitées !",
+    answer: "L'offre **Immersion Élite (1997€)** est l'expérience ultime.\n\n🌊 **Une semaine intensive en présentiel à Marseille** avec nos experts.\n✅ Tout le contenu Premium inclus\n✅ Accès VIP Discord\n✅ Certificat de complétion\n✅ Stratégies avancées exclusives\n\nAttention, les places sont limitées !",
     followUps: [
       { id: 'buy_immersion', label: 'Candidater', action: 'go_pricing', icon: '📝' },
       { id: 'logistics', label: 'Lieu & Dates', action: 'ask_immersion_logistics', icon: '📍' }
@@ -103,7 +103,7 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'access_duration',
     category: 'Formation',
     patterns: ['combien de temps', 'durée accès', 'accès à vie', 'limite de temps', 'expiration'],
-    answer: "L'accès à nos formations est **à vie** pour les offres Starter et Transformation ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
+    answer: "L'accès à nos formations est **à vie** pour les offres Starter et Premium ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
   },
   {
     id: 'what_is_included_client_area',

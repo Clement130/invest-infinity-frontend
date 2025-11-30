@@ -48,14 +48,14 @@ export default function PricingPage() {
       features.push('Echange avec les membres');
       features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
     } else if (offer.offerId === 'transformation') {
-      features.push('Tout Starter inclus');
-      features.push('Sessions de trading en direct (lun-ven, 15h-17h30)');
-      features.push('Replays illimités des sessions live');
-      features.push('Zone Premium : analyses marchés quotidiennes');
-      features.push('2 stratégies ICT éprouvées de Mickaël');
-      features.push('1 coaching individuel 30min (visio)');
+      features.push('Offre Starter incluse');
+      features.push('Accès à l\'intégralité de la formation');
+      features.push('Groupe exclusif (questions + analyses)');
+      features.push('Accompagnement 7j/7');
+      features.push('2 stratégies de trading rentables');
+      features.push('1 coaching individuel de 30 min en visio');
     } else if (offer.offerId === 'immersion_elite') {
-      features.push('Tout Transformation inclus');
+      features.push('Tout Premium inclus');
       features.push('5 jours de formation en présentiel (9h-17h)');
       features.push('Coaching personnalisé en petit groupe');
       features.push('Trading en live avec Mickaël');
@@ -174,7 +174,7 @@ export default function PricingPage() {
     },
     {
       question: 'Y a-t-il une période d\'essai ?',
-      answer: 'L\'offre Transformation inclut une garantie 14 jours satisfait ou remboursé.',
+      answer: 'L\'offre Premium inclut une garantie 14 jours satisfait ou remboursé.',
     },
     {
       question: 'Acceptez-vous les virements bancaires ?',
@@ -182,7 +182,7 @@ export default function PricingPage() {
     },
     {
       question: 'Comment fonctionne la garantie ?',
-      answer: 'Satisfait ou remboursé pendant 14 jours sur l\'offre Transformation. Aucune question posée.',
+      answer: 'Satisfait ou remboursé pendant 14 jours sur l\'offre Premium. Aucune question posée.',
     },
     {
       question: 'Comment se passe l\'Immersion Élite ?',

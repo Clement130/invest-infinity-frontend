@@ -9,7 +9,7 @@
 // Valeurs par défaut (fallback si la DB n'est pas accessible)
 export const STRIPE_PRICE_IDS_DEFAULT = {
   entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V', // Entrée - 147€
-  transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI', // Transformation - 497€
+  transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI', // Premium - 497€ (paiement 3 fois)
   immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW', // Immersion Élite - 1997€
 } as const;
 

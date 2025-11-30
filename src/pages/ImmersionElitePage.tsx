@@ -180,7 +180,7 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Tout Transformation inclus</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Tout Premium inclus</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Accès complet à la formation en ligne</p>
                     </div>
                   </div>
