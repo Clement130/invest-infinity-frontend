@@ -33,6 +33,7 @@ import type {
   AppointmentType,
   AppointmentSource,
 } from '../../types/appointment';
+import type { ChatbotContext, ChatbotUserRole } from '../../config/chatbot/systemPrompt';
 
 // Générer un ID unique
 const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -72,6 +73,40 @@ export default function Chatbot() {
     if (role === 'admin') return 'admin';
     return 'client';
   }, [user, role]);
+
+  // Déterminer le rôle pour le chatbot (prospect, client, admin)
+  const getChatbotRole = useCallback((): ChatbotUserRole => {
+    if (!user) return 'prospect';
+    if (role === 'admin') return 'admin';
+    // Si l'utilisateur a une licence active, c'est un client
+    if (profile?.license && profile.license !== 'none') return 'client';
+    return 'prospect';
+  }, [user, role, profile?.license]);
+
+  // Construire le contexte pour le chatbot
+  const buildChatbotContext = useCallback((): ChatbotContext => {
+    const chatbotRole = getChatbotRole();
+    const context: ChatbotContext = {
+      userRole: chatbotRole,
+    };
+
+    // Ajouter les infos utilisateur si connecté
+    if (user) {
+      if (profile?.first_name) {
+        context.userName = profile.first_name;
+      }
+      if (user.email) {
+        context.userEmail = user.email;
+      }
+    }
+
+    // Ajouter les offres du client si disponibles
+    if (chatbotRole === 'client' && profile?.license) {
+      context.customerOffers = [profile.license];
+    }
+
+    return context;
+  }, [user, profile, getChatbotRole]);
 
   const userType = getUserType();
   const config = chatbotConfigs[userType];
@@ -237,6 +272,33 @@ export default function Chatbot() {
   const addFallbackHint = (content: string): string => {
     return content + defaultResponses.fallbackHint;
   };
+
+  // Ajouter un message du bot avec délai de frappe
+  // IMPORTANT: Cette fonction doit être définie AVANT handleAction qui l'utilise
+  const addBotMessage = useCallback((content: string, quickReplies?: QuickReply[], showFeedback: boolean = false) => {
+    setIsTyping(true);
+    
+    // Simuler le temps de frappe (entre 500ms et 1500ms selon la longueur)
+    const typingDelay = Math.min(500 + content.length * 5, 1500);
+    
+    setTimeout(() => {
+      setIsTyping(false);
+      const botMessage: Message = {
+        id: generateId(),
+        content,
+        sender: 'bot',
+        timestamp: new Date(),
+        quickReplies,
+        showFeedback,
+        feedbackGiven: null,
+      };
+      setMessages(prev => [...prev, botMessage]);
+      
+      if (!isOpen) {
+        setUnreadCount(prev => prev + 1);
+      }
+    }, typingDelay);
+  }, [isOpen]);
 
   // Gérer les actions des quick replies
   const handleAction = useCallback((action: string) => {
@@ -706,32 +768,6 @@ export default function Chatbot() {
     }
   }, [navigate, user, profile, role, userType, config.quickReplies, checkActionPermission, filterQuickReplies, rdvFlow, addBotMessage]);
 
-  // Ajouter un message du bot avec délai de frappe
-  const addBotMessage = useCallback((content: string, quickReplies?: QuickReply[], showFeedback: boolean = false) => {
-    setIsTyping(true);
-    
-    // Simuler le temps de frappe (entre 500ms et 1500ms selon la longueur)
-    const typingDelay = Math.min(500 + content.length * 5, 1500);
-    
-    setTimeout(() => {
-      setIsTyping(false);
-      const botMessage: Message = {
-        id: generateId(),
-        content,
-        sender: 'bot',
-        timestamp: new Date(),
-        quickReplies,
-        showFeedback,
-        feedbackGiven: null,
-      };
-      setMessages(prev => [...prev, botMessage]);
-      
-      if (!isOpen) {
-        setUnreadCount(prev => prev + 1);
-      }
-    }, typingDelay);
-  }, [isOpen]);
-
   // Gérer l'envoi d'un message utilisateur
   const handleSendMessage = useCallback(async (content: string) => {
     // Logger le message
@@ -1052,6 +1088,9 @@ export default function Chatbot() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      
+      // Construire le contexte utilisateur pour le chatbot
+      const chatbotContext = buildChatbotContext();
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot`, {
         method: 'POST',
@@ -1061,9 +1100,10 @@ export default function Chatbot() {
         },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: "Tu es l'assistant virtuel d'InvestInfinity. Tu aides les utilisateurs sur le trading et la plateforme." },
             { role: "user", content: content }
-          ]
+          ],
+          // Envoyer le contexte utilisateur au backend
+          context: chatbotContext
         })
       });
 
@@ -1107,7 +1147,7 @@ export default function Chatbot() {
       setIsTyping(false);
       addBotMessage("Désolé, une erreur est survenue lors de la communication avec l'assistant.", [], false);
     }
-  }, [addBotMessage, userType, user?.id, rdvFlow]);
+  }, [addBotMessage, userType, user?.id, rdvFlow, buildChatbotContext]);
 
   // Gérer le quick reply
   const handleQuickReply = useCallback((action: string) => {
