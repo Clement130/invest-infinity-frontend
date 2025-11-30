@@ -124,7 +124,7 @@ export default function Header() {
                   className={`header__link ${activeSection === 'services' ? 'text-pink-500' : ''}`}
                   onClick={() => handleClick('services')}
                 >
-                  Services
+                  Accueil
                 </button>
                 <button
                   className={`header__link ${activeSection === 'faq' ? 'text-pink-500' : ''}`}
@@ -214,7 +214,7 @@ export default function Header() {
                 }`}
                 onClick={() => handleClick('services')}
               >
-                Services
+                Accueil
               </button>
               <button
                 className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
