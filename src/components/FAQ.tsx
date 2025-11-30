@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronDown, Sparkles, HelpCircle, CreditCard, Shield, Users, MessageCircle, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedSection from './AnimatedSection';
+import clsx from 'clsx';
 
 interface FAQProps {
   onOpenRegister?: () => void;
@@ -117,57 +119,80 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
       })) || [];
 
   return (
-    <section id="faq" className="relative bg-[#0f0f13] py-32 overflow-hidden">
-      {/* Points de lumière néon */}
-      <div className="absolute inset-0 overflow-hidden">
+    <section id="faq" className="relative bg-[#0f0f13] py-16 sm:py-24 lg:py-32 overflow-hidden">
+      {/* Dégradés d'arrière-plan */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse delay-500" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full filter blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <AnimatedSection>
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 backdrop-blur-sm border border-pink-500/10 mb-8">
-              <Sparkles className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-200 font-medium">Questions Fréquentes</span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              Tout ce que tu dois
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-500 mt-2">
-                savoir avant de commencer
-              </span>
-            </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Tu as des questions ? On a les réponses. Si tu ne trouves pas ce que tu cherches, pose ta question au chatbot !
-            </p>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          {/* Badge "Questions Fréquentes" - style pill violet foncé */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 backdrop-blur-sm border border-purple-500/20 mb-8">
+            <Sparkles className="w-5 h-5 text-pink-400" />
+            <span className="text-pink-200 font-medium text-sm sm:text-base">Questions Fréquentes</span>
           </div>
-        </AnimatedSection>
 
-        {/* Category tabs */}
-        <AnimatedSection>
-          <div className="flex flex-wrap justify-center gap-2 mb-12">
+          {/* Titre avec gradient rose/violet amélioré */}
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+            <span className="block">Tout ce que tu dois</span>
+            <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-pink-500 to-purple-500">
+              savoir avant de commencer
+            </span>
+          </h2>
+
+          {/* Sous-texte */}
+          <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+            Tu as des questions ? On a les réponses. Si tu ne trouves pas ce que tu cherches, pose ta question au chatbot !
+          </p>
+        </motion.div>
+
+        {/* Category tabs - avec scroll horizontal sur mobile */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-12"
+        >
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:justify-center sm:flex-wrap">
+            {/* Bouton "Toutes" */}
             <button
               onClick={() => setActiveCategory(-1)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={clsx(
+                'flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap',
                 activeCategory === -1
-                  ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25'
                   : 'bg-[#1f1f23] text-gray-400 hover:text-white hover:bg-[#2a2a30]'
-              }`}
+              )}
             >
               Toutes ({allQuestions.length})
             </button>
+
+            {/* Boutons de catégories */}
             {faqCategories.map((cat, index) => {
               const Icon = cat.icon;
+              const isActive = activeCategory === index;
+              
               return (
                 <button
                   key={index}
                   onClick={() => setActiveCategory(index)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    activeCategory === index
-                      ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
+                  className={clsx(
+                    'flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap',
+                    isActive
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25'
                       : 'bg-[#1f1f23] text-gray-400 hover:text-white hover:bg-[#2a2a30]'
-                  }`}
+                  )}
                 >
                   <Icon className="w-4 h-4" />
                   {cat.title}
@@ -175,74 +200,114 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
               );
             })}
           </div>
-        </AnimatedSection>
+        </motion.div>
 
-        {/* FAQ Items */}
-        <div className="grid gap-4">
-          {displayedQuestions.map((faq) => (
-            <AnimatedSection key={faq.id}>
-              <div className="relative group">
-                {/* Neon glow effect */}
-                <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500" />
-                
-                <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500">
-                  <button
-                    className="w-full px-6 sm:px-8 py-5 text-left flex justify-between items-start gap-4 group/button"
-                    onClick={() => setOpenIndex(openIndex === faq.id ? null : faq.id)}
-                  >
-                    <div className="flex-1">
-                      <span className="text-base sm:text-lg font-medium text-white group-hover:text-pink-400 transition-colors block">
-                        {faq.question}
-                      </span>
-                      {activeCategory === -1 && (
-                        <span className="text-xs text-pink-400/60 mt-1 block">{faq.category}</span>
-                      )}
-                    </div>
-                    <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
-                      bg-pink-500/10 group-hover:bg-pink-500/20
-                      transition-all duration-300
-                      ${openIndex === faq.id ? 'rotate-180 bg-pink-500/30' : ''}
-                    `}>
-                      <ChevronDown className="w-5 h-5 text-pink-400" />
-                    </div>
-                  </button>
+        {/* FAQ Items - Accordéons améliorés */}
+        <div className="grid gap-4 mb-12">
+          <AnimatePresence mode="wait">
+            {displayedQuestions.map((faq, index) => {
+              const isOpen = openIndex === faq.id;
+              
+              return (
+                <motion.div
+                  key={faq.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="relative group"
+                >
+                  {/* Glow effect au hover */}
+                  <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500" />
                   
-                  <div
-                    className={`
-                      overflow-hidden transition-all duration-500 ease-in-out
-                      ${openIndex === faq.id ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}
-                    `}
-                  >
-                    <div className="px-6 sm:px-8 pb-6 text-gray-300 leading-relaxed whitespace-pre-line">
-                      {faq.answer}
-                    </div>
+                  {/* Conteneur de l'accordéon */}
+                  <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500 hover:border-pink-500/20">
+                    <button
+                      className="w-full px-6 sm:px-8 py-5 text-left flex justify-between items-start gap-4 group/button"
+                      onClick={() => setOpenIndex(isOpen ? null : faq.id)}
+                      aria-expanded={isOpen}
+                    >
+                      <div className="flex-1">
+                        <span className={clsx(
+                          "text-base sm:text-lg font-medium block transition-colors",
+                          isOpen ? "text-pink-400" : "text-white group-hover/button:text-pink-400"
+                        )}>
+                          {faq.question}
+                        </span>
+                        {activeCategory === -1 && (
+                          <span className="text-xs text-pink-400/60 mt-1 block">{faq.category}</span>
+                        )}
+                      </div>
+                      
+                      {/* Chevron icon */}
+                      <div className={clsx(
+                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                        isOpen 
+                          ? "bg-pink-500/30 rotate-180" 
+                          : "bg-pink-500/10 group-hover/button:bg-pink-500/20"
+                      )}>
+                        <ChevronDown className="w-5 h-5 text-pink-400 transition-transform duration-300" />
+                      </div>
+                    </button>
+                    
+                    {/* Contenu de la réponse avec animation */}
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-6 sm:px-8 pb-6 text-gray-300 leading-relaxed whitespace-pre-line">
+                            {faq.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              </div>
-            </AnimatedSection>
-          ))}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
 
-        {/* Contact CTA */}
-        <AnimatedSection>
-          <div className="mt-12 text-center">
-            <p className="text-gray-400 mb-4">
-              Tu n'as pas trouvé ta réponse ?
-            </p>
-            <button
-              onClick={() => {
-                // Déclencher un événement personnalisé pour ouvrir le chatbot
-                window.dispatchEvent(new CustomEvent('openChatbot'));
-              }}
-              className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 font-medium transition-colors cursor-pointer"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Pose ta question au chatbot
-            </button>
-          </div>
-        </AnimatedSection>
+        {/* Call to Action Chatbot - Bouton avec gradient */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center"
+        >
+          <p className="text-gray-400 mb-4 text-base sm:text-lg">
+            Tu n'as pas trouvé ta réponse ?
+          </p>
+          <button
+            onClick={() => {
+              // Déclencher un événement personnalisé pour ouvrir le chatbot
+              window.dispatchEvent(new CustomEvent('openChatbot'));
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 hover:scale-105 active:scale-95"
+            aria-label="Ouvrir le chatbot pour poser une question"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span>Pose ta question au chatbot</span>
+          </button>
+        </motion.div>
       </div>
+
+      {/* Styles pour masquer la scrollbar sur mobile */}
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   );
 }

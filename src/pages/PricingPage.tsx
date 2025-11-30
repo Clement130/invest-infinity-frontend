@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone, MapPin, Calendar, ChevronRight } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Shield, Users, Star, Zap, Crown, Phone, MapPin, Calendar, ChevronRight, Sparkles, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 import { STRIPE_PRICE_IDS, getStripeSuccessUrl, getStripeCancelUrl, PlanType } from '../config/stripe';
 import { getStripePriceId } from '../services/stripePriceService';
 import { useToast } from '../hooks/useToast';
@@ -364,60 +366,135 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Section FAQ */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/10 rounded-full filter blur-[100px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-500/10 rounded-full filter blur-[100px]" />
+      {/* Section FAQ - Design premium identique à la page d'accueil */}
+      <section className="relative bg-[#0f0f13] py-16 sm:py-24 lg:py-32 overflow-hidden">
+        {/* Dégradés d'arrière-plan */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full filter blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse" style={{ animationDelay: '0.5s' }} />
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Questions
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-violet-500">
-                Fréquentes
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Header Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            {/* Badge "Questions Fréquentes" - style pill violet foncé */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 backdrop-blur-sm border border-purple-500/20 mb-8">
+              <Sparkles className="w-5 h-5 text-pink-400" />
+              <span className="text-pink-200 font-medium text-sm sm:text-base">Questions Fréquentes</span>
+            </div>
+
+            {/* Titre avec gradient rose/violet amélioré */}
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <span className="block">Tout ce que tu dois</span>
+              <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-pink-500 to-purple-500">
+                savoir avant de commencer
               </span>
             </h2>
+
+            {/* Sous-texte */}
+            <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+              Tu as des questions ? On a les réponses. Si tu ne trouves pas ce que tu cherches, pose ta question au chatbot !
+            </p>
+          </motion.div>
+
+          {/* FAQ Items - Accordéons améliorés */}
+          <div className="grid gap-4 mb-12">
+            <AnimatePresence mode="wait">
+              {faqs.map((faq, index) => {
+                const isOpen = openFaqIndex === index;
+                
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="relative group"
+                  >
+                    {/* Glow effect au hover */}
+                    <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500" />
+                    
+                    {/* Conteneur de l'accordéon */}
+                    <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500 hover:border-pink-500/20">
+                      <button
+                        className="w-full px-6 sm:px-8 py-5 text-left flex justify-between items-start gap-4 group/button"
+                        onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                        aria-expanded={isOpen}
+                      >
+                        <div className="flex-1">
+                          <span className={clsx(
+                            "text-base sm:text-lg font-medium block transition-colors",
+                            isOpen ? "text-pink-400" : "text-white group-hover/button:text-pink-400"
+                          )}>
+                            {faq.question}
+                          </span>
+                        </div>
+                        
+                        {/* Chevron icon */}
+                        <div className={clsx(
+                          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                          isOpen 
+                            ? "bg-pink-500/30 rotate-180" 
+                            : "bg-pink-500/10 group-hover/button:bg-pink-500/20"
+                        )}>
+                          <ChevronDown className="w-5 h-5 text-pink-400 transition-transform duration-300" />
+                        </div>
+                      </button>
+                      
+                      {/* Contenu de la réponse avec animation */}
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-6 sm:px-8 pb-6 text-gray-300 leading-relaxed whitespace-pre-line">
+                              {faq.answer}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
 
-          <div className="grid gap-6">
-            {faqs.map((faq, index) => (
-              <div key={index} className="relative group">
-                <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500" />
-                
-                <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500">
-                  <button
-                    className="w-full px-8 py-6 text-left flex justify-between items-center group/button"
-                    onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                  >
-                    <span className="text-lg font-medium text-white group-hover:text-pink-400 transition-colors">
-                      {faq.question}
-                    </span>
-                    <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center
-                      bg-pink-500/10 group-hover:bg-pink-500/20
-                      transition-all duration-300
-                      ${openFaqIndex === index ? 'rotate-180' : ''}
-                    `}>
-                      <ChevronDown className="w-5 h-5 text-pink-400" />
-                    </div>
-                  </button>
-                  
-                  <div
-                    className={`
-                      overflow-hidden transition-all duration-500
-                      ${openFaqIndex === index ? 'max-h-96' : 'max-h-0'}
-                    `}
-                  >
-                    <div className="px-8 pb-6 text-gray-400">
-                      {faq.answer}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Call to Action Chatbot - Bouton avec gradient */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-center"
+          >
+            <p className="text-gray-400 mb-4 text-base sm:text-lg">
+              Tu n'as pas trouvé ta réponse ?
+            </p>
+            <button
+              onClick={() => {
+                // Déclencher un événement personnalisé pour ouvrir le chatbot
+                window.dispatchEvent(new CustomEvent('openChatbot'));
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 hover:scale-105 active:scale-95"
+              aria-label="Ouvrir le chatbot pour poser une question"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>Pose ta question au chatbot</span>
+            </button>
+          </motion.div>
         </div>
       </section>
     </div>
