@@ -10,6 +10,8 @@ import {
   getAvailablePlaces,
   ImmersionSession 
 } from '../services/immersionSessionsService';
+import CalendlyBootcampModal from '../components/CalendlyBootcampModal';
+import { useAuth } from '../context/AuthContext';
 
 // URL de la fonction checkout publique
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
@@ -17,6 +19,7 @@ const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/c
 export default function ImmersionElitePage() {
   const toast = useToast();
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState<ImmersionSession[]>([]);
@@ -394,40 +397,14 @@ export default function ImmersionElitePage() {
                   </div>
                 </div>
 
-                {/* Bouton de planification RDV */}
-                <button
-                  onClick={() => {
-                    // Ouvrir le chatbot avec le contexte de réservation Bootcamp Élite
-                    window.dispatchEvent(new CustomEvent('openChatbot', { 
-                      detail: { 
-                        flow: 'reservation_bootcamp_elite',
-                        offerId: 'immersion_elite',
-                        offerName: 'Bootcamp Élite',
-                        source: 'immersion_page_cta',
-                        sessionId: selectedSession,
-                      } 
-                    }));
-                  }}
-                  className="
-                    w-full py-5 px-6 
-                    bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
-                    text-[#1a0f0a] font-extrabold text-lg
-                    rounded-xl 
-                    transition-all duration-300 
-                    transform hover:scale-[1.02] active:scale-[0.98]
-                    shadow-2xl shadow-orange-500/40 
-                    hover:shadow-orange-500/60
-                    flex items-center justify-center gap-3
-                    relative overflow-hidden
-                    group
-                  "
-                >
-                  {/* Effet de brillance au survol */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  
-                  <Crown className="w-6 h-6 relative z-10" />
-                  <span className="relative z-10">Réserver Bootcamp Élite — 1 997€</span>
-                </button>
+                {/* Bouton de réservation Calendly */}
+                <CalendlyBootcampModal
+                  prefillName={profile?.full_name || undefined}
+                  prefillEmail={user?.email || undefined}
+                  sessionId={selectedSession}
+                  buttonText="Réserver Bootcamp Élite"
+                  price="1 997€"
+                />
 
                 {/* Badge de sécurité */}
                 <div className="mt-6 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl">

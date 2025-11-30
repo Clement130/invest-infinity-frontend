@@ -8,6 +8,8 @@ import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import SocialProofBanner from '../components/SocialProofBanner';
 import { getAllOffers, type OfferId, type OfferConfig } from '../config/offers';
+import CalendlyBootcampModal from '../components/CalendlyBootcampModal';
+import { useAuth } from '../context/AuthContext';
 
 // URL de la fonction checkout publique (sans vérification JWT)
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
@@ -15,6 +17,7 @@ const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/c
 export default function PricingPage() {
   const toast = useToast();
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -72,26 +75,8 @@ export default function PricingPage() {
     return offerId as PlanType;
   };
 
-  // Ouvre le chatbot avec le contexte de réservation Bootcamp Élite
-  const handleReserveBootcamp = () => {
-    window.dispatchEvent(new CustomEvent('openChatbot', {
-      detail: {
-        flow: 'reservation_bootcamp_elite',
-        offerId: 'immersion_elite',
-        offerName: 'Bootcamp Élite',
-        source: 'pricing_page_cta',
-      },
-    }));
-  };
-
   // Paiement direct sans inscription - Stripe collecte l'email
   const handlePurchase = async (plan: PlanType) => {
-    // Pour Immersion Élite, ouvrir le chatbot pour planifier un RDV
-    if (plan === 'immersion') {
-      handleReserveBootcamp();
-      return;
-    }
-
     setLoading(plan);
 
     try {
@@ -352,39 +337,47 @@ export default function PricingPage() {
                     </ul>
 
                     {/* Bouton CTA */}
-                    <button
-                      onClick={() => handlePurchase(planType)}
-                      disabled={isLoading}
-                      className={`
-                        w-full py-3.5 px-6 rounded-xl font-semibold transition-all duration-300
-                        disabled:opacity-50 disabled:cursor-not-allowed 
-                        flex items-center justify-center gap-2
-                        ${isImmersion
-                          ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-[#1a0f0a] font-bold hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02]'
-                          : offer.offerId === 'transformation'
-                          ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:from-pink-600 hover:to-violet-600 hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
-                          : 'bg-gradient-to-r from-pink-500/90 to-rose-500/90 text-white hover:from-pink-500 hover:to-rose-500 hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
-                        }
-                      `}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Redirection...</span>
-                        </>
-                      ) : (
-                        <>
-                          {isImmersion && <Crown className="w-4 h-4" />}
-                          {isImmersion && <MessageCircle className="w-4 h-4" />}
+                    {isImmersion ? (
+                      <CalendlyBootcampModal
+                        prefillName={profile?.full_name || undefined}
+                        prefillEmail={user?.email || undefined}
+                        buttonText={`Réserver ${offer.name}`}
+                        price={`${offer.price.toLocaleString('fr-FR')}€`}
+                        buttonClassName="
+                          w-full py-3.5 px-6 rounded-xl font-bold transition-all duration-300
+                          bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 
+                          text-[#1a0f0a] 
+                          hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02]
+                          flex items-center justify-center gap-2
+                          relative overflow-hidden group
+                        "
+                      />
+                    ) : (
+                      <button
+                        onClick={() => handlePurchase(planType)}
+                        disabled={isLoading}
+                        className={`
+                          w-full py-3.5 px-6 rounded-xl font-semibold transition-all duration-300
+                          disabled:opacity-50 disabled:cursor-not-allowed 
+                          flex items-center justify-center gap-2
+                          ${offer.offerId === 'transformation'
+                            ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:from-pink-600 hover:to-violet-600 hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
+                            : 'bg-gradient-to-r from-pink-500/90 to-rose-500/90 text-white hover:from-pink-500 hover:to-rose-500 hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
+                          }
+                        `}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Redirection...</span>
+                          </>
+                        ) : (
                           <span>
-                            {isImmersion 
-                              ? `Réserver ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`
-                              : `Choisir ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`
-                            }
+                            {`Choisir ${offer.name} — ${offer.price.toLocaleString('fr-FR')}€`}
                           </span>
-                        </>
-                      )}
-                    </button>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
