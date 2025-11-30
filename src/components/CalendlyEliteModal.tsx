@@ -123,25 +123,35 @@ export default function CalendlyEliteModal({
   // Contenu du modal
   const modalContent = (
     <div 
-      className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
-      style={{ zIndex: 99999 }}
+      className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center p-4 sm:p-6"
+      style={{ 
+        zIndex: 999999,
+        position: 'fixed',
+        width: '100vw',
+        height: '100vh',
+      }}
     >
       {/* Backdrop sombre avec blur */}
       <div 
-        className="absolute inset-0 bg-black/90 backdrop-blur-md"
+        className="absolute top-0 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-lg"
         onClick={() => setIsOpen(false)}
+        style={{ position: 'absolute' }}
       />
       
       {/* Contenu du Modal */}
       <div 
-        className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#0a0a14] via-[#0f0f1a] to-[#0a0a14] border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.9)]"
-        style={{ maxHeight: 'calc(100vh - 48px)' }}
+        className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#0a0a14] via-[#0f0f1a] to-[#0a0a14] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.95)]"
+        style={{ 
+          maxHeight: 'calc(100vh - 48px)',
+          position: 'relative',
+          zIndex: 1,
+        }}
       >
         
         {/* Bouton fermer */}
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-slate-800/90 hover:bg-red-500/80 border border-white/10 transition-all duration-200 hover:scale-110"
+          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-red-500/80 hover:bg-red-500 border border-white/20 transition-all duration-200 hover:scale-110 shadow-lg"
           aria-label="Fermer"
         >
           <X className="w-5 h-5 text-white" />
