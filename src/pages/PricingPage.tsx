@@ -319,7 +319,7 @@ export default function PricingPage() {
                         </div>
                         <div className="flex items-center gap-2 text-yellow-400/90">
                           <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>5-8 élèves max par session</span>
+                          <span>Lundi au vendredi, 5-8 élèves max</span>
                         </div>
                       </div>
                     )}
