@@ -97,7 +97,7 @@ export default function CalendlyEliteModal({
     },
     {
       icon: Sparkles,
-      text: "Tu es prêt à investir temps + argent",
+      text: "Tu es prêt à t'investir",
     },
     {
       icon: Users,
