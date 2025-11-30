@@ -48,12 +48,12 @@ export default function PricingPage() {
       features.push('Support par chat 7j/7');
       features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
     } else if (offer.offerId === 'transformation') {
-      features.push('Tout Starter inclus');
-      features.push('Sessions de trading en direct (lun-ven, 15h-17h30)');
-      features.push('Replays illimités des sessions live');
-      features.push('Zone Premium : analyses marchés quotidiennes');
-      features.push('2 stratégies ICT éprouvées de Mickaël');
-      features.push('1 coaching individuel 30min (visio)');
+      features.push('Offre Starter incluse');
+      features.push('Accès à l\'intégralité de la formation');
+      features.push('Groupe exclusif');
+      features.push('Accompagnement 7j/7');
+      features.push('2 stratégies de trading rentables');
+      features.push('1 coaching individuel de 30 min en visio');
     } else if (offer.offerId === 'immersion_elite') {
       features.push('Tout Premium inclus');
       features.push('Horaire de la formation : 9h-18h');

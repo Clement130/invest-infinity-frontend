@@ -122,7 +122,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     description: 'Formation + accompagnement en live',
     price: 497,
     paymentType: 'one-time',
-    paymentDescription: 'paiement unique • accès à vie',
+    paymentDescription: 'paiement 3 fois • accès à vie',
     installmentsText: 'ou 3x 166€/mois sans frais',
     license: 'pro',
     includedModules: [], // À remplir avec les IDs réels des modules
