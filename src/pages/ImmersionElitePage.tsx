@@ -10,7 +10,7 @@ import {
   getAvailablePlaces,
   ImmersionSession 
 } from '../services/immersionSessionsService';
-import CalendlyBootcampModal from '../components/CalendlyBootcampModal';
+import CalendlyEliteModal from '../components/CalendlyEliteModal';
 import { useAuth } from '../context/AuthContext';
 
 // URL de la fonction checkout publique
@@ -398,10 +398,9 @@ export default function ImmersionElitePage() {
                 </div>
 
                 {/* Bouton de réservation Calendly */}
-                <CalendlyBootcampModal
+                <CalendlyEliteModal
                   prefillName={profile?.full_name || undefined}
                   prefillEmail={user?.email || undefined}
-                  sessionId={selectedSession}
                   buttonText="Réserver Bootcamp Élite"
                   price="1 997€"
                 />

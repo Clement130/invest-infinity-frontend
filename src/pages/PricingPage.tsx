@@ -8,7 +8,7 @@ import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import SocialProofBanner from '../components/SocialProofBanner';
 import { getAllOffers, type OfferId, type OfferConfig } from '../config/offers';
-import CalendlyBootcampModal from '../components/CalendlyBootcampModal';
+import CalendlyEliteModal from '../components/CalendlyEliteModal';
 import { useAuth } from '../context/AuthContext';
 
 // URL de la fonction checkout publique (sans vérification JWT)
@@ -338,7 +338,7 @@ export default function PricingPage() {
 
                     {/* Bouton CTA */}
                     {isImmersion ? (
-                      <CalendlyBootcampModal
+                      <CalendlyEliteModal
                         prefillName={profile?.full_name || undefined}
                         prefillEmail={user?.email || undefined}
                         buttonText={`Réserver ${offer.name}`}
