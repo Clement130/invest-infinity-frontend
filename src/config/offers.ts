@@ -93,7 +93,7 @@ export interface OfferConfig {
 export const OFFERS: Record<OfferId, OfferConfig> = {
   entree: {
     offerId: 'entree',
-    name: 'Entrée',
+    name: 'Starter',
     description: 'Les outils essentiels pour commencer',
     price: 147,
     paymentType: 'one-time',
@@ -102,7 +102,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
     includedModules: [], // À remplir avec les IDs réels des modules
     includedFeatures: {
       discord: true,
-      liveSessions: false,
+      liveSessions: true,
       alerts: true,
       immersionWeek: false,
       support: true,

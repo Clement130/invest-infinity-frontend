@@ -42,9 +42,9 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offers_overview',
     category: 'Tarifs',
     patterns: ['tarifs', 'prix', 'offres', 'formules', 'combien ça coûte', 'abonnement', 'payer'],
-    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Entrée (147€)** : Pour débuter avec les bases et la communauté.\n🔹 **Transformation (497€)** : La plus populaire, avec formation complète et lives.\n🔹 **Immersion Élite (1997€)** : Accompagnement premium en présentiel.\n\nQuelle formule vous intéresse ?",
+    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Starter (147€)** : Pour débuter avec les bases et la communauté.\n🔹 **Transformation (497€)** : La plus populaire, avec formation complète et lives.\n🔹 **Immersion Élite (1997€)** : Accompagnement premium en présentiel.\n\nQuelle formule vous intéresse ?",
     followUps: [
-      { id: 'entree', label: 'Offre Entrée', action: 'show_entree', icon: '🌱' },
+      { id: 'entree', label: 'Offre Starter', action: 'show_entree', icon: '🌱' },
       { id: 'transfo', label: 'Offre Transformation', action: 'show_transformation', icon: '🚀' },
       { id: 'immersion', label: 'Immersion Élite', action: 'show_immersion', icon: '👑' }
     ]
@@ -53,9 +53,9 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offer_entree_details',
     category: 'Tarifs',
     patterns: ['offre entrée', 'starter', 'formule entrée', 'détail entrée', 'entrée contient quoi'],
-    answer: "L'offre **Entrée (147€)** est idéale pour découvrir notre écosystème.\n\n✅ Accès à la communauté Discord\n✅ Alertes trading\n✅ Support complet\n✅ Tutoriels plateformes\n\n❌ Pas de lives ni de replays dans cette formule.\n\nC'est un paiement unique pour un accès à vie.",
+    answer: "L'offre **Starter (147€)** est idéale pour découvrir notre écosystème.\n\n✅ Sessions de trading en direct\n✅ Communauté privée Discord\n✅ Alertes trading en temps réel\n✅ Echange avec les membres\n✅ Tutoriels plateformes (TopStep, Apex, MT4/MT5)\n\nC'est un paiement unique pour un accès à vie.",
     followUps: [
-      { id: 'buy_entree', label: 'Choisir Entrée', action: 'go_pricing', icon: '🛒' },
+      { id: 'buy_entree', label: 'Choisir Starter', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer les offres', action: 'show_pricing', icon: '⚖️' }
     ]
   },
@@ -63,7 +63,7 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offer_transformation_details',
     category: 'Tarifs',
     patterns: ['offre transformation', 'pro', 'formule transformation', 'transformation contient quoi', 'intermédiaire'],
-    answer: "L'offre **Transformation (497€)** est notre best-seller ! 🏆\n\nEn plus de tout le contenu de l'offre Entrée, vous avez :\n✅ Accès aux sessions LIVE hebdomadaires\n✅ Replays illimités\n✅ Zone Premium & Coaching individuel\n✅ Garantie satisfait ou remboursé 14 jours\n\nPaiement unique, accès à vie.",
+    answer: "L'offre **Transformation (497€)** est notre best-seller ! 🏆\n\nEn plus de tout le contenu de l'offre Starter, vous avez :\n✅ Accès aux sessions LIVE hebdomadaires\n✅ Replays illimités\n✅ Zone Premium & Coaching individuel\n✅ Garantie satisfait ou remboursé 14 jours\n\nPaiement unique, accès à vie.",
     followUps: [
       { id: 'buy_transfo', label: 'Choisir Transformation', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer', action: 'show_pricing', icon: '⚖️' }
@@ -103,7 +103,7 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'access_duration',
     category: 'Formation',
     patterns: ['combien de temps', 'durée accès', 'accès à vie', 'limite de temps', 'expiration'],
-    answer: "L'accès à nos formations est **à vie** pour les offres Entrée et Transformation ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
+    answer: "L'accès à nos formations est **à vie** pour les offres Starter et Transformation ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
   },
   {
     id: 'what_is_included_client_area',

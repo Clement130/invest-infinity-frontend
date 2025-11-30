@@ -42,13 +42,13 @@ export default function PricingPage() {
     const features: string[] = [];
     
     if (offer.offerId === 'entree') {
-      features.push('Accès à vie à la formation vidéo complète (50+ heures)');
+      features.push('Sessions de trading en direct');
       features.push('Communauté privée Discord');
       features.push('Alertes trading en temps réel');
-      features.push('Support par chat 7j/7');
+      features.push('Echange avec les membres');
       features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
     } else if (offer.offerId === 'transformation') {
-      features.push('Tout Entrée inclus');
+      features.push('Tout Starter inclus');
       features.push('Sessions de trading en direct (lun-ven, 15h-17h30)');
       features.push('Replays illimités des sessions live');
       features.push('Zone Premium : analyses marchés quotidiennes');
