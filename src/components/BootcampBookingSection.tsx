@@ -15,7 +15,8 @@ import { useAuth } from '../context/AuthContext';
 // ============================================
 // CONFIGURATION - Modifiez l'URL Calendly ici
 // ============================================
-export const CALENDLY_BOOTCAMP_ELITE_URL = 'https://calendly.com/investinfinityfr/bootcamp-elite-appel-decouverte';
+// Événement: Bootcamp Élite - Appel Découverte (30 min)
+export const CALENDLY_BOOTCAMP_ELITE_URL = 'https://calendly.com/investinfinityfr/30min';
 
 // ============================================
 // Types
