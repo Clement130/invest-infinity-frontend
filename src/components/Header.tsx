@@ -127,16 +127,16 @@ export default function Header() {
                   Accueil
                 </button>
                 <button
-                  className={`header__link ${activeSection === 'faq' ? 'text-pink-500' : ''}`}
-                  onClick={() => handleClick('faq')}
-                >
-                  FAQ
-                </button>
-                <button
                   className="header__link"
                   onClick={() => navigate('/pricing')}
                 >
                   Tarifs
+                </button>
+                <button
+                  className={`header__link ${activeSection === 'faq' ? 'text-pink-500' : ''}`}
+                  onClick={() => handleClick('faq')}
+                >
+                  FAQ
                 </button>
                 <button
                   className="header__link"
@@ -223,14 +223,6 @@ export default function Header() {
                 Accueil
               </button>
               <button
-                className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
-                  activeSection === 'faq' ? 'text-pink-500' : ''
-                }`}
-                onClick={() => handleClick('faq')}
-              >
-                FAQ
-              </button>
-              <button
                 className="text-gray-400 text-xl hover:text-pink-500 transition-colors"
                 onClick={() => {
                   setIsMenuOpen(false);
@@ -238,6 +230,14 @@ export default function Header() {
                 }}
               >
                 Tarifs
+              </button>
+              <button
+                className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
+                  activeSection === 'faq' ? 'text-pink-500' : ''
+                }`}
+                onClick={() => handleClick('faq')}
+              >
+                FAQ
               </button>
               <button
                 className="text-gray-400 text-xl hover:text-pink-500 transition-colors"
