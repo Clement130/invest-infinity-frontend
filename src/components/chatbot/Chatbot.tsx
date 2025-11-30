@@ -32,6 +32,16 @@ import type {
   CreateAppointmentPayload,
   AppointmentType,
   AppointmentSource,
+  ContactFlowStep,
+  ContactRequestPayload,
+  ContactRequestType,
+  SupportFlowStep,
+  SupportRequestPayload,
+  SupportProblemType,
+} from '../../types/appointment';
+import {
+  contactTypeLabels,
+  supportProblemLabels,
 } from '../../types/appointment';
 import type { ChatbotContext, ChatbotUserRole } from '../../config/chatbot/systemPrompt';
 
@@ -65,6 +75,28 @@ export default function Chatbot() {
     step: 'ASK_NAME',
     data: {},
     context: undefined,
+  });
+
+  // État pour le flux de CONTACT intelligent (remplace le formulaire)
+  const [contactFlow, setContactFlow] = useState<{
+    active: boolean;
+    step: ContactFlowStep;
+    data: Partial<ContactRequestPayload>;
+  }>({
+    active: false,
+    step: 'ASK_NAME',
+    data: {},
+  });
+
+  // État pour le flux de SUPPORT TECHNIQUE (clients)
+  const [supportFlow, setSupportFlow] = useState<{
+    active: boolean;
+    step: SupportFlowStep;
+    data: Partial<SupportRequestPayload>;
+  }>({
+    active: false,
+    step: 'ASK_NAME',
+    data: {},
   });
 
   // Déterminer le type d'utilisateur
@@ -458,13 +490,37 @@ export default function Chatbot() {
 
       case 'contact_human':
         logActionExecuted(userType, action, true, user?.id);
+        // Lancer le flow de contact intelligent
+        setContactFlow({
+          active: true,
+          step: 'ASK_NAME',
+          data: { source: 'chatbot_contact' },
+        });
         addBotMessage(
-          addFallbackHint(defaultResponses.humanEscalation),
-          [
-            { id: 'discord', label: 'Aller sur Discord', action: 'join_discord', icon: '💬' },
-            { id: 'other', label: 'Autre question', action: 'other_question', icon: '❓' },
-          ],
-          true
+          "Je vais t'aider à contacter notre équipe ! 💬\n\n" +
+          "Pour que ta demande soit bien traitée, je vais te poser quelques questions rapides.\n\n" +
+          "🏷️ *Flow Contact - Invest Infinity*\n\n" +
+          "Pour commencer, peux-tu me donner ton **prénom et nom** ?",
+          [],
+          false
+        );
+        break;
+
+      case 'start_support_flow':
+        logActionExecuted(userType, action, true, user?.id);
+        // Lancer le flow de support technique (pour clients)
+        setSupportFlow({
+          active: true,
+          step: 'ASK_NAME',
+          data: { source: 'chatbot_support', userId: user?.id },
+        });
+        addBotMessage(
+          "Je vais t'aider à résoudre ton problème technique ! 🔧\n\n" +
+          "Pour que notre équipe puisse t'aider efficacement, je vais te poser quelques questions.\n\n" +
+          "🏷️ *Support Technique - Invest Infinity*\n\n" +
+          "Pour commencer, peux-tu me confirmer ton **prénom et nom** ?",
+          [],
+          false
         );
         break;
 
@@ -509,17 +565,16 @@ export default function Chatbot() {
       case 'tech_support':
         logActionExecuted(userType, action, true, user?.id);
         addBotMessage(
-          addFallbackHint(
-            "Tu rencontres un problème technique ? 🔧\n\n" +
-            "Voici quelques solutions courantes :\n\n" +
-            "• **Vidéo qui ne charge pas** : Rafraîchis la page ou vide le cache\n" +
-            "• **Problème de connexion** : Vérifie tes identifiants ou réinitialise ton mot de passe\n" +
-            "• **Accès refusé** : Vérifie que ton abonnement est actif\n\n" +
-            "Si le problème persiste, contacte-nous sur Discord !"
-          ),
+          "Tu rencontres un problème technique ? 🔧\n\n" +
+          "Voici quelques solutions courantes :\n\n" +
+          "• **Vidéo qui ne charge pas** : Rafraîchis la page ou vide le cache\n" +
+          "• **Problème de connexion** : Vérifie tes identifiants ou réinitialise ton mot de passe\n" +
+          "• **Accès refusé** : Vérifie que ton abonnement est actif\n\n" +
+          "Si le problème persiste, je peux créer un ticket de support pour toi !",
           [
-            { id: 'discord', label: 'Contacter sur Discord', action: 'join_discord', icon: '💬' },
-            { id: 'other', label: 'Autre problème', action: 'contact_human', icon: '👤' },
+            { id: 'support', label: 'Créer un ticket support', action: 'start_support_flow', icon: '🎫' },
+            { id: 'discord', label: 'Aller sur Discord', action: 'join_discord', icon: '💬' },
+            { id: 'other', label: 'Autre question', action: 'other_question', icon: '❓' },
           ],
           true
         );
@@ -758,6 +813,229 @@ export default function Chatbot() {
         );
         break;
 
+      // === Actions du flux CONTACT ===
+      case 'contact_subject_offres':
+        if (contactFlow.active && contactFlow.step === 'ASK_SUBJECT') {
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_MESSAGE',
+            data: { ...prev.data, subject: 'question_offres' },
+          }));
+          addBotMessage(
+            `Noté : **Question sur les offres** 📋\n\n` +
+            `Maintenant, décris-moi ta demande en détail. Plus tu es précis, mieux on pourra t'aider ! 💬`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'contact_subject_support':
+        if (contactFlow.active && contactFlow.step === 'ASK_SUBJECT') {
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_MESSAGE',
+            data: { ...prev.data, subject: 'support_technique' },
+          }));
+          addBotMessage(
+            `Noté : **Support technique** 📋\n\n` +
+            `Décris-moi le problème que tu rencontres en détail. 💬`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'contact_subject_bootcamp':
+        if (contactFlow.active && contactFlow.step === 'ASK_SUBJECT') {
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_MESSAGE',
+            data: { ...prev.data, subject: 'bootcamp_info' },
+          }));
+          addBotMessage(
+            `Noté : **Bootcamp / Immersion Élite** 📋\n\n` +
+            `Qu'aimerais-tu savoir sur le Bootcamp ? 💬`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'contact_subject_partenariat':
+        if (contactFlow.active && contactFlow.step === 'ASK_SUBJECT') {
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_MESSAGE',
+            data: { ...prev.data, subject: 'partenariat' },
+          }));
+          addBotMessage(
+            `Noté : **Partenariat** 📋\n\n` +
+            `Décris-nous ton projet de partenariat ! 🤝`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'contact_subject_autre':
+        if (contactFlow.active && contactFlow.step === 'ASK_SUBJECT') {
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_MESSAGE',
+            data: { ...prev.data, subject: 'autre' },
+          }));
+          addBotMessage(
+            `Noté : **Autre demande** 📋\n\n` +
+            `Dis-moi tout, je t'écoute ! 💬`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'contact_confirm_yes':
+        // Géré dans handleSendMessage
+        break;
+
+      case 'contact_confirm_no':
+        if (contactFlow.active && contactFlow.step === 'SUMMARY_CONFIRM') {
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_NAME',
+            data: {},
+          }));
+          addBotMessage(
+            "Pas de souci ! On reprend depuis le début. 📝\n\n" +
+            "Peux-tu me redonner ton **prénom et nom** ?",
+            [],
+            false
+          );
+        }
+        break;
+
+      // === Actions du flux SUPPORT ===
+      case 'support_problem_formation':
+        if (supportFlow.active && supportFlow.step === 'ASK_PROBLEM_TYPE') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType: 'acces_formation' },
+          }));
+          addBotMessage(
+            `Compris : **Accès à la formation** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?\n\n` +
+            `_(Message d'erreur, ce que tu as essayé, depuis quand ça arrive, etc.)_`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'support_problem_discord':
+        if (supportFlow.active && supportFlow.step === 'ASK_PROBLEM_TYPE') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType: 'acces_discord' },
+          }));
+          addBotMessage(
+            `Compris : **Accès Discord** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?\n\n` +
+            `_(Message d'erreur, ce que tu as essayé, etc.)_`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'support_problem_paiement':
+        if (supportFlow.active && supportFlow.step === 'ASK_PROBLEM_TYPE') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType: 'paiement' },
+          }));
+          addBotMessage(
+            `Compris : **Problème de paiement** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?\n\n` +
+            `_(Erreur affichée, date du paiement, montant, etc.)_`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'support_problem_video':
+        if (supportFlow.active && supportFlow.step === 'ASK_PROBLEM_TYPE') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType: 'video_bug' },
+          }));
+          addBotMessage(
+            `Compris : **Vidéo ne se charge pas** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?\n\n` +
+            `_(Quelle vidéo, navigateur utilisé, message d'erreur, etc.)_`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'support_problem_compte':
+        if (supportFlow.active && supportFlow.step === 'ASK_PROBLEM_TYPE') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType: 'compte' },
+          }));
+          addBotMessage(
+            `Compris : **Problème de compte** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?\n\n` +
+            `_(Connexion impossible, mot de passe oublié, etc.)_`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'support_problem_autre':
+        if (supportFlow.active && supportFlow.step === 'ASK_PROBLEM_TYPE') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType: 'autre' },
+          }));
+          addBotMessage(
+            `Compris : **Autre problème** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?`,
+            [],
+            false
+          );
+        }
+        break;
+
+      case 'support_confirm_yes':
+        // Géré dans handleSendMessage
+        break;
+
+      case 'support_confirm_no':
+        if (supportFlow.active && supportFlow.step === 'SUMMARY_CONFIRM') {
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_NAME',
+            data: {},
+          }));
+          addBotMessage(
+            "Pas de souci ! On reprend depuis le début. 📝\n\n" +
+            "Peux-tu me redonner ton **prénom et nom** ?",
+            [],
+            false
+          );
+        }
+        break;
+
       default:
         logActionExecuted(userType, action, false, user?.id, 'unknown_action');
         addBotMessage(
@@ -766,7 +1044,7 @@ export default function Chatbot() {
           true
         );
     }
-  }, [navigate, user, profile, role, userType, config.quickReplies, checkActionPermission, filterQuickReplies, rdvFlow, addBotMessage]);
+  }, [navigate, user, profile, role, userType, config.quickReplies, checkActionPermission, filterQuickReplies, rdvFlow, contactFlow, supportFlow, addBotMessage]);
 
   // Gérer l'envoi d'un message utilisateur
   const handleSendMessage = useCallback(async (content: string) => {
@@ -1071,6 +1349,538 @@ export default function Chatbot() {
         default:
           // État inattendu, réinitialiser
           setRdvFlow({ active: false, step: 'ASK_NAME', data: {}, context: undefined });
+          break;
+      }
+    }
+
+    // ============================================
+    // FLOW CONTACT INTELLIGENT
+    // ============================================
+    if (contactFlow.active) {
+      const trimmedContent = content.trim();
+      const lowerContent = trimmedContent.toLowerCase();
+      
+      // Permettre à l'utilisateur d'annuler
+      if (lowerContent === 'annuler' || lowerContent === 'cancel') {
+        setContactFlow({ active: false, step: 'ASK_NAME', data: {} });
+        addBotMessage(
+          "Pas de souci ! Ta demande a été annulée. 👋\n\nSi tu as d'autres questions, je suis là !",
+          filterQuickReplies(config.quickReplies),
+          false
+        );
+        return;
+      }
+      
+      switch (contactFlow.step) {
+        case 'ASK_NAME': {
+          if (trimmedContent.length < 2) {
+            addBotMessage("Merci de me donner ton prénom et nom complet. 📝", [], false);
+            return;
+          }
+          
+          const nameParts = trimmedContent.split(' ');
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_EMAIL',
+            data: { ...prev.data, firstName, lastName },
+          }));
+          
+          addBotMessage(
+            `Enchanté ${firstName} ! 👋\n\nMaintenant, peux-tu me donner ton **adresse email** ?\n\n_(Pour te recontacter concernant ta demande)_`,
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_EMAIL': {
+          if (!validateEmail(trimmedContent)) {
+            addBotMessage(
+              "Hmm, cette adresse email ne semble pas valide. 🤔\n\nPeux-tu vérifier et me la redonner ? (exemple : prenom@email.com)",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_PHONE',
+            data: { ...prev.data, email: trimmedContent.toLowerCase().trim() },
+          }));
+          
+          addBotMessage(
+            "Parfait ! 📧\n\nTon **numéro de téléphone** ? _(optionnel - tape \"passer\" pour ignorer)_",
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_PHONE': {
+          if (lowerContent === 'passer' || lowerContent === 'skip' || lowerContent === 'non') {
+            setContactFlow(prev => ({
+              ...prev,
+              step: 'ASK_SUBJECT',
+              data: { ...prev.data, phone: undefined },
+            }));
+          } else if (!validatePhone(trimmedContent)) {
+            addBotMessage(
+              "Ce numéro ne semble pas valide. 📱\n\nTape un numéro valide ou \"passer\" pour ignorer cette étape.",
+              [],
+              false
+            );
+            return;
+          } else {
+            setContactFlow(prev => ({
+              ...prev,
+              step: 'ASK_SUBJECT',
+              data: { ...prev.data, phone: trimmedContent },
+            }));
+          }
+          
+          addBotMessage(
+            "Super ! 📱\n\nQuel est le **sujet** de ta demande ?\n\n" +
+            "1️⃣ Question sur les offres\n" +
+            "2️⃣ Support technique\n" +
+            "3️⃣ Bootcamp / Immersion Élite\n" +
+            "4️⃣ Partenariat\n" +
+            "5️⃣ Autre\n\n" +
+            "_(Réponds avec le numéro ou le nom)_",
+            [
+              { id: 'subj_1', label: 'Question offres', action: 'contact_subject_offres', icon: '💎' },
+              { id: 'subj_2', label: 'Support technique', action: 'contact_subject_support', icon: '🔧' },
+              { id: 'subj_3', label: 'Bootcamp', action: 'contact_subject_bootcamp', icon: '🚀' },
+              { id: 'subj_4', label: 'Partenariat', action: 'contact_subject_partenariat', icon: '🤝' },
+              { id: 'subj_5', label: 'Autre', action: 'contact_subject_autre', icon: '❓' },
+            ],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_SUBJECT': {
+          let subject: ContactRequestType = 'autre';
+          
+          if (lowerContent === '1' || lowerContent.includes('offre')) {
+            subject = 'question_offres';
+          } else if (lowerContent === '2' || lowerContent.includes('support') || lowerContent.includes('technique')) {
+            subject = 'support_technique';
+          } else if (lowerContent === '3' || lowerContent.includes('bootcamp') || lowerContent.includes('immersion') || lowerContent.includes('elite')) {
+            subject = 'bootcamp_info';
+          } else if (lowerContent === '4' || lowerContent.includes('partenariat') || lowerContent.includes('partenaire')) {
+            subject = 'partenariat';
+          }
+          
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'ASK_MESSAGE',
+            data: { ...prev.data, subject },
+          }));
+          
+          addBotMessage(
+            `Noté : **${contactTypeLabels[subject]}** 📋\n\n` +
+            `Maintenant, décris-moi ta demande en détail. Plus tu es précis, mieux on pourra t'aider ! 💬`,
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_MESSAGE': {
+          if (trimmedContent.length < 10) {
+            addBotMessage(
+              "Peux-tu me donner un peu plus de détails ? (au moins quelques mots) 📝",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setContactFlow(prev => ({
+            ...prev,
+            step: 'SUMMARY_CONFIRM',
+            data: { ...prev.data, message: trimmedContent },
+          }));
+          
+          const data = contactFlow.data;
+          const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+          
+          addBotMessage(
+            `Parfait ! 🎯\n\n` +
+            `**📋 Récapitulatif de ta demande :**\n\n` +
+            `👤 **Nom** : ${fullName}\n` +
+            `📧 **Email** : ${data.email}\n` +
+            `📱 **Téléphone** : ${data.phone || 'Non renseigné'}\n` +
+            `🏷️ **Sujet** : ${contactTypeLabels[data.subject || 'autre']}\n` +
+            `💬 **Message** : ${trimmedContent}\n\n` +
+            `Est-ce que tout est correct ? ✅`,
+            [
+              { id: 'confirm_yes', label: 'Oui, envoyer !', action: 'contact_confirm_yes', icon: '✅' },
+              { id: 'confirm_no', label: 'Non, modifier', action: 'contact_confirm_no', icon: '✏️' },
+            ],
+            false
+          );
+          return;
+        }
+
+        case 'SUMMARY_CONFIRM': {
+          if (lowerContent === 'oui' || lowerContent === 'yes' || lowerContent === 'ok' || lowerContent === 'envoyer') {
+            // Soumettre la demande de contact
+            setContactFlow(prev => ({ ...prev, step: 'SUBMIT' }));
+            
+            const payload: ContactRequestPayload = {
+              firstName: contactFlow.data.firstName || '',
+              lastName: contactFlow.data.lastName || '',
+              email: contactFlow.data.email || '',
+              phone: contactFlow.data.phone,
+              subject: contactFlow.data.subject || 'autre',
+              message: contactFlow.data.message || '',
+              source: 'chatbot_contact',
+              userId: user?.id,
+            };
+            
+            try {
+              // Enregistrer dans la table contact_messages
+              const { error } = await supabase
+                .from('contact_messages')
+                .insert({
+                  name: `${payload.firstName} ${payload.lastName}`.trim(),
+                  email: payload.email,
+                  phone: payload.phone,
+                  subject: contactTypeLabels[payload.subject],
+                  message: payload.message,
+                  source: 'chatbot',
+                  user_id: payload.userId,
+                });
+              
+              if (error) throw error;
+              
+              setContactFlow({ active: false, step: 'ASK_NAME', data: {} });
+              
+              addBotMessage(
+                `🎉 **Merci ${contactFlow.data.firstName} !**\n\n` +
+                `Ta demande a bien été envoyée à notre équipe !\n\n` +
+                `📩 Tu recevras une réponse à **${contactFlow.data.email}** dans les 24-48h.\n\n` +
+                `En attendant, n'hésite pas à consulter notre FAQ ou à poser d'autres questions ici ! 👋`,
+                [
+                  { id: 'other', label: 'Autre question', action: 'other_question', icon: '❓' },
+                ],
+                true
+              );
+            } catch (error) {
+              console.error('Erreur envoi contact:', error);
+              addBotMessage(
+                `😔 Désolé, ta demande n'a pas pu être envoyée.\n\n` +
+                `Tu peux réessayer ou nous contacter directement sur Discord.`,
+                [
+                  { id: 'retry', label: 'Réessayer', action: 'contact_human', icon: '🔄' },
+                  { id: 'discord', label: 'Aller sur Discord', action: 'join_discord', icon: '💬' },
+                ],
+                false
+              );
+            }
+            return;
+          } else if (lowerContent === 'non' || lowerContent === 'no' || lowerContent === 'modifier') {
+            setContactFlow(prev => ({
+              ...prev,
+              step: 'ASK_NAME',
+              data: {},
+            }));
+            
+            addBotMessage(
+              "Pas de souci ! On reprend depuis le début. 📝\n\n" +
+              "Peux-tu me redonner ton **prénom et nom** ?",
+              [],
+              false
+            );
+            return;
+          } else {
+            addBotMessage(
+              "Merci de répondre par **Oui** pour envoyer ou **Non** pour modifier. 🙂",
+              [
+                { id: 'confirm_yes', label: 'Oui, envoyer !', action: 'contact_confirm_yes', icon: '✅' },
+                { id: 'confirm_no', label: 'Non, modifier', action: 'contact_confirm_no', icon: '✏️' },
+              ],
+              false
+            );
+            return;
+          }
+        }
+
+        default:
+          setContactFlow({ active: false, step: 'ASK_NAME', data: {} });
+          break;
+      }
+    }
+
+    // ============================================
+    // FLOW SUPPORT TECHNIQUE (pour clients)
+    // ============================================
+    if (supportFlow.active) {
+      const trimmedContent = content.trim();
+      const lowerContent = trimmedContent.toLowerCase();
+      
+      // Permettre à l'utilisateur d'annuler
+      if (lowerContent === 'annuler' || lowerContent === 'cancel') {
+        setSupportFlow({ active: false, step: 'ASK_NAME', data: {} });
+        addBotMessage(
+          "Pas de souci ! Ta demande de support a été annulée. 👋\n\nSi tu as d'autres questions, je suis là !",
+          filterQuickReplies(config.quickReplies),
+          false
+        );
+        return;
+      }
+      
+      switch (supportFlow.step) {
+        case 'ASK_NAME': {
+          if (trimmedContent.length < 2) {
+            addBotMessage("Merci de me donner ton prénom et nom complet. 📝", [], false);
+            return;
+          }
+          
+          const nameParts = trimmedContent.split(' ');
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_EMAIL',
+            data: { ...prev.data, firstName, lastName },
+          }));
+          
+          addBotMessage(
+            `Merci ${firstName} ! 👋\n\nTon **adresse email** associée à ton compte ?`,
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_EMAIL': {
+          if (!validateEmail(trimmedContent)) {
+            addBotMessage(
+              "Hmm, cette adresse email ne semble pas valide. 🤔\n\nPeux-tu vérifier ?",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_OFFER',
+            data: { ...prev.data, email: trimmedContent.toLowerCase().trim() },
+          }));
+          
+          addBotMessage(
+            "Parfait ! 📧\n\nQuelle **offre** as-tu souscrite ?\n\n" +
+            "1️⃣ Entrée (147€)\n" +
+            "2️⃣ Transformation (497€)\n" +
+            "3️⃣ Immersion Élite / Bootcamp (1997€)\n" +
+            "4️⃣ Je ne sais plus",
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_OFFER': {
+          let offer = trimmedContent;
+          
+          if (lowerContent === '1' || lowerContent.includes('entrée') || lowerContent.includes('entree') || lowerContent.includes('147')) {
+            offer = 'Entrée (147€)';
+          } else if (lowerContent === '2' || lowerContent.includes('transformation') || lowerContent.includes('497')) {
+            offer = 'Transformation (497€)';
+          } else if (lowerContent === '3' || lowerContent.includes('immersion') || lowerContent.includes('bootcamp') || lowerContent.includes('elite') || lowerContent.includes('1997')) {
+            offer = 'Immersion Élite (1997€)';
+          } else if (lowerContent === '4' || lowerContent.includes('sais plus') || lowerContent.includes('sais pas')) {
+            offer = 'Non précisé';
+          }
+          
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_PROBLEM_TYPE',
+            data: { ...prev.data, offer },
+          }));
+          
+          addBotMessage(
+            `Noté : **${offer}** 📋\n\n` +
+            `Quel **type de problème** rencontres-tu ?\n\n` +
+            "1️⃣ Accès à la formation\n" +
+            "2️⃣ Accès Discord\n" +
+            "3️⃣ Problème de paiement\n" +
+            "4️⃣ Vidéo ne se charge pas\n" +
+            "5️⃣ Problème de compte\n" +
+            "6️⃣ Autre problème",
+            [
+              { id: 'prob_1', label: 'Accès formation', action: 'support_problem_formation', icon: '📚' },
+              { id: 'prob_2', label: 'Accès Discord', action: 'support_problem_discord', icon: '💬' },
+              { id: 'prob_3', label: 'Paiement', action: 'support_problem_paiement', icon: '💳' },
+              { id: 'prob_4', label: 'Vidéo bug', action: 'support_problem_video', icon: '🎥' },
+              { id: 'prob_5', label: 'Compte', action: 'support_problem_compte', icon: '👤' },
+              { id: 'prob_6', label: 'Autre', action: 'support_problem_autre', icon: '❓' },
+            ],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_PROBLEM_TYPE': {
+          let problemType: SupportProblemType = 'autre';
+          
+          if (lowerContent === '1' || lowerContent.includes('formation')) {
+            problemType = 'acces_formation';
+          } else if (lowerContent === '2' || lowerContent.includes('discord')) {
+            problemType = 'acces_discord';
+          } else if (lowerContent === '3' || lowerContent.includes('paiement') || lowerContent.includes('payer')) {
+            problemType = 'paiement';
+          } else if (lowerContent === '4' || lowerContent.includes('vidéo') || lowerContent.includes('video') || lowerContent.includes('charge')) {
+            problemType = 'video_bug';
+          } else if (lowerContent === '5' || lowerContent.includes('compte')) {
+            problemType = 'compte';
+          }
+          
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'ASK_DESCRIPTION',
+            data: { ...prev.data, problemType },
+          }));
+          
+          addBotMessage(
+            `Compris : **${supportProblemLabels[problemType]}** 🔧\n\n` +
+            `Peux-tu me **décrire précisément** le problème ?\n\n` +
+            `_(Message d'erreur, ce que tu as essayé, depuis quand ça arrive, etc.)_`,
+            [],
+            false
+          );
+          return;
+        }
+
+        case 'ASK_DESCRIPTION': {
+          if (trimmedContent.length < 10) {
+            addBotMessage(
+              "Peux-tu me donner un peu plus de détails pour qu'on puisse t'aider ? 📝",
+              [],
+              false
+            );
+            return;
+          }
+          
+          setSupportFlow(prev => ({
+            ...prev,
+            step: 'SUMMARY_CONFIRM',
+            data: { ...prev.data, description: trimmedContent },
+          }));
+          
+          const data = supportFlow.data;
+          const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+          
+          addBotMessage(
+            `Merci pour ces infos ! 🎯\n\n` +
+            `**📋 Récapitulatif du ticket support :**\n\n` +
+            `👤 **Nom** : ${fullName}\n` +
+            `📧 **Email** : ${data.email}\n` +
+            `🏷️ **Offre** : ${data.offer}\n` +
+            `🔧 **Problème** : ${supportProblemLabels[data.problemType || 'autre']}\n` +
+            `💬 **Description** : ${trimmedContent}\n\n` +
+            `Est-ce que tout est correct ? ✅`,
+            [
+              { id: 'confirm_yes', label: 'Oui, envoyer !', action: 'support_confirm_yes', icon: '✅' },
+              { id: 'confirm_no', label: 'Non, modifier', action: 'support_confirm_no', icon: '✏️' },
+            ],
+            false
+          );
+          return;
+        }
+
+        case 'SUMMARY_CONFIRM': {
+          if (lowerContent === 'oui' || lowerContent === 'yes' || lowerContent === 'ok' || lowerContent === 'envoyer') {
+            setSupportFlow(prev => ({ ...prev, step: 'SUBMIT' }));
+            
+            const payload: SupportRequestPayload = {
+              firstName: supportFlow.data.firstName || '',
+              lastName: supportFlow.data.lastName || '',
+              email: supportFlow.data.email || '',
+              offer: supportFlow.data.offer || 'Non précisé',
+              problemType: supportFlow.data.problemType || 'autre',
+              description: supportFlow.data.description || '',
+              source: 'chatbot_support',
+              userId: user?.id,
+            };
+            
+            try {
+              // Enregistrer dans la table contact_messages avec le sujet "Support technique"
+              const { error } = await supabase
+                .from('contact_messages')
+                .insert({
+                  name: `${payload.firstName} ${payload.lastName}`.trim(),
+                  email: payload.email,
+                  subject: `Support: ${supportProblemLabels[payload.problemType]}`,
+                  message: `**Offre:** ${payload.offer}\n**Problème:** ${supportProblemLabels[payload.problemType]}\n\n${payload.description}`,
+                  source: 'chatbot_support',
+                  user_id: payload.userId,
+                });
+              
+              if (error) throw error;
+              
+              setSupportFlow({ active: false, step: 'ASK_NAME', data: {} });
+              
+              addBotMessage(
+                `🎉 **Merci ${supportFlow.data.firstName} !**\n\n` +
+                `Ton ticket de support a bien été créé !\n\n` +
+                `📩 Notre équipe te répondra à **${supportFlow.data.email}** dans les plus brefs délais.\n\n` +
+                `En attendant, tu peux aussi poser ta question sur Discord pour une réponse plus rapide ! 💬`,
+                [
+                  { id: 'discord', label: 'Aller sur Discord', action: 'join_discord', icon: '💬' },
+                  { id: 'other', label: 'Autre question', action: 'other_question', icon: '❓' },
+                ],
+                true
+              );
+            } catch (error) {
+              console.error('Erreur envoi support:', error);
+              addBotMessage(
+                `😔 Désolé, ton ticket n'a pas pu être créé.\n\n` +
+                `Contacte-nous directement sur Discord pour une aide immédiate.`,
+                [
+                  { id: 'discord', label: 'Aller sur Discord', action: 'join_discord', icon: '💬' },
+                ],
+                false
+              );
+            }
+            return;
+          } else if (lowerContent === 'non' || lowerContent === 'no' || lowerContent === 'modifier') {
+            setSupportFlow(prev => ({
+              ...prev,
+              step: 'ASK_NAME',
+              data: {},
+            }));
+            
+            addBotMessage(
+              "Pas de souci ! On reprend depuis le début. 📝\n\n" +
+              "Peux-tu me redonner ton **prénom et nom** ?",
+              [],
+              false
+            );
+            return;
+          } else {
+            addBotMessage(
+              "Merci de répondre par **Oui** pour envoyer ou **Non** pour modifier. 🙂",
+              [
+                { id: 'confirm_yes', label: 'Oui, envoyer !', action: 'support_confirm_yes', icon: '✅' },
+                { id: 'confirm_no', label: 'Non, modifier', action: 'support_confirm_no', icon: '✏️' },
+              ],
+              false
+            );
+            return;
+          }
+        }
+
+        default:
+          setSupportFlow({ active: false, step: 'ASK_NAME', data: {} });
           break;
       }
     }

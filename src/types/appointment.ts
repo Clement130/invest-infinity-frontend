@@ -77,6 +77,124 @@ export type RdvFlowStep =
   | 'SUBMIT_TO_BACKEND'
   | 'DONE';
 
+// ============================================
+// FLOW CONTACT - Collecte intelligente d'infos
+// ============================================
+
+// Type de demande de contact
+export type ContactRequestType = 
+  | 'question_offres'      // Question sur les offres
+  | 'support_technique'    // Problème technique
+  | 'bootcamp_info'        // Info sur le Bootcamp
+  | 'partenariat'          // Demande de partenariat
+  | 'autre';               // Autre demande
+
+// États du flux de contact
+export type ContactFlowStep = 
+  | 'ASK_NAME'
+  | 'ASK_EMAIL'
+  | 'ASK_PHONE'
+  | 'ASK_SUBJECT'
+  | 'ASK_MESSAGE'
+  | 'SUMMARY_CONFIRM'
+  | 'SUBMIT'
+  | 'DONE';
+
+// Payload pour une demande de contact
+export interface ContactRequestPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  subject: ContactRequestType;
+  message: string;
+  source: 'chatbot_contact';
+  userId?: string;
+}
+
+// État du flux contact dans le chatbot
+export interface ContactFlowState {
+  active: boolean;
+  step: ContactFlowStep;
+  data: Partial<ContactRequestPayload>;
+}
+
+// État initial du flux contact
+export const initialContactFlowState: ContactFlowState = {
+  active: false,
+  step: 'ASK_NAME',
+  data: {},
+};
+
+// Labels pour les types de contact
+export const contactTypeLabels: Record<ContactRequestType, string> = {
+  question_offres: 'Question sur les offres',
+  support_technique: 'Support technique',
+  bootcamp_info: 'Bootcamp / Immersion Élite',
+  partenariat: 'Partenariat',
+  autre: 'Autre',
+};
+
+// ============================================
+// FLOW SUPPORT TECHNIQUE - Pour les clients
+// ============================================
+
+// États du flux support technique
+export type SupportFlowStep = 
+  | 'ASK_NAME'
+  | 'ASK_EMAIL'
+  | 'ASK_OFFER'
+  | 'ASK_PROBLEM_TYPE'
+  | 'ASK_DESCRIPTION'
+  | 'SUMMARY_CONFIRM'
+  | 'SUBMIT'
+  | 'DONE';
+
+// Type de problème technique
+export type SupportProblemType = 
+  | 'acces_formation'      // Problème d'accès formation
+  | 'acces_discord'        // Problème d'accès Discord
+  | 'paiement'             // Problème de paiement
+  | 'video_bug'            // Vidéo ne se charge pas
+  | 'compte'               // Problème de compte
+  | 'autre';               // Autre problème
+
+// Payload pour une demande de support
+export interface SupportRequestPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  offer: string;
+  problemType: SupportProblemType;
+  description: string;
+  source: 'chatbot_support';
+  userId?: string;
+}
+
+// État du flux support
+export interface SupportFlowState {
+  active: boolean;
+  step: SupportFlowStep;
+  data: Partial<SupportRequestPayload>;
+}
+
+// État initial du flux support
+export const initialSupportFlowState: SupportFlowState = {
+  active: false,
+  step: 'ASK_NAME',
+  data: {},
+};
+
+// Labels pour les types de problèmes
+export const supportProblemLabels: Record<SupportProblemType, string> = {
+  acces_formation: 'Accès à la formation',
+  acces_discord: 'Accès Discord',
+  paiement: 'Problème de paiement',
+  video_bug: 'Vidéo ne se charge pas',
+  compte: 'Problème de compte',
+  autre: 'Autre problème',
+};
+
 // État du flux RDV dans le chatbot
 export interface RdvFlowState {
   active: boolean;
