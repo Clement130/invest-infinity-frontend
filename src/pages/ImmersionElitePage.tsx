@@ -143,7 +143,7 @@ export default function ImmersionElitePage() {
               </span>
             </h1>
             <p className="text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8 font-medium">
-              Formation présentielle intensive d'une semaine à Marseille
+              Formation présentielle intensive
             </p>
             <div className="flex flex-wrap items-center justify-center gap-6 lg:gap-8 text-sm lg:text-base">
               <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
@@ -183,7 +183,7 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Tout Transformation inclus</h3>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Tout Premium inclus</h3>
                       <p className="text-sm text-gray-400 leading-relaxed">Accès complet à la formation en ligne</p>
                     </div>
                   </div>
@@ -194,8 +194,8 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">5 jours de formation</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">Lundi au vendredi, 9h-17h</p>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Horaire de la formation : 9h–18h</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Lundi au vendredi</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
@@ -205,8 +205,8 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Coaching personnalisé</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">Petit groupe pour un suivi optimal</p>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Ateliers guidés</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Pour comprendre et appliquer</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
@@ -216,8 +216,8 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Trading en live</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">Avec Mickaël en temps réel</p>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Trading en live avec Mickaël</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Sessions de trading en temps réel</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
@@ -227,8 +227,8 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Analyse de vos trades</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">Feedback immédiat sur vos positions</p>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Analyse en direct des marchés</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Feedback immédiat sur les opportunités</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
@@ -238,30 +238,8 @@ export default function ImmersionElitePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Déjeuners offerts</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">5 repas inclus</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-yellow-400" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Certificat de complétion</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">Reconnaissance de votre formation</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-yellow-400" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-white mb-1.5 text-base">Accès VIP Discord</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">Communauté à vie</p>
+                      <h3 className="font-bold text-white mb-1.5 text-base">Ma stratégie rentable de A à Z</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Expliquée en détail par Mickaël</p>
                     </div>
                   </div>
                 </div>
@@ -401,7 +379,7 @@ export default function ImmersionElitePage() {
                 <CalendlyEliteModal
                   prefillName={profile?.full_name || undefined}
                   prefillEmail={user?.email || undefined}
-                  buttonText="Réserver Bootcamp Élite"
+                  buttonText="Planifier un rendez-vous"
                   price="1 997€"
                 />
 

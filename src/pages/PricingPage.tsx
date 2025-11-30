@@ -59,11 +59,11 @@ export default function PricingPage() {
       features.push('1 coaching individuel de 30 min en visio');
     } else if (offer.offerId === 'immersion_elite') {
       features.push('Tout Premium inclus');
-      features.push('Horaire de la formation : 9h-18h');
-      features.push('Programme théorique et pratique');
+      features.push('Horaire de la formation : 9h–18h');
+      features.push('Ateliers guidés pour comprendre et appliquer');
       features.push('Trading en live avec Mickaël');
-      features.push('Analyse de vos trades en temps réel');
-      features.push('Certificat fin de semaine');
+      features.push('Analyse en direct des marchés');
+      features.push('Ma stratégie rentable expliquée de A à Z');
     }
     
     return features;
@@ -341,7 +341,7 @@ export default function PricingPage() {
                       <CalendlyEliteModal
                         prefillName={profile?.full_name || undefined}
                         prefillEmail={user?.email || undefined}
-                        buttonText={`Réserver ${offer.name}`}
+                        buttonText="Planifier un rendez-vous"
                         price={`${offer.price.toLocaleString('fr-FR')}€`}
                         buttonClassName="
                           w-full py-3.5 px-6 rounded-xl font-bold transition-all duration-300

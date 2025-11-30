@@ -48,7 +48,7 @@ export default function CalendlyEliteModal({
   calendlyUrl = CALENDLY_ELITE_URL,
   prefillName = '',
   prefillEmail = '',
-  buttonText = 'Réserver Bootcamp Élite',
+  buttonText = 'Planifier un rendez-vous',
   price = '1 997€',
   showCrownIcon = true,
   buttonClassName,

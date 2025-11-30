@@ -147,7 +147,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
   immersion_elite: {
     offerId: 'immersion_elite',
     name: 'Bootcamp Élite',
-    description: 'Formation présentielle intensive à Marseille',
+    description: 'Formation présentielle intensive',
     price: 1997,
     paymentType: 'weekly',
     paymentDescription: 'paiement unique • 1 semaine intensive (Lundi au vendredi)',
