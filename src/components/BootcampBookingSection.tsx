@@ -59,8 +59,7 @@ export default function BootcampBookingSection({
     setIsClient(true);
   }, []);
 
-  // Construire l'URL avec les UTM parameters
-  const calendlyUrlWithUtm = `${calendlyUrl}?utm_source=${utmSource}&utm_medium=bootcamp&utm_campaign=${utmCampaign}`;
+  // Utiliser l'URL de base sans UTM dans l'URL (les UTM sont passés via les props)
 
   // Check-list des critères d'éligibilité
   const eligibilityCriteria = [
@@ -217,7 +216,7 @@ export default function BootcampBookingSection({
             <div className="h-full min-h-[650px] lg:min-h-[700px]">
               {isClient ? (
                 <InlineWidget
-                  url={calendlyUrlWithUtm}
+                  url={calendlyUrl}
                   styles={{
                     height: '100%',
                     minHeight: '650px',
