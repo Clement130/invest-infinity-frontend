@@ -42,10 +42,10 @@ export default function PricingPage() {
     const features: string[] = [];
     
     if (offer.offerId === 'entree') {
-      features.push('Accès à vie à la formation vidéo complète (50+ heures)');
+      features.push('Sessions de trading en direct');
       features.push('Communauté privée Discord');
       features.push('Alertes trading en temps réel');
-      features.push('Support par chat 7j/7');
+      features.push('Échanges avec les membres');
       features.push('Tutoriels plateformes (TopStep, Apex, MT4/MT5)');
     } else if (offer.offerId === 'transformation') {
       features.push('Offre Starter incluse');
@@ -251,7 +251,7 @@ export default function PricingPage() {
                 ? 'border-2 border-yellow-500/60 bg-gradient-to-br from-yellow-950/30 via-amber-950/20 to-orange-950/30 shadow-xl shadow-yellow-500/10 ring-1 ring-yellow-500/20'
                 : offer.offerId === 'transformation'
                 ? 'border-2 border-violet-500/40 bg-gradient-to-br from-violet-950/20 via-slate-900/50 to-pink-950/20 shadow-lg shadow-violet-500/5 ring-1 ring-violet-500/10'
-                : 'border border-pink-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/80 ring-1 ring-pink-500/10';
+                : 'border border-pink-500/50 bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-pink-950/10 shadow-[0_0_30px_rgba(236,72,153,0.15)] ring-1 ring-pink-500/20';
               
               return (
                 <div
@@ -344,14 +344,14 @@ export default function PricingPage() {
                       onClick={() => handlePurchase(planType)}
                       disabled={isLoading}
                       className={`
-                        w-full py-3 px-6 rounded-lg font-medium transition-all 
+                        w-full py-3.5 px-6 rounded-xl font-semibold transition-all duration-300
                         disabled:opacity-50 disabled:cursor-not-allowed 
                         flex items-center justify-center gap-2
                         ${isImmersion
-                          ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-[#1a0f0a] font-bold hover:shadow-lg hover:shadow-orange-500/40'
+                          ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-[#1a0f0a] font-bold hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02]'
                           : offer.offerId === 'transformation'
-                          ? 'bg-gradient-to-r from-pink-500/80 to-violet-500/80 text-white hover:from-pink-600 hover:to-violet-600'
-                          : 'border border-pink-500/50 text-pink-400 hover:bg-pink-500/10'
+                          ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:from-pink-600 hover:to-violet-600 hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
+                          : 'bg-gradient-to-r from-pink-500/90 to-rose-500/90 text-white hover:from-pink-500 hover:to-rose-500 hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
                         }
                       `}
                     >
