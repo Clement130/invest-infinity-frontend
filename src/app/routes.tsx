@@ -38,6 +38,8 @@ const ConfirmationPage = lazy(() => import('../pages/ConfirmationPage'));
 const CreatePasswordPage = lazy(() => import('../pages/CreatePasswordPage'));
 const UpgradeOffer = lazy(() => import('../components/UpgradeOffer'));
 const LandingForm = lazy(() => import('../components/LandingForm/LandingForm').then(module => ({ default: module.LandingForm })));
+const ContactPage = lazy(() => import('../pages/ContactPage'));
+const BootcampElitePage = lazy(() => import('../pages/BootcampElitePage'));
 
 export type MarketingRouteConfig = {
   path: string;
@@ -109,6 +111,16 @@ export const marketingRoutes: MarketingRouteConfig[] = [
     path: '/create-password',
     element: <CreatePasswordPage />,
     layout: { header: false, footer: false },
+  },
+  {
+    path: '/contact',
+    element: <ContactPage />,
+    layout: { header: true, footer: true },
+  },
+  {
+    path: '/bootcamp-elite',
+    element: <BootcampElitePage />,
+    layout: { header: true, footer: true },
   },
 ];
 

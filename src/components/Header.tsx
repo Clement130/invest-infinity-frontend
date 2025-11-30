@@ -138,6 +138,12 @@ export default function Header() {
                 >
                   Tarifs
                 </button>
+                <button
+                  className="header__link"
+                  onClick={() => navigate('/contact')}
+                >
+                  Contact
+                </button>
                 
                 {/* Bouton "Mon Compte" avec dropdown */}
                 <div className="relative" ref={dropdownRef}>
@@ -232,6 +238,15 @@ export default function Header() {
                 }}
               >
                 Tarifs
+              </button>
+              <button
+                className="text-gray-400 text-xl hover:text-pink-500 transition-colors"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate('/contact');
+                }}
+              >
+                Contact
               </button>
               
               {/* Options du menu mobile */}
