@@ -287,26 +287,23 @@ export default function SettingsPage() {
             <div className="space-y-6">
               {/* Avatar */}
               <div className="flex items-center gap-6">
-                <div className="relative group">
+                {/* Avatar cliquable */}
+                <div 
+                  className="relative group cursor-pointer"
+                  onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                >
                   {/* Input file caché */}
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
                     onChange={handleAvatarUpload}
-                    className="hidden"
-                    id="avatar-upload"
+                    className="sr-only"
+                    aria-label="Changer la photo de profil"
                   />
                   
-                  {/* Avatar cliquable */}
-                  <label 
-                    htmlFor="avatar-upload"
-                    className={clsx(
-                      "relative block w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20 overflow-hidden",
-                      isUploadingAvatar ? "cursor-wait" : "cursor-pointer"
-                    )}
-                  >
-                    {/* Image ou initiale */}
+                  {/* Avatar avec image ou initiale */}
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20 overflow-hidden flex items-center justify-center">
                     {profile?.avatar_url ? (
                       <img 
                         src={profile.avatar_url} 
@@ -314,31 +311,32 @@ export default function SettingsPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
+                      <span className="text-3xl font-bold text-white">
                         {firstName.charAt(0).toUpperCase()}
                       </span>
                     )}
-                    
-                    {/* Overlay - toujours visible sur mobile, hover sur desktop */}
-                    <span 
-                      className={clsx(
-                        "absolute inset-0 rounded-2xl bg-black/60 flex flex-col items-center justify-center transition-opacity",
-                        isUploadingAvatar 
-                          ? "opacity-100" 
-                          : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                      )}
-                    >
-                      {isUploadingAvatar ? (
-                        <Loader2 className="w-6 h-6 text-white animate-spin" />
-                      ) : (
-                        <>
-                          <Camera className="w-6 h-6 text-white" />
-                          <span className="text-[10px] text-white mt-1">Modifier</span>
-                        </>
-                      )}
-                    </span>
-                  </label>
+                  </div>
+                  
+                  {/* Overlay au hover */}
+                  <div 
+                    className={clsx(
+                      "absolute inset-0 rounded-2xl bg-black/60 flex flex-col items-center justify-center transition-opacity",
+                      isUploadingAvatar 
+                        ? "opacity-100" 
+                        : "opacity-0 group-hover:opacity-100"
+                    )}
+                  >
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="w-6 h-6 text-white" />
+                        <span className="text-xs text-white mt-1">Modifier</span>
+                      </>
+                    )}
+                  </div>
                 </div>
+
                 <div>
                   <p className="text-white font-semibold">{profile?.full_name || 'Utilisateur'}</p>
                   <p className="text-sm text-gray-400">{user?.email}</p>
