@@ -298,8 +298,15 @@ export default function SettingsPage() {
                     id="avatar-upload"
                   />
                   
-                  {/* Avatar avec image ou initiale */}
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/20 overflow-hidden">
+                  {/* Avatar cliquable */}
+                  <label 
+                    htmlFor="avatar-upload"
+                    className={clsx(
+                      "relative block w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20 overflow-hidden",
+                      isUploadingAvatar ? "cursor-wait" : "cursor-pointer"
+                    )}
+                  >
+                    {/* Image ou initiale */}
                     {profile?.avatar_url ? (
                       <img 
                         src={profile.avatar_url} 
@@ -307,42 +314,45 @@ export default function SettingsPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-3xl font-bold text-white">
+                      <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
                         {firstName.charAt(0).toUpperCase()}
                       </span>
                     )}
-                  </div>
-                  
-                  {/* Overlay au hover */}
-                  <label 
-                    htmlFor="avatar-upload"
-                    className={clsx(
-                      "absolute inset-0 rounded-2xl bg-black/60 transition-opacity flex flex-col items-center justify-center",
-                      isUploadingAvatar ? "opacity-100 cursor-wait" : "opacity-0 group-hover:opacity-100 cursor-pointer"
-                    )}
-                  >
-                    {isUploadingAvatar ? (
-                      <Loader2 className="w-6 h-6 text-white animate-spin" />
-                    ) : (
-                      <>
-                        <Camera className="w-6 h-6 text-white" />
-                        <span className="text-[10px] text-white mt-1">Modifier</span>
-                      </>
-                    )}
+                    
+                    {/* Overlay - toujours visible sur mobile, hover sur desktop */}
+                    <span 
+                      className={clsx(
+                        "absolute inset-0 rounded-2xl bg-black/60 flex flex-col items-center justify-center transition-opacity",
+                        isUploadingAvatar 
+                          ? "opacity-100" 
+                          : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      )}
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      ) : (
+                        <>
+                          <Camera className="w-6 h-6 text-white" />
+                          <span className="text-[10px] text-white mt-1">Modifier</span>
+                        </>
+                      )}
+                    </span>
                   </label>
                 </div>
                 <div>
                   <p className="text-white font-semibold">{profile?.full_name || 'Utilisateur'}</p>
                   <p className="text-sm text-gray-400">{user?.email}</p>
-                  <label 
-                    htmlFor="avatar-upload" 
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingAvatar}
                     className={clsx(
-                      "mt-2 text-sm text-pink-400 hover:text-pink-300 transition inline-block",
+                      "mt-2 text-sm text-pink-400 hover:text-pink-300 transition",
                       isUploadingAvatar ? "cursor-wait opacity-50" : "cursor-pointer"
                     )}
                   >
                     {isUploadingAvatar ? 'Chargement...' : 'Changer la photo'}
-                  </label>
+                  </button>
                 </div>
               </div>
 
