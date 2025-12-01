@@ -22,7 +22,7 @@ import { BookOpen, Search, Play, CheckCircle2, Clock, ArrowRight } from 'lucide-
 import { getModules } from '../services/trainingService';
 import { getUserProgressSummary } from '../services/progressService';
 import { useSession } from '../hooks/useSession';
-import { useEntitlements } from '../hooks/useEntitlements';
+import { useEntitlements, useHasLicense } from '../hooks/useEntitlements';
 import clsx from 'clsx';
 
 // Components
@@ -62,6 +62,7 @@ export default function ClientApp() {
   const navigate = useNavigate();
   const { user, profile } = useSession();
   const entitlements = useEntitlements();
+  const hasLicense = useHasLicense();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -198,8 +199,8 @@ export default function ClientApp() {
         userName={userName}
       />
 
-      {/* Continue Learning CTA */}
-      {continueModule && (
+      {/* Continue Learning CTA - Seulement si l'utilisateur a une offre active */}
+      {continueModule && hasLicense && (
         <ContinueModuleCard
           moduleTitle={continueModule.title}
           lessonTitle={continueLessonTitle}
