@@ -212,17 +212,14 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
       // (permet au client de créer son mot de passe même s'il ne paie pas tout de suite)
       if (signUpData.user) {
         try {
-          const { error: emailError } = await supabase.functions.invoke('send-password-email', {
-            body: {
-              userId: signUpData.user.id,
-              email: formData.email,
-              prenom: formData.prenom,
-            },
+          // Utiliser resetPasswordForEmail qui envoie un email via Resend (SMTP configuré)
+          const { error: resetError } = await supabase.auth.resetPasswordForEmail(formData.email, {
+            redirectTo: `https://www.investinfinity.fr/create-password`,
           });
-          if (emailError) {
-            console.error('[AuthModal] Erreur envoi email mot de passe:', emailError);
+          if (resetError) {
+            console.error('[AuthModal] Erreur envoi email mot de passe:', resetError);
           } else {
-            console.log('[AuthModal] Email de création de mot de passe envoyé');
+            console.log('[AuthModal] Email de création de mot de passe envoyé via Supabase Auth');
           }
         } catch (emailErr) {
           console.error('[AuthModal] Exception envoi email:', emailErr);

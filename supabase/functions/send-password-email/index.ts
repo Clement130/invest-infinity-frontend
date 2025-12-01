@@ -2,6 +2,13 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
 
+// Headers CORS pour permettre les appels depuis le frontend
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 interface EmailRequest {
   email: string;
   token: string;
@@ -9,11 +16,16 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
+  // Gérer les requêtes CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   // Seules les requêtes POST sont autorisées
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
@@ -23,7 +35,7 @@ serve(async (req) => {
     if (!email || !token) {
       return new Response(
         JSON.stringify({ error: 'Email and token are required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -147,7 +159,7 @@ serve(async (req) => {
       console.error('[send-password-email] Resend error:', data);
       return new Response(
         JSON.stringify({ error: 'Failed to send email', details: data }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -155,7 +167,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, emailId: data.id }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: unknown) {
@@ -164,7 +176,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: errorMessage }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

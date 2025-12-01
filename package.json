@@ -24,6 +24,7 @@
     "supabase:seed-test": "echo 'Exécutez le script via Supabase Dashboard > SQL Editor ou via psql'",
     "seed-test": "node scripts/seed-test-data.js",
     "grant-access": "node scripts/grant-access.js",
+    "set-user-plan": "npx tsx scripts/setUserPlan.ts",
     "check-lessons-video": "node scripts/check-lessons-without-video.js",
     "associate-video": "node scripts/associate-video-to-lesson.js",
     "analyze-bundle": "npx vite-bundle-analyzer dist",
