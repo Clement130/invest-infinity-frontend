@@ -324,6 +324,35 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
                     </div>
                   )}
 
+                  {/* Lien mot de passe oublié */}
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!loginData.email) {
+                          toast.error('Entre ton email pour recevoir un lien de réinitialisation');
+                          return;
+                        }
+                        setIsLoading(true);
+                        try {
+                          const { error } = await supabase.auth.resetPasswordForEmail(loginData.email, {
+                            redirectTo: 'https://www.investinfinity.fr/create-password'
+                          });
+                          if (error) throw error;
+                          toast.success('Email envoyé ! Vérifie ta boîte mail pour réinitialiser ton mot de passe.');
+                        } catch (err: any) {
+                          toast.error(err.message || 'Erreur lors de l\'envoi de l\'email');
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="text-sm text-pink-400 hover:text-pink-300 transition-colors disabled:opacity-50"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+
                   {/* Bouton */}
                   <button
                     type="submit"

@@ -8,21 +8,103 @@ export default function CreatePasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
+  // Supabase peut envoyer token_hash ou token, et parfois aucun des deux
+  // car la vérification se fait via le lien /auth/v1/verify qui établit une session
+  const tokenHash = searchParams.get('token_hash');
   const token = searchParams.get('token');
-  const email = searchParams.get('email');
+  const type = searchParams.get('type'); // 'recovery' pour reset password
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Commence en loading pour vérifier la session
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isSessionValid, setIsSessionValid] = useState(false);
 
   useEffect(() => {
-    if (!token || !email) {
-      setError('Lien invalide ou expiré');
-    }
-  }, [token, email]);
+    // Vérifier si l'utilisateur a une session active (après redirect de Supabase)
+    const checkSession = async () => {
+      try {
+        // D'abord, gérer le hash fragment si présent (Supabase met parfois les tokens dans le hash)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          // Établir la session à partir des tokens du hash
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (sessionError) {
+            console.error('[CreatePassword] Session error:', sessionError);
+            setError('Lien invalide ou expiré. Demande un nouveau lien.');
+            setLoading(false);
+            return;
+          }
+          
+          if (data.user) {
+            setUserEmail(data.user.email || null);
+            setIsSessionValid(true);
+            setLoading(false);
+            // Nettoyer le hash de l'URL
+            window.history.replaceState(null, '', window.location.pathname);
+            return;
+          }
+        }
+        
+        // Si pas de tokens dans le hash, vérifier si on a déjà une session
+        const { data: { session }, error: getSessionError } = await supabase.auth.getSession();
+        
+        if (getSessionError) {
+          console.error('[CreatePassword] Get session error:', getSessionError);
+        }
+        
+        if (session?.user) {
+          setUserEmail(session.user.email || null);
+          setIsSessionValid(true);
+          setLoading(false);
+          return;
+        }
+        
+        // Si on a un token_hash dans l'URL, essayer de le vérifier
+        if (tokenHash && type === 'recovery') {
+          const { data, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
+          });
+          
+          if (verifyError) {
+            console.error('[CreatePassword] Verify OTP error:', verifyError);
+            setError('Lien invalide ou expiré. Demande un nouveau lien via "Mot de passe oublié".');
+            setLoading(false);
+            return;
+          }
+          
+          if (data.user) {
+            setUserEmail(data.user.email || null);
+            setIsSessionValid(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Aucune session valide
+        setError('Lien invalide ou expiré. Demande un nouveau lien via "Mot de passe oublié".');
+        setLoading(false);
+        
+      } catch (err) {
+        console.error('[CreatePassword] Check session error:', err);
+        setError('Erreur lors de la vérification. Réessaie.');
+        setLoading(false);
+      }
+    };
+    
+    checkSession();
+  }, [tokenHash, type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,20 +122,8 @@ export default function CreatePasswordPage() {
     setLoading(true);
 
     try {
-      // Utiliser le token pour vérifier et mettre à jour le mot de passe
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash: token!,
-        type: 'recovery',
-      });
-
-      if (verifyError) {
-        console.error('[CreatePassword] Verify error:', verifyError);
-        // Si le token est expiré, essayer de se connecter directement
-        // avec l'email et le nouveau mot de passe après l'avoir mis à jour
-        throw verifyError;
-      }
-
-      // Mettre à jour le mot de passe
+      // On a déjà une session valide (établie dans useEffect)
+      // On peut directement mettre à jour le mot de passe
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
@@ -81,7 +151,19 @@ export default function CreatePasswordPage() {
     }
   };
 
-  if (error && !token) {
+  // Afficher un loader pendant la vérification de session
+  if (loading && !isSessionValid) {
+    return (
+      <div className="min-h-screen bg-[#0f0f13] text-white flex items-center justify-center px-4">
+        <div className="max-w-md mx-auto text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-pink-500 mx-auto mb-4" />
+          <h1 className="text-xl font-medium">Vérification en cours...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !isSessionValid) {
     return (
       <div className="min-h-screen bg-[#0f0f13] text-white flex items-center justify-center px-4">
         <div className="max-w-md mx-auto text-center">
@@ -89,7 +171,7 @@ export default function CreatePasswordPage() {
           <h1 className="text-2xl font-bold mb-2">Lien invalide</h1>
           <p className="text-gray-400 mb-6">{error}</p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/')}
             className="px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-lg font-medium"
           >
             Aller à la connexion
@@ -156,10 +238,12 @@ export default function CreatePasswordPage() {
           </div>
 
           {/* Email (readonly) */}
-          <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <p className="text-sm text-gray-400">Email</p>
-            <p className="text-white font-medium">{email}</p>
-          </div>
+          {userEmail && (
+            <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+              <p className="text-sm text-gray-400">Email</p>
+              <p className="text-white font-medium">{userEmail}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Mot de passe */}

@@ -35,7 +35,9 @@ const subjects: Record<string, string> = {
 
 // Génère l'URL de confirmation
 function generateConfirmationURL(email_data: AuthEmailPayload['email_data']): string {
-  return `https://vveswlmcgmizmjsriezw.supabase.co/auth/v1/verify?token=${email_data.token_hash}&type=${email_data.email_action_type}&redirect_to=${encodeURIComponent(email_data.redirect_to || 'https://www.investinfinity.fr/')}`;
+  // Utiliser token_hash comme paramètre (requis par Supabase Auth)
+  const redirectTo = email_data.redirect_to || 'https://www.investinfinity.fr/';
+  return `https://vveswlmcgmizmjsriezw.supabase.co/auth/v1/verify?token_hash=${email_data.token_hash}&type=${email_data.email_action_type}&redirect_to=${encodeURIComponent(redirectTo)}`;
 }
 
 // Template HTML professionnel
