@@ -14,6 +14,7 @@ export type Database = {
           id: string
           email: string
           full_name: string | null
+          avatar_url: string | null
           role: 'client' | 'admin' | 'developer'
           license: 'none' | 'starter' | 'pro' | 'elite'
           license_valid_until: string | null
@@ -25,6 +26,7 @@ export type Database = {
           id: string
           email: string
           full_name?: string | null
+          avatar_url?: string | null
           role?: 'client' | 'admin' | 'developer'
           license?: 'none' | 'starter' | 'pro' | 'elite'
           license_valid_until?: string | null
@@ -36,6 +38,7 @@ export type Database = {
           id?: string
           email?: string
           full_name?: string | null
+          avatar_url?: string | null
           role?: 'client' | 'admin' | 'developer'
           license?: 'none' | 'starter' | 'pro' | 'elite'
           license_valid_until?: string | null

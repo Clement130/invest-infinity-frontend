@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from '../hooks/useSession';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import toast from 'react-hot-toast';
 import GlassCard from '../components/ui/GlassCard';
 import {
   User,
@@ -22,6 +24,7 @@ import {
   AlertTriangle,
   LogOut,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -67,15 +70,114 @@ function ToggleSwitch({ enabled, onChange, disabled }: ToggleSwitchProps) {
 }
 
 export default function SettingsPage() {
-  const { user, profile, signOut } = useSession();
+  const { user, profile, signOut, refreshProfile } = useSession();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
     email: user?.email || '',
   });
+
+  // Mettre à jour le formulaire quand le profil change
+  useEffect(() => {
+    if (profile?.full_name) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: profile.full_name || '',
+      }));
+    }
+    if (user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+      }));
+    }
+  }, [profile?.full_name, user?.email]);
+
+  // Gérer l'upload de l'avatar
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Vérifier le type de fichier
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format non supporté. Utilisez JPG, PNG, GIF ou WebP.');
+      return;
+    }
+
+    // Vérifier la taille (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('L\'image est trop volumineuse (max 2 Mo)');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      // Générer un nom de fichier unique
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+
+      // Supprimer l'ancien avatar s'il existe
+      if (profile?.avatar_url) {
+        const oldPath = profile.avatar_url.split('/avatars/')[1];
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([oldPath]);
+        }
+      }
+
+      // Upload du nouveau fichier
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Erreur upload:', uploadError);
+        toast.error('Erreur lors de l\'upload de l\'image');
+        return;
+      }
+
+      // Obtenir l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Mettre à jour le profil avec la nouvelle URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Erreur mise à jour profil:', updateError);
+        toast.error('Erreur lors de la mise à jour du profil');
+        return;
+      }
+
+      await refreshProfile();
+      toast.success('Photo de profil mise à jour !');
+    } catch (err) {
+      console.error('Erreur inattendue:', err);
+      toast.error('Une erreur est survenue');
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset l'input file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -98,10 +200,43 @@ export default function SettingsPage() {
   });
 
   const handleSave = async () => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour modifier votre profil');
+      return;
+    }
+
+    // Vérifier si le nom a changé
+    if (formData.fullName === profile?.full_name) {
+      toast('Aucune modification détectée', { icon: 'ℹ️' });
+      return;
+    }
+
     setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          full_name: formData.fullName.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Erreur lors de la mise à jour du profil:', error);
+        toast.error('Erreur lors de la sauvegarde');
+        return;
+      }
+
+      // Rafraîchir le profil dans le contexte
+      await refreshProfile();
+      toast.success('Profil mis à jour avec succès !');
+    } catch (err) {
+      console.error('Erreur inattendue:', err);
+      toast.error('Une erreur est survenue');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -153,21 +288,61 @@ export default function SettingsPage() {
               {/* Avatar */}
               <div className="flex items-center gap-6">
                 <div className="relative group">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/20">
-                    <span className="text-3xl font-bold text-white">
-                      {firstName.charAt(0).toUpperCase()}
-                    </span>
+                  {/* Input file caché */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  
+                  {/* Avatar avec image ou initiale */}
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/20 overflow-hidden">
+                    {profile?.avatar_url ? (
+                      <img 
+                        src={profile.avatar_url} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl font-bold text-white">
+                        {firstName.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
-                  <button className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="w-6 h-6 text-white" />
-                  </button>
+                  
+                  {/* Overlay au hover */}
+                  <label 
+                    htmlFor="avatar-upload"
+                    className={clsx(
+                      "absolute inset-0 rounded-2xl bg-black/60 transition-opacity flex flex-col items-center justify-center",
+                      isUploadingAvatar ? "opacity-100 cursor-wait" : "opacity-0 group-hover:opacity-100 cursor-pointer"
+                    )}
+                  >
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="w-6 h-6 text-white" />
+                        <span className="text-[10px] text-white mt-1">Modifier</span>
+                      </>
+                    )}
+                  </label>
                 </div>
                 <div>
                   <p className="text-white font-semibold">{profile?.full_name || 'Utilisateur'}</p>
                   <p className="text-sm text-gray-400">{user?.email}</p>
-                  <button className="mt-2 text-sm text-pink-400 hover:text-pink-300 transition">
-                    Changer la photo
-                  </button>
+                  <label 
+                    htmlFor="avatar-upload" 
+                    className={clsx(
+                      "mt-2 text-sm text-pink-400 hover:text-pink-300 transition inline-block",
+                      isUploadingAvatar ? "cursor-wait opacity-50" : "cursor-pointer"
+                    )}
+                  >
+                    {isUploadingAvatar ? 'Chargement...' : 'Changer la photo'}
+                  </label>
                 </div>
               </div>
 
