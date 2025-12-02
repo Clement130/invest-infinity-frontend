@@ -298,7 +298,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
   
   secureLog('Assigning license', { license, priceId });
 
-  const { error: profileError } = await supabaseAdmin
+  // IMPORTANT: Utiliser upsert avec onConflict sur 'id' pour créer ou mettre à jour le profil
+  const { data: upsertData, error: profileError } = await supabaseAdmin
     .from('profiles')
     .upsert({
       id: userId,
@@ -309,10 +310,62 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
       created_at: new Date().toISOString()
     }, {
       onConflict: 'id'
-    });
+    })
+    .select('id, license');
 
   if (profileError) {
-    secureLog('Error updating profile', { error: profileError.message });
+    secureLog('Error upserting profile', { error: profileError.message, code: profileError.code });
+    
+    // Tentative de fallback: UPDATE direct si l'upsert échoue
+    secureLog('Attempting direct UPDATE as fallback');
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ 
+        license: license,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+    
+    if (updateError) {
+      secureLog('Fallback UPDATE also failed', { error: updateError.message });
+    } else {
+      secureLog('Fallback UPDATE succeeded');
+    }
+  } else {
+    secureLog('Profile upsert succeeded', { 
+      profileId: upsertData?.[0]?.id,
+      assignedLicense: upsertData?.[0]?.license 
+    });
+  }
+
+  // VERIFICATION: S'assurer que la licence a bien été assignée
+  const { data: verifyProfile, error: verifyError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, license')
+    .eq('id', userId)
+    .single();
+
+  if (verifyError) {
+    secureLog('Error verifying profile after upsert', { error: verifyError.message });
+  } else if (verifyProfile?.license !== license) {
+    secureLog('WARNING: License mismatch detected!', { 
+      expected: license, 
+      actual: verifyProfile?.license 
+    });
+    
+    // Forcer la mise à jour si la licence ne correspond pas
+    const { error: forceUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ license: license })
+      .eq('id', userId);
+    
+    if (forceUpdateError) {
+      secureLog('Force update failed', { error: forceUpdateError.message });
+    } else {
+      secureLog('Force update succeeded - license corrected to', { license });
+    }
+  } else {
+    secureLog('License verification passed', { license: verifyProfile?.license });
   }
 
   const userLicenseLevel = LICENSE_HIERARCHY[license] || 1;
