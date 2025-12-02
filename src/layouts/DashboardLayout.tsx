@@ -135,8 +135,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <MemoizedHeader />
 
         {/* Content - seule partie qui change */}
-        {/* Padding réduit sur mobile pour éviter le rognage, augmenté progressivement */}
-        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 overflow-auto">
+        {/* Padding augmenté sur mobile pour éviter le rognage */}
+        <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 overflow-x-hidden overflow-y-auto">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>

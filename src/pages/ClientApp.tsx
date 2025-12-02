@@ -190,9 +190,9 @@ export default function ClientApp() {
   return (
     // Mobile-first layout:
     // - pb-28 pour éviter le chevauchement avec le chatbot ET la BottomNav sur mobile
-    // - max-w-full et overflow-hidden pour éviter le scroll horizontal
-    // - space-y-5 mobile, space-y-8 desktop pour respiration
-    <div className="space-y-5 sm:space-y-6 lg:space-y-8 pb-28 lg:pb-8 max-w-full overflow-hidden">
+    // - w-full et overflow-x-hidden pour éviter le scroll horizontal
+    // - space-y-4 mobile pour respiration compacte
+    <div className="space-y-4 sm:space-y-5 lg:space-y-8 pb-28 lg:pb-8 w-full overflow-x-hidden">
       {/* Header Hero */}
       <FormationHeader 
         stats={statsData}

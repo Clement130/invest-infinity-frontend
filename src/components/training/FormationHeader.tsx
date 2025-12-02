@@ -187,10 +187,10 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-transparent border border-pink-500/20"
+          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-transparent border border-pink-500/20 w-full overflow-hidden"
         >
           <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400 flex-shrink-0" />
-          <p className="text-xs sm:text-sm lg:text-base text-gray-300 line-clamp-2">{motivationalMessage}</p>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-300 truncate flex-1 min-w-0">{motivationalMessage}</p>
         </motion.div>
 
         {/* Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
