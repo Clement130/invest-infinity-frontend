@@ -26,10 +26,11 @@ import {
   Sparkles,
   Handshake,
 } from 'lucide-react';
-import { useState, useRef, useEffect, memo, useCallback } from 'react';
+import { useRef, useEffect, memo, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { useQuery } from '@tanstack/react-query';
 import { getUserStats } from '../../services/memberStatsService';
+import { useMobileSidebar } from '../../context/MobileSidebarContext';
 import clsx from 'clsx';
 
 interface NavItem {
@@ -99,22 +100,11 @@ const sidebarVariants = {
   },
 };
 
-// Export pour permettre l'ouverture du drawer depuis l'extérieur (BottomNav)
-export const useMobileSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  return {
-    isOpen,
-    open: () => setIsOpen(true),
-    close: () => setIsOpen(false),
-    toggle: () => setIsOpen(prev => !prev),
-  };
-};
-
 function ClientSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signOut } = useSession();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { isOpen: isMobileOpen, close: closeMobileSidebar } = useMobileSidebar();
 
   // Track if this is the initial mount to prevent animations on subsequent renders
   const isInitialMount = useRef(true);
@@ -130,8 +120,8 @@ function ClientSidebar() {
 
   // Fermer le drawer quand on change de page
   useEffect(() => {
-    setIsMobileOpen(false);
-  }, [location.pathname]);
+    closeMobileSidebar();
+  }, [location.pathname, closeMobileSidebar]);
 
   const { data: stats } = useQuery({
     queryKey: ['member-stats', user?.id],
@@ -142,8 +132,8 @@ function ClientSidebar() {
 
   const handleNavClick = useCallback((path: string) => {
     navigate(path);
-    setIsMobileOpen(false);
-  }, [navigate]);
+    closeMobileSidebar();
+  }, [navigate, closeMobileSidebar]);
 
   const handleLogout = useCallback(async () => {
     await signOut();
@@ -186,7 +176,7 @@ function ClientSidebar() {
           </div>
           {/* Bouton fermer - visible uniquement dans le drawer mobile */}
           <button
-            onClick={() => setIsMobileOpen(false)}
+            onClick={closeMobileSidebar}
             className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition"
           >
             <X className="w-5 h-5 text-gray-400" />
@@ -398,7 +388,7 @@ function ClientSidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            onClick={() => setIsMobileOpen(false)}
+            onClick={closeMobileSidebar}
           />
         )}
       </AnimatePresence>

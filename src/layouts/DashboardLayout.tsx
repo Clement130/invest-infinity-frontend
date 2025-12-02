@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import ClientSidebar from '../components/navigation/ClientSidebar';
 import DashboardHeader from '../components/navigation/DashboardHeader';
 import BottomNav from '../components/navigation/BottomNav';
+import { MobileSidebarProvider } from '../context/MobileSidebarContext';
 import { useSession } from '../hooks/useSession';
 
 interface DashboardLayoutProps {
@@ -122,29 +123,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const themeKey = (profile?.theme as ThemeKey) ?? 'default';
 
   return (
-    <div className="flex min-h-screen bg-black text-white overflow-hidden">
-      {/* Animated Background - ne se re-render jamais */}
-      <AnimatedBackground themeKey={themeKey} />
+    <MobileSidebarProvider>
+      <div className="flex min-h-screen bg-black text-white overflow-hidden">
+        {/* Animated Background - ne se re-render jamais */}
+        <AnimatedBackground themeKey={themeKey} />
 
-      {/* Sidebar - Desktop uniquement (géré dans ClientSidebar) */}
-      <MemoizedSidebar />
+        {/* Sidebar - Desktop uniquement (géré dans ClientSidebar) */}
+        <MemoizedSidebar />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
-        {/* Header - reste statique lors des navigations */}
-        <MemoizedHeader />
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
+          {/* Header - reste statique lors des navigations */}
+          <MemoizedHeader />
 
-        {/* Content - seule partie qui change */}
-        {/* Padding augmenté sur mobile pour éviter le rognage */}
-        <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 overflow-x-hidden overflow-y-auto">
-          <div className="max-w-7xl mx-auto w-full">
-            {children}
-          </div>
-        </main>
+          {/* Content - seule partie qui change */}
+          {/* Padding augmenté sur mobile pour éviter le rognage */}
+          <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 overflow-x-hidden overflow-y-auto">
+            <div className="max-w-7xl mx-auto w-full">
+              {children}
+            </div>
+          </main>
+        </div>
+
+        {/* Bottom Navigation - Mobile uniquement */}
+        <MemoizedBottomNav />
       </div>
-
-      {/* Bottom Navigation - Mobile uniquement */}
-      <MemoizedBottomNav />
-    </div>
+    </MobileSidebarProvider>
   );
 }
