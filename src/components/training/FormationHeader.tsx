@@ -145,38 +145,38 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
     <motion.header
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative overflow-hidden"
+      className="relative overflow-hidden w-full"
     >
       {/* Background decorative elements */}
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 w-full">
         {/* Title Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5"
+          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5"
         >
-          {/* Icon */}
+          {/* Icon - plus petit sur très petit mobile */}
           <motion.div
             initial={{ scale: 0.8, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-xl shadow-pink-500/30"
+            className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-xl shadow-pink-500/30 flex-shrink-0"
           >
-            <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
           </motion.div>
 
           {/* Text */}
-          <div className="space-y-1 sm:space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">
+          <div className="space-y-0.5 sm:space-y-1 lg:space-y-2 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">
               Espace Formation
             </h1>
-            <p className="text-base sm:text-lg text-gray-400">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-400 truncate">
               {greeting}
             </p>
           </div>
@@ -187,15 +187,14 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-transparent border border-pink-500/20"
+          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-transparent border border-pink-500/20"
         >
-          <Sparkles className="w-5 h-5 text-pink-400 flex-shrink-0" />
-          <p className="text-sm sm:text-base text-gray-300">{motivationalMessage}</p>
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400 flex-shrink-0" />
+          <p className="text-xs sm:text-sm lg:text-base text-gray-300 line-clamp-2">{motivationalMessage}</p>
         </motion.div>
 
         {/* Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
-        {/* Important: overflow-hidden pour éviter le débordement horizontal sur mobile */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full">
           <StatCard
             label="Total"
             value={stats.total}
