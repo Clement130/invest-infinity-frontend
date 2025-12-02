@@ -42,40 +42,40 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'offers_overview',
     category: 'Tarifs',
     patterns: ['tarifs', 'prix', 'offres', 'formules', 'combien ça coûte', 'abonnement', 'payer'],
-    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Entrée (147€)** : Pour débuter avec les bases et la communauté.\n🔹 **Transformation (497€)** : La plus populaire, avec formation complète et lives.\n🔹 **Immersion Élite (1997€)** : Accompagnement premium en présentiel.\n\nQuelle formule vous intéresse ?",
+    answer: "Nous proposons 3 formules adaptées à vos besoins :\n\n🔹 **Starter (147€)** : Les outils essentiels pour commencer.\n🔹 **Premium (497€)** : Notre formule la plus populaire, formation + accompagnement.\n🔹 **Bootcamp Élite (1997€)** : Formation présentielle intensive à Marseille.\n\nQuelle formule vous intéresse ?",
     followUps: [
-      { id: 'entree', label: 'Offre Entrée', action: 'show_entree', icon: '🌱' },
-      { id: 'transfo', label: 'Offre Transformation', action: 'show_transformation', icon: '🚀' },
-      { id: 'immersion', label: 'Immersion Élite', action: 'show_immersion', icon: '👑' }
+      { id: 'entree', label: 'Offre Starter', action: 'show_entree', icon: '🌱' },
+      { id: 'transfo', label: 'Offre Premium', action: 'show_transformation', icon: '🚀' },
+      { id: 'immersion', label: 'Bootcamp Élite', action: 'show_immersion', icon: '👑' }
     ]
   },
   {
     id: 'offer_entree_details',
     category: 'Tarifs',
-    patterns: ['offre entrée', 'starter', 'formule entrée', 'détail entrée', 'entrée contient quoi'],
-    answer: "L'offre **Entrée (147€)** est idéale pour découvrir notre écosystème.\n\n✅ Accès à la communauté Discord\n✅ Alertes trading\n✅ Support complet\n✅ Tutoriels plateformes\n\n❌ Pas de lives ni de replays dans cette formule.\n\nC'est un paiement unique pour un accès à vie.",
+    patterns: ['offre entrée', 'starter', 'formule entrée', 'détail entrée', 'entrée contient quoi', 'formule starter'],
+    answer: "L'offre **Starter (147€)** est idéale pour commencer.\n\n✅ Sessions de trading en direct\n✅ Communauté privée Discord\n✅ Alertes trading en temps réel\n✅ Échanges avec les membres\n✅ Tutoriels plateformes (TopStep, Apex, MT4/MT5)\n\nC'est un paiement unique pour un accès à vie.",
     followUps: [
-      { id: 'buy_entree', label: 'Choisir Entrée', action: 'go_pricing', icon: '🛒' },
+      { id: 'buy_entree', label: 'Choisir Starter', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer les offres', action: 'show_pricing', icon: '⚖️' }
     ]
   },
   {
     id: 'offer_transformation_details',
     category: 'Tarifs',
-    patterns: ['offre transformation', 'pro', 'formule transformation', 'transformation contient quoi', 'intermédiaire'],
-    answer: "L'offre **Transformation (497€)** est notre best-seller ! 🏆\n\nEn plus de tout le contenu de l'offre Entrée, vous avez :\n✅ Accès aux sessions LIVE hebdomadaires\n✅ Replays illimités\n✅ Zone Premium & Coaching individuel\n✅ Garantie satisfait ou remboursé 14 jours\n\nPaiement unique, accès à vie.",
+    patterns: ['offre transformation', 'pro', 'formule transformation', 'transformation contient quoi', 'intermédiaire', 'premium', 'formule premium'],
+    answer: "L'offre **Premium (497€)** est notre best-seller ! 🏆\n\nEn plus de tout le contenu Starter, vous avez :\n✅ Accès à l'intégralité de la formation\n✅ Groupe exclusif\n✅ Accompagnement 7j/7\n✅ Ma stratégie de trading rentable\n✅ Garantie satisfait ou remboursé 14 jours\n\nPaiement unique ou 3x 166€/mois sans frais, accès à vie.",
     followUps: [
-      { id: 'buy_transfo', label: 'Choisir Transformation', action: 'go_pricing', icon: '🛒' },
+      { id: 'buy_transfo', label: 'Choisir Premium', action: 'go_pricing', icon: '🛒' },
       { id: 'compare', label: 'Comparer', action: 'show_pricing', icon: '⚖️' }
     ]
   },
   {
     id: 'offer_immersion_details',
     category: 'Tarifs',
-    patterns: ['offre immersion', 'élite', 'formule immersion', 'présentiel', 'marseille', 'immersion contient quoi'],
-    answer: "L'offre **Immersion Élite (1997€)** est l'expérience ultime.\n\n🌊 **Une semaine intensive en présentiel à Marseille** avec nos experts.\n✅ Tout le contenu Transformation inclus\n✅ Accès VIP Discord\n✅ Certificat de complétion\n✅ Stratégies avancées exclusives\n\nAttention, les places sont limitées !",
+    patterns: ['offre immersion', 'élite', 'formule immersion', 'présentiel', 'marseille', 'immersion contient quoi', 'bootcamp', 'bootcamp élite'],
+    answer: "L'offre **Bootcamp Élite (1997€)** est l'expérience ultime.\n\n🌊 **Une semaine intensive en présentiel à Marseille** (lundi au vendredi, 9h-18h).\n✅ Tout le contenu Premium inclus\n✅ 5-8 élèves maximum\n✅ Ateliers guidés pour comprendre et appliquer\n✅ Trading en live avec Mickaël\n✅ Analyse en direct des marchés\n✅ Ma stratégie rentable expliquée de A à Z\n\nPaiement unique ou 3x 666€/mois sans frais. Places limitées !",
     followUps: [
-      { id: 'buy_immersion', label: 'Candidater', action: 'go_pricing', icon: '📝' },
+      { id: 'buy_immersion', label: 'Planifier un RDV', action: 'go_pricing', icon: '📝' },
       { id: 'logistics', label: 'Lieu & Dates', action: 'ask_immersion_logistics', icon: '📍' }
     ]
   },
@@ -154,10 +154,10 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
   {
     id: 'immersion_logistics',
     category: 'Immersion',
-    patterns: ['date immersion', 'lieu immersion', 'logement', 'marseille', 'où se passe immersion'],
-    answer: "Les sessions d'Immersion Élite se déroulent à **Marseille** dans nos locaux privés.\n\nLes dates sont définies par sessions (généralement une par trimestre). Le logement et le transport restent à votre charge, mais nous pouvons vous recommander des hôtels partenaires à proximité.",
+    patterns: ['date immersion', 'lieu immersion', 'logement', 'marseille', 'où se passe immersion', 'bootcamp où', 'bootcamp quand'],
+    answer: "Les sessions **Bootcamp Élite** se déroulent à **Marseille** dans nos locaux privés.\n\n📅 Du lundi au vendredi, de 9h à 18h\n👥 5-8 élèves maximum par session\n\nLes dates sont définies par sessions. Le logement et le transport restent à votre charge, mais nous pouvons vous recommander des hôtels partenaires à proximité.",
     followUps: [
-      { id: 'contact_immersion', label: 'Plus d\'infos', action: 'contact_human', icon: '📞' }
+      { id: 'contact_immersion', label: 'Planifier un RDV', action: 'contact_human', icon: '📞' }
     ]
   },
 
