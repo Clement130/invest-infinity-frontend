@@ -8,7 +8,7 @@
 import { useMemo } from 'react';
 import { useSession } from './useSession';
 import {
-  hasModuleAccess,
+  hasLicenseAccess,
   profileLicenseToSystemLicense,
   type OfferId,
   type OfferConfig,
@@ -65,8 +65,15 @@ export function useEntitlements(): UserEntitlements {
     
     // Fonction pour vérifier l'accès à un module
     const checkModuleAccess = (module: TrainingModule): boolean => {
-      const moduleLicense = module.required_license || 'starter';
-      return hasModuleAccess(profileLicense, moduleLicense);
+      // Les modules utilisent 'entree', 'transformation', 'immersion' dans la DB
+      // On doit convertir en 'starter', 'pro', 'elite' pour la comparaison
+      const moduleRequiredLicense = module.required_license || 'entree';
+      const moduleSystemLicense = profileLicenseToSystemLicense(
+        moduleRequiredLicense as 'entree' | 'transformation' | 'immersion' | 'none'
+      );
+      
+      // Comparer la licence système de l'utilisateur avec celle requise par le module
+      return hasLicenseAccess(systemLicense, moduleSystemLicense as 'starter' | 'pro' | 'elite');
     };
     
     // Fonction pour vérifier l'accès à une feature
