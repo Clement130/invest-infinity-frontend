@@ -5,7 +5,7 @@
  * (Événements, Partenariats, etc.) non visibles dans la bottom nav.
  */
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 interface MobileSidebarContextType {
   isOpen: boolean;
@@ -17,11 +17,11 @@ interface MobileSidebarContextType {
 const MobileSidebarContext = createContext<MobileSidebarContextType | undefined>(undefined);
 
 export function MobileSidebarProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
-  const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+  const toggle = useCallback(() => setIsOpen((prev: boolean) => !prev), []);
 
   return (
     <MobileSidebarContext.Provider value={{ isOpen, open, close, toggle }}>
