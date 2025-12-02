@@ -114,9 +114,7 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
 });
 
 // Composants mémorisés pour éviter les re-renders
-const MemoizedSidebar = memo(ClientSidebar);
 const MemoizedHeader = memo(DashboardHeader);
-const MemoizedBottomNav = memo(BottomNav);
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile } = useSession();
@@ -129,7 +127,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <AnimatedBackground themeKey={themeKey} />
 
         {/* Sidebar - Desktop uniquement (géré dans ClientSidebar) */}
-        <MemoizedSidebar />
+        <ClientSidebar />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
@@ -146,7 +144,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Bottom Navigation - Mobile uniquement */}
-        <MemoizedBottomNav />
+        <BottomNav />
       </div>
     </MobileSidebarProvider>
   );
