@@ -76,6 +76,7 @@ const HANDLED_EVENT_TYPES = [
   'customer.subscription.deleted',
   'payment_intent.succeeded',
   'payment_intent.payment_failed',
+  'charge.refunded',
 ];
 
 // Cache pour le mapping priceId → licence
@@ -527,6 +528,112 @@ async function handlePaymentIntent(
   }
 }
 
+async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+  if (!supabaseAdmin || !stripe) {
+    throw new Error('Stripe or Supabase not initialized');
+  }
+
+  const customerEmail = charge.billing_details?.email || charge.receipt_email;
+  const refundedAmount = charge.amount_refunded;
+  const totalAmount = charge.amount;
+  const isFullRefund = refundedAmount >= totalAmount;
+
+  secureLog('Processing charge.refunded', { 
+    chargeId: charge.id,
+    email: customerEmail,
+    refundedAmount,
+    totalAmount,
+    isFullRefund,
+    currency: charge.currency
+  });
+
+  if (!customerEmail) {
+    // Essayer de récupérer l'email via le customer ID
+    if (charge.customer) {
+      try {
+        const customer = await stripe.customers.retrieve(charge.customer as string);
+        if (customer && !customer.deleted && customer.email) {
+          await revokeUserAccess(customer.email, isFullRefund);
+          return;
+        }
+      } catch (e) {
+        secureLog('Error fetching customer for refund', { error: e instanceof Error ? e.message : 'Unknown' });
+      }
+    }
+    secureLog('No customer email found for refund');
+    return;
+  }
+
+  await revokeUserAccess(customerEmail, isFullRefund);
+}
+
+async function revokeUserAccess(email: string, isFullRefund: boolean): Promise<void> {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase not initialized');
+  }
+
+  secureLog('Revoking user access due to refund', { email, isFullRefund });
+
+  // Trouver l'utilisateur par email
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, license')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (profileError || !profile) {
+    secureLog('User not found for refund revocation', { email, error: profileError?.message });
+    return;
+  }
+
+  const previousLicense = profile.license;
+
+  // Révoquer la licence (remettre à 'none')
+  const { error: updateError } = await supabaseAdmin
+    .from('profiles')
+    .update({ 
+      license: 'none',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', profile.id);
+
+  if (updateError) {
+    secureLog('Error revoking license', { error: updateError.message });
+    return;
+  }
+
+  secureLog('License revoked successfully', { 
+    userId: profile.id, 
+    previousLicense,
+    newLicense: 'none'
+  });
+
+  // Supprimer les accès aux modules
+  const { error: accessError } = await supabaseAdmin
+    .from('training_access')
+    .delete()
+    .eq('user_id', profile.id);
+
+  if (accessError) {
+    secureLog('Error removing training access', { error: accessError.message });
+  } else {
+    secureLog('Training access removed');
+  }
+
+  // Mettre à jour le statut du paiement
+  const { error: paymentError } = await supabaseAdmin
+    .from('payments')
+    .update({ status: 'refunded' })
+    .eq('user_id', profile.id)
+    .eq('status', 'completed');
+
+  if (paymentError) {
+    secureLog('Error updating payment status', { error: paymentError.message });
+  } else {
+    secureLog('Payment status updated to refunded');
+  }
+}
+
 // ============================================================================
 // HANDLER PRINCIPAL
 // ============================================================================
@@ -642,6 +749,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
         case 'payment_intent.payment_failed': {
           const paymentIntent = event.data.object as Stripe.PaymentIntent;
           await handlePaymentIntent(paymentIntent, event.type);
+          break;
+        }
+
+        case 'charge.refunded': {
+          const charge = event.data.object as Stripe.Charge;
+          await handleChargeRefunded(charge);
           break;
         }
 
