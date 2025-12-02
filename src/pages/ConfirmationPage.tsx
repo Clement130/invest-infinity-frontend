@@ -60,9 +60,10 @@ const OFFERS_CONFIG = {
     subtitle: 'Formation + accompagnement',
     price: 497,
     priceText: '497€',
-    paymentDescription: 'paiement 3 fois • accès à vie',
+    paymentDescription: 'paiement en 3 fois • accès à vie',
     installmentsText: 'ou 3x 166€/mois sans frais',
     badge: { text: 'Garantie 14 jours', color: 'green' },
+    recommended: true,
     features: [
       'Offre Starter incluse',
       'Accès à l\'intégralité de la formation',
@@ -165,7 +166,7 @@ export default function ConfirmationPage() {
       
       if (!priceId || !priceId.startsWith('price_')) {
         console.error('❌ Price ID invalide:', priceId);
-        toast.error('Erreur: configuration Stripe manquante. Contactez le support.');
+        toast.error('Oups ! Un problème technique est survenu. Contacte-nous sur Discord pour t\'aider.');
         setLoading(null);
         return;
       }
@@ -240,14 +241,14 @@ export default function ConfirmationPage() {
 
       const { url } = await response.json();
       if (url) {
-        toast.success('Redirection vers le paiement sécurisé...', { duration: 2000 });
+        toast.success('Parfait ! Redirection vers le paiement sécurisé...', { duration: 2000 });
         window.location.href = url;
       } else {
-        toast.error('Erreur : URL de checkout non reçue.');
+        toast.error('Impossible de créer la session de paiement. Réessaie ou contacte-nous sur Discord.');
       }
     } catch (error: any) {
       console.error('Erreur:', error);
-      toast.error(error?.message || 'Une erreur est survenue. Veuillez réessayer.');
+      toast.error('Une erreur est survenue. Vérifie ta connexion et réessaie.');
     } finally {
       setLoading(null);
     }
@@ -260,8 +261,10 @@ export default function ConfirmationPage() {
     const Icon = offer.icon;
     const isBootcamp = variant === 'bootcamp';
     
+    const isPremium = variant === 'premium';
+    
     return (
-      <div className={`relative rounded-2xl p-6 ${offer.bgClass} ${offer.borderClass} border flex flex-col h-full transition-all duration-300 hover:scale-[1.02] ${isBootcamp ? 'lg:scale-105 lg:-my-2 shadow-xl shadow-yellow-500/10' : ''}`}>
+      <div className={`relative rounded-2xl p-6 sm:p-6 ${offer.bgClass} ${offer.borderClass} border flex flex-col h-full transition-all duration-300 hover:scale-[1.02] ${isBootcamp ? 'lg:scale-105 lg:-my-2 shadow-xl shadow-yellow-500/10' : ''} ${isPremium ? 'ring-2 ring-pink-500/30' : ''}`}>
         {/* Badge en haut de la carte */}
         {isBootcamp && offer.badge && (
           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -272,7 +275,17 @@ export default function ConfirmationPage() {
           </div>
         )}
         
-        <div className={`mb-4 ${isBootcamp ? 'mt-2' : ''}`}>
+        {/* Badge Recommandé pour Premium */}
+        {isPremium && (
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <span className="px-4 py-1.5 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-sm font-bold rounded-full flex items-center gap-1.5 shadow-lg shadow-pink-500/30">
+              <Star className="w-4 h-4 fill-current" />
+              Recommandé
+            </span>
+          </div>
+        )}
+        
+        <div className={`mb-4 ${isBootcamp || isPremium ? 'mt-2' : ''}`}>
           {/* Titre avec icône */}
           <div className="flex items-center gap-2 mb-2">
             <Icon className={`w-5 h-5 ${offer.iconColor}`} />
@@ -280,7 +293,7 @@ export default function ConfirmationPage() {
           </div>
           
           {/* Sous-titre */}
-          <p className="text-gray-400 text-sm mb-3">{offer.subtitle}</p>
+          <p className="text-gray-300 text-sm mb-4">{offer.subtitle}</p>
           
           {/* Prix */}
           <div className="flex items-baseline gap-2 mb-1">
@@ -302,10 +315,10 @@ export default function ConfirmationPage() {
         
         {/* Badge Garantie pour Premium */}
         {variant === 'premium' && offer.badge && (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 mb-4">
+          <div className="bg-green-500/15 border border-green-500/40 rounded-lg p-3 mb-4">
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-400" />
-              <span className="text-green-400 text-sm font-semibold">{offer.badge.text}</span>
+              <Shield className="w-5 h-5 text-green-400" />
+              <span className="text-green-300 text-sm font-bold">{offer.badge.text}</span>
             </div>
           </div>
         )}
@@ -315,9 +328,9 @@ export default function ConfirmationPage() {
           {offer.features.map((feature, idx) => {
             const isIncluded = feature.includes('inclus') || feature.includes('incluse');
             return (
-              <li key={idx} className="flex items-start gap-2">
+              <li key={idx} className="flex items-start gap-2.5">
                 <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isBootcamp ? 'text-yellow-400' : isIncluded ? 'text-pink-400' : 'text-green-400'}`} />
-                <span className={`text-sm ${isIncluded ? 'text-white font-semibold' : 'text-gray-300'}`}>
+                <span className={`text-sm ${isIncluded ? 'text-white font-semibold' : 'text-gray-200'}`}>
                   {feature}
                 </span>
               </li>
@@ -346,24 +359,24 @@ export default function ConfirmationPage() {
             onClick={() => handlePurchase(offer.id)}
             disabled={isDisabled}
             className={`
-              w-full px-6 py-4 font-bold rounded-xl transition-all 
+              w-full px-6 py-4 font-bold rounded-xl transition-all duration-200
               disabled:opacity-50 disabled:cursor-not-allowed 
               flex items-center justify-center gap-2 text-lg
-              ${variant === 'premium' 
-                ? 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white' 
-                : 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white'
+              ${isPremium 
+                ? 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50' 
+                : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white'
               }
             `}
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Redirection...
+                Redirection vers Stripe...
               </>
             ) : waitingForAuth ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Chargement...
+                Préparation...
               </>
             ) : (
               `Choisir — ${offer.priceText}`
@@ -409,7 +422,7 @@ export default function ConfirmationPage() {
         </div>
 
         {/* 3 PLANS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-6 mb-10">
           <OfferCard offer={OFFERS_CONFIG.starter} variant="starter" />
           <OfferCard offer={OFFERS_CONFIG.premium} variant="premium" />
           <OfferCard offer={OFFERS_CONFIG.bootcamp} variant="bootcamp" />
@@ -428,16 +441,16 @@ export default function ConfirmationPage() {
 
         {/* Stats */}
         <div className="bg-white/5 rounded-xl p-5 border border-white/10 mb-6">
-          <div className="flex items-center justify-center gap-8 text-center">
-            <div>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-center">
+            <div className="min-w-[100px]">
               <div className="flex items-center gap-2 justify-center mb-1">
                 <Users className="w-5 h-5 text-pink-400" />
                 <span className="text-2xl font-bold text-white">100+</span>
               </div>
               <p className="text-gray-400 text-sm">Membres actifs</p>
             </div>
-            <div className="h-10 w-px bg-white/10" />
-            <div>
+            <div className="hidden sm:block h-10 w-px bg-white/10" />
+            <div className="min-w-[100px]">
               <div className="flex items-center gap-2 justify-center mb-1">
                 <Clock className="w-5 h-5 text-green-400" />
                 <span className="text-2xl font-bold text-white">7/7</span>

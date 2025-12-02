@@ -83,10 +83,16 @@ export default function SuccessPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0f0f13] text-white flex items-center justify-center px-4">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 animate-spin text-pink-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Paiement validé ! 🎉</h1>
-          <p className="text-gray-400">Préparation de ton compte...</p>
+        <div className="text-center max-w-md mx-auto">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-green-500/20 rounded-full blur-2xl animate-pulse" />
+            <div className="relative bg-gradient-to-br from-green-500 to-emerald-500 rounded-full p-4 w-20 h-20 mx-auto flex items-center justify-center">
+              <Loader2 className="w-10 h-10 animate-spin text-white" />
+            </div>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-3">Paiement validé ! 🎉</h1>
+          <p className="text-gray-300 mb-2">Préparation de ton espace membre...</p>
+          <p className="text-gray-500 text-sm">Cela ne prend que quelques secondes</p>
         </div>
       </div>
     );
@@ -96,15 +102,27 @@ export default function SuccessPage() {
     return (
       <div className="min-h-screen bg-[#0f0f13] text-white flex items-center justify-center px-4">
         <div className="max-w-md mx-auto text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Oops...</h1>
-          <p className="text-gray-400 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-lg font-medium"
-          >
-            Aller à la connexion
-          </button>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+            <AlertCircle className="w-10 h-10 text-red-400" />
+          </div>
+          <h1 className="text-2xl font-bold mb-3">Un petit souci...</h1>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-lg font-medium hover:from-pink-600 hover:to-violet-600 transition-all"
+            >
+              Aller à la connexion
+            </button>
+            <a
+              href="https://discord.gg/Y9RvKDCrWH"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full px-6 py-3 bg-[#5865F2] hover:bg-[#4752C4] rounded-lg font-medium transition-all"
+            >
+              Besoin d'aide ? Discord
+            </a>
+          </div>
         </div>
       </div>
     );
