@@ -81,45 +81,44 @@ export interface ChatbotLogEvent {
   metadata?: Record<string, unknown>;
 }
 
-// Configuration par type d'utilisateur
+// Configuration par type d'utilisateur - Style Amazon avec menu principal
 export const chatbotConfigs: Record<UserType, ChatbotConfig> = {
   visitor: {
-    welcomeMessage: "Bonjour 👋 Je suis l'assistant virtuel InvestInfinity. Comment puis-je t'aider aujourd'hui ?",
+    welcomeMessage: "Bonjour 👋 Je suis l'assistant InvestInfinity.\n\n**Comment puis-je t'aider ?**\n\nChoisis une option ci-dessous ou pose-moi directement ta question.",
     botName: "Assistant InvestInfinity",
     botAvatar: "/logo.png",
     primaryColor: "#ec4899",
     quickReplies: [
-      { id: "discover", label: "Découvrir l'offre", action: "discover_offer", icon: "✨" },
-      { id: "pricing", label: "Tarifs & plans", action: "show_pricing", icon: "💎" },
-      { id: "testimonials", label: "Avis clients", action: "show_testimonials", icon: "⭐" },
-      { id: "register", label: "S'inscrire", action: "open_register", icon: "🚀" },
-      { id: "contact", label: "Contacter un conseiller", action: "contact_human", icon: "💬" },
+      // Menu principal style Amazon - catégories claires
+      { id: "menu_offers", label: "Découvrir les offres", action: "menu_offers", icon: "💎" },
+      { id: "menu_help", label: "J'ai besoin d'aide", action: "menu_help", icon: "🆘" },
+      { id: "menu_info", label: "Questions fréquentes", action: "menu_faq", icon: "❓" },
+      { id: "menu_contact", label: "Parler à l'équipe", action: "contact_human", icon: "💬" },
     ],
   },
   client: {
-    welcomeMessage: "Bonjour ! 👋 Comment puis-je t'aider aujourd'hui ?",
+    welcomeMessage: "Bonjour ! 👋 Je suis ton assistant personnel.\n\n**Que puis-je faire pour toi ?**",
     botName: "Support InvestInfinity",
     botAvatar: "/logo.png",
     primaryColor: "#ec4899",
     quickReplies: [
-      { id: "training", label: "Accéder à la formation", action: "go_training", icon: "📚", requiresAuth: true },
-      { id: "account", label: "Mon compte", action: "go_account", icon: "👤", requiresAuth: true },
-      { id: "subscription", label: "Mon abonnement", action: "show_subscription", icon: "💳", requiresAuth: true },
-      { id: "support", label: "Support technique", action: "tech_support", icon: "🔧" },
-      { id: "discord", label: "Rejoindre Discord", action: "join_discord", icon: "💬" },
+      // Menu client - actions directes style Amazon
+      { id: "menu_formation", label: "Ma formation", action: "menu_formation", icon: "📚", requiresAuth: true },
+      { id: "menu_account", label: "Mon compte", action: "menu_account", icon: "👤", requiresAuth: true },
+      { id: "menu_problem", label: "J'ai un problème", action: "menu_problem", icon: "🔧", requiresAuth: true },
+      { id: "menu_other", label: "Autre demande", action: "menu_other_client", icon: "💬", requiresAuth: true },
     ],
   },
   admin: {
-    welcomeMessage: "Bienvenue dans l'interface admin. Que souhaitez-vous consulter ?",
+    welcomeMessage: "Bienvenue dans l'interface admin.\n\n**Que souhaitez-vous faire ?**",
     botName: "Admin Bot",
     botAvatar: "/logo.png",
     primaryColor: "#8b5cf6",
     quickReplies: [
-      { id: "stats", label: "Statistiques", action: "show_stats", icon: "📊", requiresAdmin: true },
-      { id: "users", label: "Utilisateurs", action: "list_users", icon: "👥", requiresAdmin: true },
-      { id: "subscriptions", label: "Abonnements", action: "show_subscriptions", icon: "💰", requiresAdmin: true },
-      { id: "reports", label: "Rapports", action: "generate_report", icon: "📈", requiresAdmin: true },
-      { id: "alerts", label: "Alertes", action: "show_alerts", icon: "🔔", requiresAdmin: true },
+      { id: "stats", label: "Tableau de bord", action: "go_admin_dashboard", icon: "📊", requiresAdmin: true },
+      { id: "users", label: "Gestion utilisateurs", action: "go_admin_users", icon: "👥", requiresAdmin: true },
+      { id: "support", label: "Messages support", action: "go_admin_support", icon: "📩", requiresAdmin: true },
+      { id: "settings", label: "Paramètres", action: "go_admin_settings", icon: "⚙️", requiresAdmin: true },
     ],
   },
 };

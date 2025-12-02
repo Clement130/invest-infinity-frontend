@@ -389,6 +389,493 @@ export default function Chatbot() {
 
     // Exécuter l'action
     switch (action) {
+      // ============================================
+      // MENUS PRINCIPAUX STYLE AMAZON - VISITEURS
+      // ============================================
+      case 'menu_offers':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Nos offres de formation trading 💎\n\n" +
+          "**Choisis ce qui t'intéresse :**",
+          [
+            { id: 'compare', label: 'Comparer les offres', action: 'show_difference_offers', icon: '⚖️' },
+            { id: 'starter', label: 'Offre Starter', action: 'show_entree', icon: '🌱' },
+            { id: 'premium', label: 'Offre Premium', action: 'show_transformation', icon: '🚀' },
+            { id: 'bootcamp', label: 'Offre Bootcamp', action: 'show_immersion', icon: '👑' },
+            { id: 'pricing', label: 'Voir les tarifs', action: 'go_pricing', icon: '💰' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'menu_help':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Je suis là pour t'aider ! 🆘\n\n" +
+          "**Quel est ton problème ?**",
+          [
+            { id: 'help_account', label: 'Connexion / Compte', action: 'help_before_contact_account', icon: '🔐' },
+            { id: 'help_payment', label: 'Paiement / Facture', action: 'help_before_contact_payment', icon: '💳' },
+            { id: 'help_access', label: 'Accès formation', action: 'help_before_contact_access', icon: '🚫' },
+            { id: 'help_video', label: 'Vidéo ne marche pas', action: 'help_before_contact_video', icon: '🎥' },
+            { id: 'help_other', label: 'Autre problème', action: 'help_before_contact_other', icon: '❓' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'menu_faq':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Questions fréquentes ❓\n\n" +
+          "**Choisis un sujet :**",
+          [
+            { id: 'faq_trading', label: 'Trading & Formation', action: 'faq_trading_menu', icon: '📊' },
+            { id: 'faq_offers', label: 'Offres & Tarifs', action: 'faq_offers_menu', icon: '💎' },
+            { id: 'faq_community', label: 'Communauté & Discord', action: 'faq_community_menu', icon: '💬' },
+            { id: 'faq_tech', label: 'Technique & Accès', action: 'faq_tech_menu', icon: '⚙️' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'faq_trading_menu':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Questions sur le trading 📊\n\n" +
+          "**Sélectionne ta question :**",
+          [
+            { id: 'q1', label: 'C\'est quoi InvestInfinity ?', action: 'faq_what_is_ii', icon: '🎯' },
+            { id: 'q2', label: 'Je suis débutant, c\'est pour moi ?', action: 'faq_beginner', icon: '🌱' },
+            { id: 'q3', label: 'Donnez-vous des signaux ?', action: 'faq_signals', icon: '📈' },
+            { id: 'q4', label: 'Quand sont les lives ?', action: 'faq_lives', icon: '🎥' },
+            { id: 'q5', label: 'Qu\'est-ce qu\'une Prop Firm ?', action: 'explain_propfirm', icon: '🏢' },
+            { id: 'q6', label: 'Combien de temps pour apprendre ?', action: 'show_time_info', icon: '⏱️' },
+            { id: 'back', label: '← Retour FAQ', action: 'menu_faq', icon: '🔙' },
+          ],
+          false
+        );
+        break;
+
+      case 'faq_offers_menu':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Questions sur les offres 💎\n\n" +
+          "**Sélectionne ta question :**",
+          [
+            { id: 'q1', label: 'Différences entre offres', action: 'show_difference_offers', icon: '⚖️' },
+            { id: 'q2', label: 'Paiement en plusieurs fois', action: 'show_payment_info', icon: '💳' },
+            { id: 'q3', label: 'Garantie 14 jours', action: 'show_guarantee', icon: '🛡️' },
+            { id: 'q4', label: 'Comment changer d\'offre', action: 'show_upgrade_info', icon: '⬆️' },
+            { id: 'q5', label: 'Voir les tarifs', action: 'go_pricing', icon: '💰' },
+            { id: 'back', label: '← Retour FAQ', action: 'menu_faq', icon: '🔙' },
+          ],
+          false
+        );
+        break;
+
+      case 'faq_community_menu':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Questions sur la communauté 💬\n\n" +
+          "**Sélectionne ta question :**",
+          [
+            { id: 'q1', label: 'Comment rejoindre Discord ?', action: 'show_discord_info', icon: '💬' },
+            { id: 'q2', label: 'Horaires des lives', action: 'faq_lives', icon: '📅' },
+            { id: 'q3', label: 'Comment contacter le support ?', action: 'faq_support', icon: '🆘' },
+            { id: 'back', label: '← Retour FAQ', action: 'menu_faq', icon: '🔙' },
+          ],
+          false
+        );
+        break;
+
+      case 'faq_tech_menu':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Questions techniques ⚙️\n\n" +
+          "**Sélectionne ta question :**",
+          [
+            { id: 'q1', label: 'Problème de connexion', action: 'help_before_contact_account', icon: '🔐' },
+            { id: 'q2', label: 'Vidéo ne fonctionne pas', action: 'help_before_contact_video', icon: '🎥' },
+            { id: 'q3', label: 'Mes données sont-elles sécurisées ?', action: 'faq_security', icon: '🔒' },
+            { id: 'q4', label: 'Quel broker utiliser ?', action: 'faq_broker', icon: '🏦' },
+            { id: 'back', label: '← Retour FAQ', action: 'menu_faq', icon: '🔙' },
+          ],
+          false
+        );
+        break;
+
+      // Réponses FAQ individuelles
+      case 'faq_what_is_ii':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**InvestInfinity, c'est quoi ?** 🎯\n\n" +
+          "Une communauté premium dédiée aux traders qui veulent progresser sérieusement !\n\n" +
+          "**Tu accèdes à :**\n" +
+          "📊 Analyses quotidiennes de nos experts\n" +
+          "📚 Formations complètes (débutant → avancé)\n" +
+          "🎥 Lives hebdomadaires\n" +
+          "💬 Communauté Discord active (+100 membres)\n\n" +
+          "**Notre mission :** T'accompagner pour devenir un trader autonome et rentable.\n\n" +
+          "⚠️ *Le trading comporte des risques. Nos services sont éducatifs.*",
+          [
+            { id: 'pricing', label: 'Voir les offres', action: 'go_pricing', icon: '💎' },
+            { id: 'back', label: '← Autres questions', action: 'faq_trading_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'faq_beginner':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Je suis débutant, c'est pour moi ?** 🌱\n\n" +
+          "**Carrément !** Nos formations commencent vraiment de zéro :\n\n" +
+          "• Qu'est-ce qu'un pip ?\n" +
+          "• Comment lire un graphique ?\n" +
+          "• Les bases du money management\n" +
+          "• ...\n\n" +
+          "Tu seras guidé **pas à pas**. Et la communauté est là si tu bloques ! 💪",
+          [
+            { id: 'start', label: 'Commencer maintenant', action: 'go_pricing', icon: '🚀' },
+            { id: 'back', label: '← Autres questions', action: 'faq_trading_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'faq_signals':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Donnez-vous des signaux ?** 📈\n\n" +
+          "**Non, et c'est volontaire !** On ne donne pas de \"signaux\" à copier bêtement.\n\n" +
+          "Nos experts partagent leurs positions avec :\n" +
+          "• Point d'entrée\n" +
+          "• Stop-loss\n" +
+          "• Take profit\n" +
+          "• Et surtout le **POURQUOI** derrière chaque trade\n\n" +
+          "**L'objectif :** Te rendre autonome, pas dépendant.\n\n" +
+          "⚠️ *Information éducative, pas un conseil financier.*",
+          [
+            { id: 'discover', label: 'En savoir plus', action: 'menu_offers', icon: '✨' },
+            { id: 'back', label: '← Autres questions', action: 'faq_trading_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'faq_lives':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Horaires des lives trading** 📅\n\n" +
+          "**Lundi & Mardi :** 16h - 17h30\n" +
+          "**Mercredi à Vendredi :** 15h - 17h30\n\n" +
+          "Tu peux poser tes questions directement à nos experts pendant les lives ! 🎙️\n\n" +
+          "*Les lives sont accessibles sur Discord.*",
+          [
+            { id: 'discord', label: 'Rejoindre Discord', action: 'join_discord', icon: '💬' },
+            { id: 'back', label: '← Autres questions', action: 'faq_trading_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'faq_support':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Comment contacter le support ?** 🆘\n\n" +
+          "Plusieurs options :\n\n" +
+          "💬 **Discord** : Mentionne @investinfinity\n" +
+          "🤖 **Chatbot** : Je suis là 24h/24 !\n" +
+          "🎥 **En live** : Pose tes questions aux experts\n\n" +
+          "On répond généralement sous 24h, souvent plus vite !",
+          [
+            { id: 'contact', label: 'Contacter l\'équipe', action: 'start_contact_flow_now', icon: '👤' },
+            { id: 'back', label: '← Autres questions', action: 'faq_community_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'faq_security':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Sécurité de tes données** 🔒\n\n" +
+          "**Absolument !** Tes données sont protégées :\n\n" +
+          "✅ Chiffrement SSL\n" +
+          "✅ Conformité RGPD\n" +
+          "✅ Jamais partagées avec des tiers\n" +
+          "✅ Suppression possible à tout moment\n\n" +
+          "Ta vie privée est notre priorité.",
+          [
+            { id: 'back', label: '← Autres questions', action: 'faq_tech_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'faq_broker':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Quel broker utiliser ?** 🏦\n\n" +
+          "Tu peux rejoindre la formation avec **ton broker actuel**, pas de souci !\n\n" +
+          "Si tu n'en as pas encore, nous avons des **partenaires de confiance** chez lesquels tu peux faire un dépôt en toute sécurité.\n\n" +
+          "⚠️ *Fais tes propres recherches avant de choisir un broker.*",
+          [
+            { id: 'back', label: '← Autres questions', action: 'faq_tech_menu', icon: '🔙' },
+          ],
+          true
+        );
+        break;
+
+      case 'back_to_main':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "**Comment puis-je t'aider ?** 🏠",
+          filterQuickReplies(config.quickReplies),
+          false
+        );
+        break;
+
+      // ============================================
+      // MENUS PRINCIPAUX STYLE AMAZON - CLIENTS
+      // ============================================
+      case 'menu_formation':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Ta formation 📚\n\n" +
+          "**Que veux-tu faire ?**",
+          [
+            { id: 'go_training', label: 'Accéder à la formation', action: 'go_training', icon: '▶️' },
+            { id: 'progress', label: 'Ma progression', action: 'show_my_progress', icon: '📊' },
+            { id: 'discord', label: 'Rejoindre Discord', action: 'join_discord', icon: '💬' },
+            { id: 'lives', label: 'Horaires des lives', action: 'faq_lives', icon: '📅' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'menu_account':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Ton compte 👤\n\n" +
+          "**Que veux-tu faire ?**",
+          [
+            { id: 'go_account', label: 'Voir mon profil', action: 'go_account', icon: '👤' },
+            { id: 'subscription', label: 'Mon abonnement', action: 'show_subscription', icon: '💳' },
+            { id: 'upgrade', label: 'Changer d\'offre', action: 'show_upgrade_info', icon: '⬆️' },
+            { id: 'cancel', label: 'Annuler mon abonnement', action: 'show_cancel_info', icon: '❌' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'menu_problem':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Je vais t'aider à résoudre ton problème ! 🔧\n\n" +
+          "**Quel est le souci ?**",
+          [
+            { id: 'video', label: 'Vidéo ne fonctionne pas', action: 'help_before_contact_video', icon: '🎥' },
+            { id: 'access', label: 'Je n\'ai pas accès à un contenu', action: 'help_before_contact_access', icon: '🚫' },
+            { id: 'account', label: 'Problème de connexion', action: 'help_before_contact_account', icon: '🔐' },
+            { id: 'payment', label: 'Problème de paiement', action: 'help_before_contact_payment', icon: '💳' },
+            { id: 'other', label: 'Autre problème', action: 'start_support_flow', icon: '❓' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'menu_other_client':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Autre demande 💬\n\n" +
+          "**Que puis-je faire pour toi ?**",
+          [
+            { id: 'faq', label: 'Questions fréquentes', action: 'menu_faq', icon: '❓' },
+            { id: 'feedback', label: 'Donner mon avis', action: 'start_feedback_flow', icon: '⭐' },
+            { id: 'suggest', label: 'Suggérer une amélioration', action: 'start_suggestion_flow', icon: '💡' },
+            { id: 'contact', label: 'Parler à l\'équipe', action: 'start_contact_flow_now', icon: '👤' },
+            { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'show_my_progress':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Ta progression 📊\n\n" +
+          "Je t'emmène vers ta page de progression où tu pourras voir :\n\n" +
+          "✅ Modules complétés\n" +
+          "📈 Ton avancement global\n" +
+          "🏆 Tes badges et achievements\n" +
+          "🔥 Ton streak de connexion",
+          [
+            { id: 'go', label: 'Voir ma progression', action: 'go_progress', icon: '📊' },
+            { id: 'back', label: '← Menu formation', action: 'menu_formation', icon: '🔙' },
+          ],
+          false
+        );
+        break;
+
+      case 'go_progress':
+        logActionExecuted(userType, action, true, user?.id);
+        navigate('/progress');
+        addBotMessage(
+          "Te voilà sur ta page de progression ! 📊\n\n" +
+          "Continue comme ça, tu progresses bien ! 💪",
+          [{ id: 'back', label: 'Autre question', action: 'back_to_main', icon: '🏠' }],
+          true
+        );
+        break;
+
+      case 'show_cancel_info':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Annuler ton abonnement ❌\n\n" +
+          "On est triste de te voir partir... 😢\n\n" +
+          "**Avant de partir, sache que :**\n" +
+          "• L'annulation prend effet à la fin de ta période en cours\n" +
+          "• Tu gardes l'accès jusqu'à cette date\n" +
+          "• Tu peux te réabonner quand tu veux\n\n" +
+          "**Pour annuler :**\n" +
+          "Va dans ton espace membre → Mon abonnement → Annuler\n\n" +
+          "💡 *Si tu as un souci qu'on peut résoudre, dis-le nous !*",
+          [
+            { id: 'problem', label: 'J\'ai un problème', action: 'menu_problem', icon: '🔧' },
+            { id: 'account', label: 'Aller à mon compte', action: 'go_account', icon: '👤' },
+            { id: 'stay', label: 'Je reste ! 🎉', action: 'back_to_main', icon: '✅' },
+          ],
+          false
+        );
+        break;
+
+      case 'start_feedback_flow':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Ton avis compte beaucoup ! ⭐\n\n" +
+          "**Comment évaluerais-tu ton expérience ?**",
+          [
+            { id: '5', label: '⭐⭐⭐⭐⭐ Excellent', action: 'feedback_5', icon: '🌟' },
+            { id: '4', label: '⭐⭐⭐⭐ Très bien', action: 'feedback_4', icon: '😊' },
+            { id: '3', label: '⭐⭐⭐ Bien', action: 'feedback_3', icon: '👍' },
+            { id: '2', label: '⭐⭐ Moyen', action: 'feedback_2', icon: '😐' },
+            { id: '1', label: '⭐ Décevant', action: 'feedback_1', icon: '😞' },
+          ],
+          false
+        );
+        break;
+
+      case 'feedback_5':
+      case 'feedback_4':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Merci beaucoup ! 🎉\n\n" +
+          "Ça nous fait super plaisir !\n\n" +
+          "Si tu veux nous aider encore plus, tu peux laisser un avis sur **Trustpilot** 🌟\n\n" +
+          "Ça aide vraiment d'autres personnes à nous découvrir !",
+          [
+            { id: 'trustpilot', label: 'Laisser un avis Trustpilot', action: 'go_trustpilot', icon: '⭐' },
+            { id: 'back', label: 'Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          true
+        );
+        break;
+
+      case 'feedback_3':
+      case 'feedback_2':
+      case 'feedback_1':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Merci pour ton retour honnête 🙏\n\n" +
+          "On veut s'améliorer ! Peux-tu nous dire ce qu'on pourrait faire mieux ?\n\n" +
+          "Tape ton message ci-dessous, notre équipe le lira attentivement.",
+          [
+            { id: 'contact', label: 'Parler à l\'équipe', action: 'start_contact_flow_now', icon: '💬' },
+            { id: 'back', label: 'Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      case 'go_trustpilot':
+        logActionExecuted(userType, action, true, user?.id);
+        window.open('https://www.trustpilot.com/review/investinfinity.fr', '_blank');
+        addBotMessage(
+          "Merci d'avance pour ton avis ! 🌟\n\n" +
+          "La page Trustpilot s'est ouverte dans un nouvel onglet.",
+          [{ id: 'back', label: 'Menu principal', action: 'back_to_main', icon: '🏠' }],
+          true
+        );
+        break;
+
+      case 'start_suggestion_flow':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "On adore les suggestions ! 💡\n\n" +
+          "Dis-nous ce que tu aimerais voir amélioré ou ajouté.\n\n" +
+          "Tape ton message ci-dessous, notre équipe le lira attentivement.",
+          [
+            { id: 'contact', label: 'Envoyer via formulaire', action: 'start_contact_flow_now', icon: '📝' },
+            { id: 'back', label: 'Menu principal', action: 'back_to_main', icon: '🏠' },
+          ],
+          false
+        );
+        break;
+
+      // ============================================
+      // MENUS ADMIN
+      // ============================================
+      case 'go_admin_dashboard':
+        logActionExecuted(userType, action, true, user?.id);
+        navigate('/admin');
+        addBotMessage(
+          "Te voilà sur le tableau de bord admin ! 📊",
+          [{ id: 'back', label: 'Autre action', action: 'back_to_main', icon: '🏠' }],
+          true
+        );
+        break;
+
+      case 'go_admin_users':
+        logActionExecuted(userType, action, true, user?.id);
+        navigate('/admin/users');
+        addBotMessage(
+          "Gestion des utilisateurs 👥",
+          [{ id: 'back', label: 'Autre action', action: 'back_to_main', icon: '🏠' }],
+          true
+        );
+        break;
+
+      case 'go_admin_support':
+        logActionExecuted(userType, action, true, user?.id);
+        navigate('/admin/support');
+        addBotMessage(
+          "Messages du support 📩",
+          [{ id: 'back', label: 'Autre action', action: 'back_to_main', icon: '🏠' }],
+          true
+        );
+        break;
+
+      case 'go_admin_settings':
+        logActionExecuted(userType, action, true, user?.id);
+        navigate('/admin/settings');
+        addBotMessage(
+          "Paramètres ⚙️",
+          [{ id: 'back', label: 'Autre action', action: 'back_to_main', icon: '🏠' }],
+          true
+        );
+        break;
+
+      // ============================================
+      // ACTIONS EXISTANTES
+      // ============================================
       case 'discover_offer':
         logActionExecuted(userType, action, true, user?.id);
         addBotMessage(
@@ -506,6 +993,341 @@ export default function Chatbot() {
 
       case 'contact_human':
         logActionExecuted(userType, action, true, user?.id);
+        // Avant de lancer le flow de contact, proposer une aide automatique
+        addBotMessage(
+          "Avant de te mettre en contact avec l'équipe, laisse-moi essayer de t'aider ! 🤖\n\n" +
+          "**Quel est le sujet de ta demande ?**\n\n" +
+          "Choisis une catégorie pour que je puisse t'orienter :",
+          [
+            { id: 'help_offers', label: 'Questions sur les offres', action: 'help_before_contact_offers', icon: '💎' },
+            { id: 'help_account', label: 'Problème de connexion', action: 'help_before_contact_account', icon: '🔐' },
+            { id: 'help_video', label: 'Vidéo ne fonctionne pas', action: 'help_before_contact_video', icon: '🎥' },
+            { id: 'help_payment', label: 'Paiement / Remboursement', action: 'help_before_contact_payment', icon: '💳' },
+            { id: 'help_access', label: 'Accès à la formation', action: 'help_before_contact_access', icon: '🚫' },
+            { id: 'help_other', label: 'Autre chose', action: 'help_before_contact_other', icon: '❓' },
+          ],
+          false
+        );
+        break;
+
+      case 'help_before_contact_offers':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Je peux t'aider avec les offres ! 💎\n\n" +
+          "Voici les questions les plus fréquentes :",
+          [
+            { id: 'diff', label: 'Différences entre offres', action: 'show_difference_offers', icon: '⚖️' },
+            { id: 'pricing', label: 'Voir les tarifs', action: 'show_pricing', icon: '💰' },
+            { id: 'upgrade', label: 'Changer d\'offre / Upgrade', action: 'show_upgrade_info', icon: '⬆️' },
+            { id: 'payment', label: 'Paiement en plusieurs fois', action: 'show_payment_info', icon: '💳' },
+            { id: 'contact_now', label: 'Parler à l\'équipe', action: 'start_contact_flow_now', icon: '👤' },
+          ],
+          false
+        );
+        break;
+
+      case 'help_before_contact_account':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Problème de connexion ? Voici les solutions les plus courantes ! 🔐\n\n" +
+          "**1. Mot de passe oublié ?**\n" +
+          "→ Clique sur 'Mot de passe oublié' sur la page de connexion\n\n" +
+          "**2. Email non reconnu ?**\n" +
+          "→ Vérifie que tu utilises l'email de ton inscription\n\n" +
+          "**3. Pas reçu l'email de confirmation ?**\n" +
+          "→ Vérifie tes spams/indésirables\n\n" +
+          "**4. Message d'erreur ?**\n" +
+          "→ Essaie de vider le cache de ton navigateur\n\n" +
+          "Est-ce que ça t'aide ?",
+          [
+            { id: 'solved', label: 'Problème résolu !', action: 'problem_solved', icon: '✅' },
+            { id: 'forgot_pw', label: 'Réinitialiser mot de passe', action: 'go_forgot_password', icon: '🔑' },
+            { id: 'still_stuck', label: 'Toujours bloqué', action: 'start_contact_flow_now', icon: '😕' },
+          ],
+          false
+        );
+        break;
+
+      case 'help_before_contact_video':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Problème de lecture vidéo ? Voici les solutions ! 🎥\n\n" +
+          "**Essaie ces étapes :**\n\n" +
+          "1️⃣ **Désactive ton bloqueur de pub** (AdBlock, uBlock...)\n" +
+          "2️⃣ **Rafraîchis la page** (Ctrl+F5 ou Cmd+Shift+R)\n" +
+          "3️⃣ **Teste un autre navigateur** (Chrome recommandé)\n" +
+          "4️⃣ **Vérifie ta connexion internet**\n" +
+          "5️⃣ **Vide le cache** du navigateur\n\n" +
+          "💡 **Astuce** : Les vidéos fonctionnent mieux sur ordinateur que sur mobile.\n\n" +
+          "Est-ce que ça fonctionne maintenant ?",
+          [
+            { id: 'solved', label: 'Ça marche !', action: 'problem_solved', icon: '✅' },
+            { id: 'still_stuck', label: 'Toujours en panne', action: 'start_contact_flow_now', icon: '😕' },
+          ],
+          false
+        );
+        break;
+
+      case 'help_before_contact_payment':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Questions sur le paiement ou remboursement ? 💳\n\n" +
+          "**Informations importantes :**\n\n" +
+          "🛡️ **Garantie 14 jours** : Tu peux demander un remboursement complet dans les 14 jours suivant ton achat (offre Premium).\n\n" +
+          "💳 **Paiement en 3x** : Disponible via Klarna sans frais.\n\n" +
+          "📧 **Facture** : Envoyée automatiquement par email après achat.\n\n" +
+          "⏱️ **Délai remboursement** : 5-7 jours ouvrés après validation.\n\n" +
+          "Quelle est ta question précise ?",
+          [
+            { id: 'refund', label: '🔄 Demander remboursement', action: 'start_contact_flow_now', icon: '🔄' },
+            { id: 'invoice', label: '📄 Problème de facture', action: 'start_contact_flow_now', icon: '📄' },
+            { id: 'payment_failed', label: '❌ Paiement refusé', action: 'show_payment_failed_help', icon: '❌' },
+            { id: 'solved', label: 'Question répondue', action: 'problem_solved', icon: '✅' },
+          ],
+          false
+        );
+        break;
+
+      case 'show_payment_failed_help':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Paiement refusé ? Voici les causes possibles ! ❌\n\n" +
+          "**Vérifie ces points :**\n\n" +
+          "1️⃣ **Fonds suffisants** sur ta carte\n" +
+          "2️⃣ **Plafond de paiement** non atteint\n" +
+          "3️⃣ **Paiements en ligne** autorisés par ta banque\n" +
+          "4️⃣ **3D Secure** activé si demandé\n" +
+          "5️⃣ **Date d'expiration** de la carte valide\n\n" +
+          "💡 **Astuce** : Certaines banques bloquent les paiements internationaux. Appelle ta banque pour autoriser la transaction.\n\n" +
+          "Tu peux aussi essayer avec une autre carte ou via Klarna (paiement en 3x).",
+          [
+            { id: 'retry', label: '🔄 Réessayer le paiement', action: 'go_pricing', icon: '🔄' },
+            { id: 'contact', label: 'Besoin d\'aide', action: 'start_contact_flow_now', icon: '💬' },
+          ],
+          false
+        );
+        break;
+
+      case 'help_before_contact_access':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Problème d'accès à la formation ? 🚫\n\n" +
+          "**Vérifie ces points :**\n\n" +
+          "1️⃣ **Es-tu bien connecté ?** → Vérifie en haut à droite\n" +
+          "2️⃣ **As-tu finalisé ton achat ?** → Vérifie tes emails de confirmation\n" +
+          "3️⃣ **Bonne offre ?** → Certains contenus sont réservés aux offres supérieures\n\n" +
+          "**Contenus par offre :**\n" +
+          "• **Starter** : Lives + Discord + Alertes\n" +
+          "• **Premium** : Tout Starter + Formation complète + Replays\n" +
+          "• **Bootcamp** : Tout Premium + Présentiel\n\n" +
+          "Quel est ton problème exact ?",
+          [
+            { id: 'not_bought', label: '🛒 Je n\'ai pas encore acheté', action: 'go_pricing', icon: '🛒' },
+            { id: 'upgrade', label: '⬆️ Je veux upgrader', action: 'show_upgrade_info', icon: '⬆️' },
+            { id: 'bought_no_access', label: 'J\'ai payé mais pas d\'accès', action: 'start_contact_flow_now', icon: '😕' },
+          ],
+          false
+        );
+        break;
+
+      case 'help_before_contact_other':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "D'accord ! Avant de te mettre en contact avec l'équipe, voici quelques ressources utiles : 📚\n\n" +
+          "**Questions fréquentes :**",
+          [
+            { id: 'faq_guarantee', label: 'Garantie 14 jours', action: 'show_guarantee', icon: '🛡️' },
+            { id: 'faq_discord', label: 'Accès Discord', action: 'show_discord_info', icon: '💬' },
+            { id: 'faq_time', label: 'Temps nécessaire', action: 'show_time_info', icon: '⏱️' },
+            { id: 'faq_propfirm', label: 'Prop Firms', action: 'explain_propfirm', icon: '🏢' },
+            { id: 'contact_now', label: 'Parler à l\'équipe', action: 'start_contact_flow_now', icon: '👤' },
+          ],
+          false
+        );
+        break;
+
+      case 'show_difference_offers':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Voici les différences principales ! 📊\n\n" +
+          "**🌱 Starter (147€)**\n" +
+          "- Lives trading\n" +
+          "- Communauté Discord\n" +
+          "- Alertes trading\n" +
+          "- ❌ Pas de formation vidéo\n" +
+          "- ❌ Pas de replays\n\n" +
+          "**🚀 Premium (497€)** ⭐ Best-seller\n" +
+          "- Tout Starter +\n" +
+          "- Formation complète\n" +
+          "- Replays illimités\n" +
+          "- Accompagnement 7j/7\n" +
+          "- Garantie 14 jours\n\n" +
+          "**👑 Bootcamp (1997€)**\n" +
+          "- Tout Premium +\n" +
+          "- 1 semaine en présentiel\n" +
+          "- Trading live avec Mickaël\n" +
+          "- Certificat\n\n" +
+          "**Mon conseil :** Premium si tu veux vraiment progresser !",
+          [
+            { id: 'pricing', label: 'Voir les tarifs', action: 'go_pricing', icon: '💎' },
+            { id: 'other_q', label: 'Autre question', action: 'other_question', icon: '❓' },
+          ],
+          true
+        );
+        break;
+
+      case 'show_upgrade_info':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Tu veux passer à une offre supérieure ? Excellente idée ! 🚀\n\n" +
+          "**Comment faire un upgrade :**\n\n" +
+          "1️⃣ Contacte notre support\n" +
+          "2️⃣ On calcule la différence de prix\n" +
+          "3️⃣ Tu paies uniquement le complément\n\n" +
+          "**Exemple :**\n" +
+          "• Starter (147€) → Premium (497€) = **350€ à payer**\n" +
+          "• Premium (497€) → Bootcamp (1997€) = **1500€ à payer**\n\n" +
+          "Le changement est effectif immédiatement ! ⚡",
+          [
+            { id: 'upgrade_now', label: '⬆️ Demander un upgrade', action: 'start_contact_flow_now', icon: '⬆️' },
+            { id: 'compare', label: '⚖️ Comparer les offres', action: 'show_difference_offers', icon: '⚖️' },
+          ],
+          false
+        );
+        break;
+
+      case 'show_payment_info':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Paiement en plusieurs fois ? C'est possible ! 💳\n\n" +
+          "**Options disponibles :**\n\n" +
+          "🔹 **Premium (497€)** → 3x 166€/mois sans frais\n" +
+          "🔹 **Bootcamp (1997€)** → 3x 666€/mois sans frais\n\n" +
+          "**Comment ça marche :**\n" +
+          "- Paiement via Klarna à la commande\n" +
+          "- Prélèvements automatiques\n" +
+          "- 0% de frais supplémentaires\n\n" +
+          "L'accès est immédiat dès le premier paiement ! ⚡",
+          [
+            { id: 'pricing', label: '💎 Voir les offres', action: 'go_pricing', icon: '💎' },
+            { id: 'other_q', label: '❓ Autre question', action: 'other_question', icon: '❓' },
+          ],
+          true
+        );
+        break;
+
+      case 'show_guarantee':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Notre garantie satisfait ou remboursé ! 🛡️\n\n" +
+          "**14 jours pour tester l'offre Premium**\n\n" +
+          "✅ Si la formation ne te convient pas, tu peux demander un remboursement complet dans les 14 jours suivant ton achat.\n\n" +
+          "✅ Aucune condition, aucune question.\n\n" +
+          "✅ Remboursement sous 5-7 jours ouvrés.\n\n" +
+          "**Pour faire une demande :** Contacte le support avec ton email d'inscription.",
+          [
+            { id: 'pricing', label: '💎 Voir les offres', action: 'go_pricing', icon: '💎' },
+            { id: 'other_q', label: '❓ Autre question', action: 'other_question', icon: '❓' },
+          ],
+          true
+        );
+        break;
+
+      case 'show_discord_info':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Accès au Discord de la communauté ! 💬\n\n" +
+          "**Comment rejoindre :**\n\n" +
+          "1️⃣ Connecte-toi à ton espace membre\n" +
+          "2️⃣ Le lien d'invitation se trouve dans le dashboard\n" +
+          "3️⃣ Clique et rejoins la communauté !\n\n" +
+          "**Ce que tu y trouveras :**\n" +
+          "• Lives trading quotidiens\n" +
+          "• Alertes en temps réel\n" +
+          "• Échanges avec les autres membres\n" +
+          "• Support de l'équipe\n\n" +
+          "⚠️ L'accès Discord est réservé aux membres ayant une offre active.",
+          [
+            { id: 'login', label: '🔐 Se connecter', action: 'go_account', icon: '🔐' },
+            { id: 'other_q', label: '❓ Autre question', action: 'other_question', icon: '❓' },
+          ],
+          false
+        );
+        break;
+
+      case 'show_time_info':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Combien de temps pour apprendre ? ⏱️\n\n" +
+          "**Formation complète :**\n" +
+          "• ~20-30h de contenu vidéo\n" +
+          "• À ton rythme, accès à vie\n\n" +
+          "**Recommandation :**\n" +
+          "• 5-10h/semaine pour bien progresser\n" +
+          "• 2-3 mois pour maîtriser les bases\n" +
+          "• 6-12 mois pour être vraiment autonome\n\n" +
+          "**Lives trading :**\n" +
+          "• ~10h/semaine (optionnel mais recommandé)\n\n" +
+          "Le trading s'apprend avec la pratique. Pas de rush ! 🎯",
+          [
+            { id: 'start', label: '🚀 Commencer', action: 'go_pricing', icon: '🚀' },
+            { id: 'other_q', label: '❓ Autre question', action: 'other_question', icon: '❓' },
+          ],
+          true
+        );
+        break;
+
+      case 'explain_propfirm':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Les **Prop Firms** te permettent de trader avec leur capital ! 🏢\n\n" +
+          "**Comment ça marche :**\n\n" +
+          "1️⃣ Tu passes un challenge (évaluation)\n" +
+          "2️⃣ Si tu réussis, tu trades leur argent (jusqu'à 150 000€+)\n" +
+          "3️⃣ Tu gardes 80-90% des profits\n\n" +
+          "**Avantages :**\n" +
+          "✅ Pas besoin de capital personnel\n" +
+          "✅ Risque limité au coût du challenge\n" +
+          "✅ Gains potentiels importants\n\n" +
+          "Dans la formation, on t'explique comment passer ces challenges ! 🎯",
+          [
+            { id: 'pricing', label: 'Voir la formation', action: 'go_pricing', icon: '📚' },
+            { id: 'other_q', label: 'Autre question', action: 'other_question', icon: '❓' },
+          ],
+          true
+        );
+        break;
+
+      case 'go_forgot_password':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Pour réinitialiser ton mot de passe : 🔑\n\n" +
+          "1️⃣ Va sur la page de connexion\n" +
+          "2️⃣ Clique sur **'Mot de passe oublié ?'**\n" +
+          "3️⃣ Entre ton email d'inscription\n" +
+          "4️⃣ Vérifie ta boîte mail (et les spams !)\n" +
+          "5️⃣ Clique sur le lien reçu pour créer un nouveau mot de passe\n\n" +
+          "Le lien est valide 24h. Si tu ne reçois rien, vérifie que tu utilises le bon email.",
+          [
+            { id: 'login', label: '🔐 Page de connexion', action: 'go_account', icon: '🔐' },
+            { id: 'still_stuck', label: 'Toujours bloqué', action: 'start_contact_flow_now', icon: '😕' },
+          ],
+          false
+        );
+        break;
+
+      case 'problem_solved':
+        logActionExecuted(userType, action, true, user?.id);
+        addBotMessage(
+          "Super, content d'avoir pu t'aider ! 🎉\n\n" +
+          "N'hésite pas si tu as d'autres questions. Je suis là 24h/24 ! 🤖",
+          filterQuickReplies(config.quickReplies),
+          true
+        );
+        break;
+
+      case 'start_contact_flow_now':
+        logActionExecuted(userType, action, true, user?.id);
         // Lancer le flow de contact intelligent
         setContactFlow({
           active: true,
@@ -513,9 +1335,9 @@ export default function Chatbot() {
           data: { source: 'chatbot_contact' },
         });
         addBotMessage(
-          "Je vais t'aider à contacter notre équipe ! 💬\n\n" +
+          "Je vais te mettre en contact avec notre équipe ! 💬\n\n" +
           "Pour que ta demande soit bien traitée, je vais te poser quelques questions rapides.\n\n" +
-          "🏷️ *Flow Contact - Invest Infinity*\n\n" +
+          "🏷️ *Contact - Invest Infinity*\n\n" +
           "Pour commencer, peux-tu me donner ton **prénom et nom** ?",
           [],
           false
@@ -563,19 +1385,48 @@ export default function Chatbot() {
 
       case 'show_subscription':
         logActionExecuted(userType, action, true, user?.id);
-        const license = profile?.license || 'none';
-        addBotMessage(
-          addFallbackHint(
-            `Voici les infos de ton abonnement :\n\n` +
-            `📋 **Formule actuelle** : ${license === 'none' ? 'Aucune' : license.charAt(0).toUpperCase() + license.slice(1)}\n\n` +
-            `Tu peux gérer ton abonnement depuis ton espace membre.`
-          ),
-          [
-            { id: 'account', label: 'Gérer mon compte', action: 'go_account', icon: '👤' },
-            { id: 'upgrade', label: 'Changer de formule', action: 'show_pricing', icon: '⬆️' },
-          ],
-          true
-        );
+        const currentLicense = profile?.license || 'none';
+        const licenseLabels: Record<string, { name: string; icon: string; features: string[] }> = {
+          'none': { name: 'Aucun abonnement', icon: '❌', features: [] },
+          'starter': { name: 'Starter', icon: '🌱', features: ['Lives trading', 'Discord', 'Alertes'] },
+          'premium': { name: 'Premium', icon: '🚀', features: ['Tout Starter', 'Formation complète', 'Replays illimités', 'Support 7j/7'] },
+          'bootcamp': { name: 'Bootcamp', icon: '👑', features: ['Tout Premium', 'Semaine en présentiel', 'Trading live avec Mickaël'] },
+          'entree': { name: 'Entrée', icon: '🌱', features: ['Lives trading', 'Discord', 'Alertes'] },
+          'transformation': { name: 'Transformation', icon: '🚀', features: ['Tout Entrée', 'Formation complète', 'Replays illimités'] },
+          'immersion': { name: 'Immersion', icon: '👑', features: ['Tout Transformation', 'Semaine en présentiel'] },
+        };
+        const licenseInfo = licenseLabels[currentLicense] || licenseLabels['none'];
+        
+        if (currentLicense === 'none') {
+          addBotMessage(
+            "**Ton abonnement** 💳\n\n" +
+            `${licenseInfo.icon} **Statut :** Aucun abonnement actif\n\n` +
+            "Tu n'as pas encore d'abonnement. Découvre nos offres pour accéder à la formation !",
+            [
+              { id: 'pricing', label: 'Voir les offres', action: 'go_pricing', icon: '💎' },
+              { id: 'compare', label: 'Comparer les offres', action: 'show_difference_offers', icon: '⚖️' },
+              { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+            ],
+            false
+          );
+        } else {
+          const featuresText = licenseInfo.features.map(f => `✅ ${f}`).join('\n');
+          addBotMessage(
+            "**Ton abonnement** 💳\n\n" +
+            `${licenseInfo.icon} **Formule :** ${licenseInfo.name}\n` +
+            `📧 **Email :** ${user?.email || 'Non renseigné'}\n\n` +
+            "**Ce qui est inclus :**\n" +
+            featuresText + "\n\n" +
+            "Tu peux gérer ton abonnement depuis ton espace membre.",
+            [
+              { id: 'account', label: 'Gérer mon compte', action: 'go_account', icon: '👤' },
+              { id: 'upgrade', label: 'Changer de formule', action: 'show_upgrade_info', icon: '⬆️' },
+              { id: 'cancel', label: 'Annuler', action: 'show_cancel_info', icon: '❌' },
+              { id: 'back', label: '← Menu principal', action: 'back_to_main', icon: '🏠' },
+            ],
+            false
+          );
+        }
         break;
 
       case 'tech_support':
@@ -911,7 +1762,11 @@ export default function Chatbot() {
         break;
 
       case 'contact_confirm_yes':
-        // Géré dans handleSendMessage
+        // Soumettre la demande de contact via le flux
+        if (contactFlow.active && contactFlow.step === 'SUMMARY_CONFIRM') {
+          // Simuler l'envoi du message "oui" pour déclencher la soumission
+          handleSendMessage('oui');
+        }
         break;
 
       case 'contact_confirm_no':
@@ -1033,7 +1888,11 @@ export default function Chatbot() {
         break;
 
       case 'support_confirm_yes':
-        // Géré dans handleSendMessage
+        // Soumettre la demande de support via le flux
+        if (supportFlow.active && supportFlow.step === 'SUMMARY_CONFIRM') {
+          // Simuler l'envoi du message "oui" pour déclencher la soumission
+          handleSendMessage('oui');
+        }
         break;
 
       case 'support_confirm_no':
@@ -1983,7 +2842,7 @@ export default function Chatbot() {
       setIsTyping(false);
       addBotMessage("Désolé, une erreur est survenue lors de la communication avec l'assistant.", [], false);
     }
-  }, [addBotMessage, userType, user?.id, rdvFlow, buildChatbotContext]);
+  }, [addBotMessage, userType, user?.id, rdvFlow, contactFlow, supportFlow, buildChatbotContext, config.quickReplies, filterQuickReplies]);
 
   // Gérer le quick reply
   const handleQuickReply = useCallback((action: string) => {

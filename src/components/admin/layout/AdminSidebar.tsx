@@ -27,6 +27,7 @@ import {
   X,
   HelpCircle,
   Bot,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -73,6 +74,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'events', label: 'Événements', icon: Calendar, path: '/admin/events' },
       { id: 'immersion', label: 'Immersion Élite', icon: GraduationCap, path: '/admin/immersion' },
       { id: 'appointments', label: 'Demandes RDV', icon: CalendarCheck, path: '/admin/appointments' },
+      { id: 'support', label: 'Messages & Support', icon: MessageSquare, path: '/admin/support' },
     ],
   },
   {

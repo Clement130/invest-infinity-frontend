@@ -74,19 +74,19 @@ const CONTACT_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/conta
 const SOCIAL_LINKS = [
   { 
     name: 'Discord', 
-    href: 'https://discord.gg/investinfinity', // TODO: Remplacer par votre lien Discord
+    href: 'https://discord.gg/Y9RvKDCrWH',
     icon: DiscordIcon,
     color: 'hover:bg-indigo-500/20 hover:text-indigo-400 hover:border-indigo-500/50'
   },
   { 
     name: 'YouTube', 
-    href: 'https://youtube.com/@investinfinity', // TODO: Remplacer par votre chaîne YouTube
+    href: 'https://www.youtube.com/@InvestInfinity',
     icon: YoutubeIcon,
     color: 'hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50'
   },
   { 
     name: 'Instagram', 
-    href: 'https://instagram.com/investinfinity', // TODO: Remplacer par votre Instagram
+    href: 'https://www.instagram.com/investinfinity_fr/',
     icon: InstagramIcon,
     color: 'hover:bg-pink-500/20 hover:text-pink-400 hover:border-pink-500/50'
   },
