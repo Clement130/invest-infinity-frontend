@@ -24,6 +24,7 @@ import {
   Zap,
   ChevronRight,
   Sparkles,
+  Handshake,
 } from 'lucide-react';
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
@@ -70,6 +71,12 @@ const navItems: NavItem[] = [
     icon: Calendar,
     path: '/app/events',
     gradient: 'from-purple-500 to-violet-500',
+  },
+  {
+    label: 'Partenariats',
+    icon: Handshake,
+    path: '/app/partnerships',
+    gradient: 'from-amber-500 to-orange-500',
   },
 ];
 

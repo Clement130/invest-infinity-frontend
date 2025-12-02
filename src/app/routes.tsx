@@ -30,6 +30,7 @@ const MemberDashboard = lazy(() => import('../pages/MemberDashboard'));
 const ProgressPage = lazy(() => import('../pages/ProgressPage'));
 const ClientChallengesPage = lazy(() => import('../pages/ChallengesPage'));
 const EventsPage = lazy(() => import('../pages/EventsPage'));
+const PartnershipsPage = lazy(() => import('../pages/PartnershipsPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
 const ImmersionElitePage = lazy(() => import('../pages/ImmersionElitePage'));
@@ -132,6 +133,7 @@ export const clientRoutes: ClientRouteConfig[] = [
   { path: 'progress', element: <ProgressPage /> }, // /app/progress
   { path: 'challenges', element: <ClientChallengesPage /> }, // /app/challenges
   { path: 'events', element: <EventsPage /> }, // /app/events
+  { path: 'partnerships', element: <PartnershipsPage /> }, // /app/partnerships
   { path: 'settings', element: <SettingsPage /> }, // /app/settings
   { path: 'modules/:moduleId', element: <ModulePage /> }, // /app/modules/:moduleId
   { path: 'modules/:moduleId/lessons/:lessonId', element: <LessonPlayerPage /> }, // /app/modules/:moduleId/lessons/:lessonId
