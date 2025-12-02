@@ -67,18 +67,25 @@ export default function UsersPage() {
         const licenseColors: Record<string, string> = {
           none: 'bg-gray-500/20 text-gray-400',
           starter: 'bg-blue-500/20 text-blue-400',
+          entree: 'bg-blue-500/20 text-blue-400',
           pro: 'bg-purple-500/20 text-purple-400',
+          transformation: 'bg-purple-500/20 text-purple-400',
           elite: 'bg-amber-500/20 text-amber-400',
+          immersion: 'bg-amber-500/20 text-amber-400',
         };
         const licenseLabels: Record<string, string> = {
           none: 'Aucun',
           starter: 'Starter',
+          entree: 'Starter',
           pro: 'Pro',
+          transformation: 'Pro',
           elite: 'Elite',
+          immersion: 'Elite',
         };
+        const isElite = value === 'elite' || value === 'immersion';
         return (
           <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${licenseColors[value as string] || licenseColors.none}`}>
-            {value === 'elite' && <Crown className="w-3 h-3" />}
+            {isElite && <Crown className="w-3 h-3" />}
             {licenseLabels[value as string] || 'Aucun'}
           </span>
         );
