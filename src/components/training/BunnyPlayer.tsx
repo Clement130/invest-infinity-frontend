@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Lock } from 'lucide-react';
 import { VideoProgressTracker, type VideoProgressEvent } from '../../services/progressTrackingService';
+import { getSecureEmbedUrl } from '../../services/bunnyStreamService';
 
 // Déclaration du type Player.js pour TypeScript
 declare global {
@@ -39,17 +40,16 @@ interface BunnyPlayerProps {
 
 export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: BunnyPlayerProps) {
   const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [embedUrl, setEmbedUrl] = useState<string>('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const trackerRef = useRef<VideoProgressTracker | null>(null);
   const playerRef = useRef<PlayerJS | null>(null);
   const progressCheckIntervalRef = useRef<number | null>(null);
-  const baseUrl = import.meta.env.VITE_BUNNY_EMBED_BASE_URL;
 
   // Déterminer le type d'erreur à afficher
   const isTestVideo = videoId?.startsWith('test-');
-  const isMissingConfig = !baseUrl;
   const isMissingVideoId = !videoId || videoId.trim() === '';
 
   // Initialiser le tracker si userId et lessonId sont fournis
@@ -67,9 +67,10 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     };
   }, [userId, lessonId, videoId]);
 
-  // Construire l'URL d'embed directement (sans token de sécurité)
+  // Générer l'URL d'embed SÉCURISÉE avec token via Edge Function
   useEffect(() => {
     setHasError(false);
+    setErrorMessage('');
     setIsLoading(true);
     setEmbedUrl('');
 
@@ -80,17 +81,33 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       return;
     }
 
-    if (videoId && baseUrl) {
-      // URL simple sans token (l'authentification Bunny.net doit être désactivée)
-      const url = `${baseUrl}/${videoId}?autoplay=false&preload=true`;
-      setEmbedUrl(url);
+    if (!videoId) {
       setIsLoading(false);
+      return;
     }
-  }, [videoId, baseUrl]);
+
+    // Générer l'URL sécurisée via l'Edge Function
+    const fetchSecureUrl = async () => {
+      try {
+        console.log('[BunnyPlayer] Génération du token sécurisé pour:', videoId);
+        const secureUrl = await getSecureEmbedUrl(videoId, 4); // Token valide 4h
+        console.log('[BunnyPlayer] URL sécurisée générée');
+        setEmbedUrl(secureUrl + '&autoplay=false&preload=true');
+        setIsLoading(false);
+      } catch (error) {
+        console.error('[BunnyPlayer] Erreur génération token:', error);
+        setHasError(true);
+        setErrorMessage(error instanceof Error ? error.message : 'Erreur de chargement');
+        setIsLoading(false);
+      }
+    };
+
+    fetchSecureUrl();
+  }, [videoId]);
 
   // Timeout pour détecter les vidéos qui ne chargent pas
   useEffect(() => {
-    if (!isLoading || isMissingConfig || isMissingVideoId || isTestVideo) return;
+    if (!isLoading || isMissingVideoId || isTestVideo) return;
 
     const timeout = setTimeout(() => {
       if (isLoading) {
@@ -100,7 +117,7 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     }, 15000);
 
     return () => clearTimeout(timeout);
-  }, [isLoading, videoId, isMissingConfig, isMissingVideoId, isTestVideo]);
+  }, [isLoading, videoId, isMissingVideoId, isTestVideo]);
 
   // Fonction pour vérifier la progression de la vidéo
   const checkVideoProgress = useCallback(async () => {
@@ -200,21 +217,6 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   }, []);
 
   // Rendu conditionnel APRÈS tous les hooks
-  if (isMissingConfig) {
-    return (
-      <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-red-500/30 bg-black/50 flex items-center justify-center">
-        <div className="text-center space-y-2 px-4">
-          <p className="text-red-400 font-medium">
-            Bunny Stream n'est pas configuré
-          </p>
-          <p className="text-sm text-gray-400">
-            La variable d'environnement VITE_BUNNY_EMBED_BASE_URL est manquante.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (isMissingVideoId) {
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-yellow-500/30 bg-black/50 flex items-center justify-center">
@@ -254,17 +256,28 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   }
 
   if (hasError) {
+    // Déterminer si c'est une erreur d'accès ou une autre erreur
+    const isAccessDenied = errorMessage.includes('accès') || errorMessage.includes('access') || errorMessage.includes('403');
+    
     return (
       <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-red-500/30 bg-black/50 flex items-center justify-center">
         <div className="text-center space-y-3 px-4">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
-          <p className="text-red-400 font-medium text-lg">Erreur de chargement</p>
+          {isAccessDenied ? (
+            <Lock className="w-12 h-12 text-orange-400 mx-auto" />
+          ) : (
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
+          )}
+          <p className={`font-medium text-lg ${isAccessDenied ? 'text-orange-400' : 'text-red-400'}`}>
+            {isAccessDenied ? 'Accès non autorisé' : 'Erreur de chargement'}
+          </p>
           <p className="text-sm text-gray-400">
-            La vidéo n'a pas pu être chargée. Vérifiez que l'ID vidéo est correct.
+            {errorMessage || 'La vidéo n\'a pas pu être chargée.'}
           </p>
-          <p className="text-xs text-gray-500 mt-2">
-            ID vidéo: {videoId}
-          </p>
+          {!isAccessDenied && (
+            <p className="text-xs text-gray-500 mt-2">
+              ID vidéo: {videoId}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -279,23 +292,6 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto" />
             <p className="text-gray-400 text-sm">Chargement de la vidéo...</p>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (hasError) {
-    return (
-      <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-red-500/30 bg-black/50 flex items-center justify-center">
-        <div className="text-center space-y-3 px-4">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
-          <p className="text-red-400 font-medium text-lg">Erreur de chargement</p>
-          <p className="text-sm text-gray-400">
-            La vidéo n'a pas pu être chargée. Vérifiez que l'ID vidéo est correct.
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            ID vidéo: {videoId}
-          </p>
         </div>
       </div>
     );
