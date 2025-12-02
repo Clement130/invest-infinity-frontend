@@ -126,28 +126,34 @@ serve(async (req) => {
     const isNewUser = (now.getTime() - createdAt.getTime()) < 5 * 60 * 1000; // Créé il y a moins de 5 min
     const hasNeverLoggedIn = !user.last_sign_in_at;
 
-    let token = null;
+    let verificationUrl = null;
     
     if (isNewUser && hasNeverLoggedIn) {
       // Générer un nouveau token de reset
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: 'recovery',
         email: customerEmail,
+        options: {
+          redirectTo: 'https://www.investinfinity.fr/create-password',
+        },
       });
 
       if (!linkError && linkData?.properties?.hashed_token) {
-        token = linkData.properties.hashed_token;
+        // Construire l'URL de vérification Supabase (le bon format !)
+        // Supabase vérifie le token et redirige vers /create-password avec une session établie
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+        verificationUrl = `${SUPABASE_URL}/auth/v1/verify?token=${linkData.properties.hashed_token}&type=recovery&redirect_to=${encodeURIComponent('https://www.investinfinity.fr/create-password')}`;
       }
     }
 
-    console.log('[get-session-info] User found:', user.id, 'isNewUser:', isNewUser, 'hasToken:', !!token);
+    console.log('[get-session-info] User found:', user.id, 'isNewUser:', isNewUser, 'hasVerificationUrl:', !!verificationUrl);
 
     return new Response(JSON.stringify({
       success: true,
       email: customerEmail,
       userId: user.id,
       isNewUser: isNewUser && hasNeverLoggedIn,
-      token: token,
+      verificationUrl: verificationUrl,
       paymentStatus: session.payment_status
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

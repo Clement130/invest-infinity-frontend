@@ -47,10 +47,12 @@ export default function SuccessPage() {
           return;
         }
 
-        // Si c'est un nouvel utilisateur avec un token, rediriger vers create-password
-        if (data.isNewUser && data.token) {
-          console.log('[SuccessPage] New user, redirecting to create-password');
-          navigate(`/create-password?token=${data.token}&email=${encodeURIComponent(data.email)}`);
+        // Si c'est un nouvel utilisateur avec une URL de vérification, rediriger vers Supabase Auth
+        if (data.isNewUser && data.verificationUrl) {
+          console.log('[SuccessPage] New user, redirecting to Supabase verification');
+          // Redirection vers l'endpoint Supabase qui vérifie le token et établit une session
+          // Supabase redirigera ensuite vers /create-password avec une session valide
+          window.location.href = data.verificationUrl;
           return;
         }
 

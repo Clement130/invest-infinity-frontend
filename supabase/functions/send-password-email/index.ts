@@ -11,8 +11,10 @@ const corsHeaders = {
 
 interface EmailRequest {
   email: string;
-  token: string;
+  verificationUrl: string; // URL complète de vérification Supabase
   prenom?: string;
+  // Rétro-compatibilité avec l'ancien format (token)
+  token?: string;
 }
 
 serve(async (req) => {
@@ -30,18 +32,18 @@ serve(async (req) => {
   }
 
   try {
-    const { email, token, prenom = 'Cher membre' }: EmailRequest = await req.json();
+    const { email, verificationUrl, token, prenom = 'Cher membre' }: EmailRequest = await req.json();
 
-    if (!email || !token) {
+    if (!email || (!verificationUrl && !token)) {
       return new Response(
-        JSON.stringify({ error: 'Email and token are required' }),
+        JSON.stringify({ error: 'Email and verificationUrl (or token for legacy) are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Construire l'URL de création de mot de passe
-    const encodedEmail = encodeURIComponent(email);
-    const passwordUrl = `https://www.investinfinity.fr/create-password?token=${token}&email=${encodedEmail}`;
+    // Utiliser verificationUrl si fourni, sinon construire l'ancien format (rétro-compatibilité)
+    // Le nouveau format passe par /auth/v1/verify qui établit une session avant de rediriger
+    const passwordUrl = verificationUrl || `https://www.investinfinity.fr/create-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     // Template HTML de l'email
     const htmlContent = `

@@ -194,17 +194,30 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     sessionId 
   });
 
-  // Vérifier si l'utilisateur existe déjà
-  const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-  const existingUser = existingUsers?.users?.find(u => u.email === customerEmail);
-
-  let userId: string;
+  // Vérifier si l'utilisateur existe déjà via la table profiles (plus rapide)
+  let userId: string | null = null;
   let passwordToken: string | null = null;
+  let isNewUser = false;
 
-  if (existingUser) {
-    userId = existingUser.id;
-    secureLog('Existing user found', { userId });
-  } else {
+  try {
+    // Vérifier d'abord dans la table profiles (beaucoup plus rapide que listUsers())
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', customerEmail)
+      .maybeSingle(); // Utiliser maybeSingle() au lieu de single() pour éviter les erreurs si aucun résultat
+
+    if (profile && !profileError && profile.id) {
+      userId = profile.id;
+      secureLog('Existing user found via profile', { userId });
+    }
+  } catch (checkError) {
+    secureLog('Error checking existing user in profiles, will create new user', { 
+      error: checkError instanceof Error ? checkError.message : 'Unknown' 
+    });
+  }
+
+  if (!userId) {
     const tempPassword = crypto.randomUUID();
     
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -219,21 +232,31 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     }
 
     userId = newUser.user.id;
+    isNewUser = true;
     secureLog('New user created', { userId });
 
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: customerEmail,
-    });
+    // Générer le lien de récupération de mot de passe de manière asynchrone (non bloquant)
+    try {
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email: customerEmail,
+        options: {
+          redirectTo: 'https://www.investinfinity.fr/create-password',
+        },
+      });
 
-    if (linkError) {
-      secureLog('Error generating recovery link', { error: linkError.message });
-    } else if (linkData?.properties?.hashed_token) {
-      passwordToken = linkData.properties.hashed_token;
-      secureLog('Password token generated');
-      
-      try {
-        const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-password-email`, {
+      if (linkError) {
+        secureLog('Error generating recovery link', { error: linkError.message });
+      } else if (linkData?.properties?.hashed_token) {
+        passwordToken = linkData.properties.hashed_token;
+        secureLog('Password token generated');
+        
+        // Construire l'URL de vérification Supabase (le bon format !)
+        // Supabase vérifie le token et redirige vers /create-password avec une session établie
+        const verificationUrl = `${SUPABASE_URL}/auth/v1/verify?token=${linkData.properties.hashed_token}&type=recovery&redirect_to=${encodeURIComponent('https://www.investinfinity.fr/create-password')}`;
+        
+        // Envoyer l'email de manière non bloquante (ne pas attendre la réponse)
+        fetch(`${SUPABASE_URL}/functions/v1/send-password-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -241,23 +264,33 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
           },
           body: JSON.stringify({
             email: customerEmail,
-            token: passwordToken,
+            verificationUrl: verificationUrl,
             prenom: session.customer_details?.name?.split(' ')[0] || 'Cher membre',
           }),
-        });
-
-        if (emailResponse.ok) {
-          secureLog('Password email sent successfully');
-        } else {
-          const errorData = await emailResponse.text();
-          secureLog('Failed to send password email', { error: errorData });
-        }
-      } catch (emailError) {
-        secureLog('Exception sending password email', { 
-          error: emailError instanceof Error ? emailError.message : 'Unknown' 
+        }).then((emailResponse) => {
+          if (emailResponse.ok) {
+            secureLog('Password email sent successfully');
+          } else {
+            emailResponse.text().then((errorData) => {
+              secureLog('Failed to send password email', { error: errorData });
+            });
+          }
+        }).catch((emailError) => {
+          secureLog('Exception sending password email', { 
+            error: emailError instanceof Error ? emailError.message : 'Unknown' 
+          });
         });
       }
+    } catch (linkGenError) {
+      secureLog('Exception generating recovery link', { 
+        error: linkGenError instanceof Error ? linkGenError.message : 'Unknown' 
+      });
     }
+  }
+
+  // Vérification de sécurité : userId doit être défini à ce stade
+  if (!userId) {
+    throw new Error('User ID is not defined after user creation/retrieval');
   }
 
   const priceToLicense = await getPriceToLicenseMapping();
@@ -365,7 +398,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
 
   secureLog('checkout.session.completed processed successfully', { 
     license, 
-    isNewUser: !existingUser 
+    isNewUser 
   });
 }
 
@@ -447,140 +480,162 @@ async function handlePaymentIntent(
 
 Deno.serve(async (req: Request): Promise<Response> => {
   const requestId = crypto.randomUUID().substring(0, 8);
-  secureLog(`Request received [${requestId}]`, { method: req.method });
-
-  // OPTIONS (CORS preflight)
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204 });
-  }
-
-  // Uniquement POST
-  if (req.method !== 'POST') {
-    secureLog(`Method not allowed [${requestId}]`, { method: req.method });
-    return jsonResponse({ error: 'Method not allowed' }, 405);
-  }
-
-  // Vérification des dépendances
-  if (!stripe) {
-    secureLog(`STRIPE_SECRET_KEY_LIVE not configured [${requestId}]`);
-    return jsonResponse({ error: 'Server configuration error: missing Stripe key' }, 500);
-  }
-
-  if (!STRIPE_WEBHOOK_SECRET) {
-    secureLog(`STRIPE_WEBHOOK_SECRET_LIVE not configured [${requestId}]`);
-    return jsonResponse({ error: 'Server configuration error: missing webhook secret' }, 500);
-  }
-
-  if (!supabaseAdmin) {
-    secureLog(`Supabase not configured [${requestId}]`);
-    return jsonResponse({ error: 'Server configuration error: missing Supabase' }, 500);
-  }
-
-  // Récupération signature et raw body
-  const signature = req.headers.get('stripe-signature');
   
-  if (!signature) {
-    secureLog(`Missing stripe-signature header [${requestId}]`);
-    return jsonResponse({ error: 'Missing signature' }, 400);
-  }
-
-  let rawBody: string;
+  // Wrapper global pour garantir qu'une réponse est toujours renvoyée
   try {
-    rawBody = await req.text();
-  } catch (e) {
-    secureLog(`Error reading request body [${requestId}]`, { 
-      error: e instanceof Error ? e.message : 'Unknown' 
-    });
-    return jsonResponse({ error: 'Error reading request body' }, 400);
-  }
+    secureLog(`Request received [${requestId}]`, { method: req.method });
 
-  if (!rawBody) {
-    secureLog(`Empty request body [${requestId}]`);
-    return jsonResponse({ error: 'Empty request body' }, 400);
-  }
-
-  // Vérification de la signature Stripe
-  let event: Stripe.Event;
-  
-  try {
-    event = await stripe.webhooks.constructEventAsync(
-      rawBody, 
-      signature, 
-      STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    secureLog(`Signature verification failed [${requestId}]`, { error: errorMessage });
-    return jsonResponse({ error: 'Invalid signature' }, 400);
-  }
-
-  secureLog(`Event verified [${requestId}]`, { 
-    type: event.type, 
-    eventId: event.id,
-    mode: MODE
-  });
-
-  // Événement non géré → 200 quand même
-  if (!HANDLED_EVENT_TYPES.includes(event.type)) {
-    secureLog(`Unhandled event type [${requestId}]`, { type: event.type });
-    return jsonResponse({ received: true, handled: false, mode: MODE }, 200);
-  }
-
-  // Traitement de l'événement
-  try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutSessionCompleted(session);
-        break;
-      }
-
-      case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice;
-        await handleInvoicePaid(invoice);
-        break;
-      }
-
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionEvent(subscription, event.type);
-        break;
-      }
-
-      case 'payment_intent.succeeded':
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentIntent(paymentIntent, event.type);
-        break;
-      }
-
-      default:
-        secureLog(`No handler for event type [${requestId}]`, { type: event.type });
+    // OPTIONS (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204 });
     }
 
-    secureLog(`Event processed successfully [${requestId}]`, { 
+    // Uniquement POST
+    if (req.method !== 'POST') {
+      secureLog(`Method not allowed [${requestId}]`, { method: req.method });
+      return jsonResponse({ error: 'Method not allowed' }, 405);
+    }
+
+    // Vérification des dépendances
+    if (!stripe) {
+      secureLog(`STRIPE_SECRET_KEY_LIVE not configured [${requestId}]`);
+      return jsonResponse({ error: 'Server configuration error: missing Stripe key' }, 500);
+    }
+
+    if (!STRIPE_WEBHOOK_SECRET) {
+      secureLog(`STRIPE_WEBHOOK_SECRET_LIVE not configured [${requestId}]`);
+      return jsonResponse({ error: 'Server configuration error: missing webhook secret' }, 500);
+    }
+
+    if (!supabaseAdmin) {
+      secureLog(`Supabase not configured [${requestId}]`);
+      return jsonResponse({ error: 'Server configuration error: missing Supabase' }, 500);
+    }
+
+    // Récupération signature et raw body
+    const signature = req.headers.get('stripe-signature');
+    
+    if (!signature) {
+      secureLog(`Missing stripe-signature header [${requestId}]`);
+      return jsonResponse({ error: 'Missing signature' }, 400);
+    }
+
+    let rawBody: string;
+    try {
+      rawBody = await req.text();
+    } catch (e) {
+      secureLog(`Error reading request body [${requestId}]`, { 
+        error: e instanceof Error ? e.message : 'Unknown' 
+      });
+      return jsonResponse({ error: 'Error reading request body' }, 400);
+    }
+
+    if (!rawBody) {
+      secureLog(`Empty request body [${requestId}]`);
+      return jsonResponse({ error: 'Empty request body' }, 400);
+    }
+
+    // Vérification de la signature Stripe
+    let event: Stripe.Event;
+    
+    try {
+      event = await stripe.webhooks.constructEventAsync(
+        rawBody, 
+        signature, 
+        STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      secureLog(`Signature verification failed [${requestId}]`, { error: errorMessage });
+      return jsonResponse({ error: 'Invalid signature' }, 400);
+    }
+
+    secureLog(`Event verified [${requestId}]`, { 
       type: event.type, 
       eventId: event.id,
       mode: MODE
     });
 
-    return jsonResponse({ received: true, handled: true, mode: MODE }, 200);
+    // Événement non géré → 200 quand même
+    if (!HANDLED_EVENT_TYPES.includes(event.type)) {
+      secureLog(`Unhandled event type [${requestId}]`, { type: event.type });
+      return jsonResponse({ received: true, handled: false, mode: MODE }, 200);
+    }
 
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    secureLog(`Error processing event [${requestId}]`, { 
-      type: event.type,
-      eventId: event.id,
-      error: errorMessage 
+    // Traitement de l'événement
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await handleCheckoutSessionCompleted(session);
+          break;
+        }
+
+        case 'invoice.paid': {
+          const invoice = event.data.object as Stripe.Invoice;
+          await handleInvoicePaid(invoice);
+          break;
+        }
+
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+        case 'customer.subscription.deleted': {
+          const subscription = event.data.object as Stripe.Subscription;
+          await handleSubscriptionEvent(subscription, event.type);
+          break;
+        }
+
+        case 'payment_intent.succeeded':
+        case 'payment_intent.payment_failed': {
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          await handlePaymentIntent(paymentIntent, event.type);
+          break;
+        }
+
+        default:
+          secureLog(`No handler for event type [${requestId}]`, { type: event.type });
+      }
+
+      secureLog(`Event processed successfully [${requestId}]`, { 
+        type: event.type, 
+        eventId: event.id,
+        mode: MODE
+      });
+
+      return jsonResponse({ received: true, handled: true, mode: MODE }, 200);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const errorStack = err instanceof Error ? err.stack : undefined;
+      secureLog(`Error processing event [${requestId}]`, { 
+        type: event.type,
+        eventId: event.id,
+        error: errorMessage,
+        stack: errorStack
+      });
+      
+      // Retourne 200 pour éviter les retries infinis de Stripe
+      return jsonResponse({ 
+        received: true, 
+        handled: false, 
+        error: 'Processing error',
+        mode: MODE
+      }, 200);
+    }
+  } catch (globalErr) {
+    // Catch-all pour toute erreur non capturée
+    const errorMessage = globalErr instanceof Error ? globalErr.message : 'Unknown error';
+    const errorStack = globalErr instanceof Error ? globalErr.stack : undefined;
+    secureLog(`Unhandled global error [${requestId}]`, { 
+      error: errorMessage,
+      stack: errorStack
     });
     
-    // Retourne 200 pour éviter les retries infinis de Stripe
+    // Toujours retourner 200 pour éviter les retries infinis de Stripe
     return jsonResponse({ 
       received: true, 
       handled: false, 
-      error: 'Processing error',
+      error: 'Internal server error',
       mode: MODE
     }, 200);
   }

@@ -124,3 +124,5 @@ Pour un utilisateur **sans progression**, le calcul fonctionne correctement:
 
 
 
+
+
