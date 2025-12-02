@@ -289,11 +289,16 @@ export default function Chatbot() {
     }
   }, [isOpen]);
 
-  // Trouver une réponse dans les Intents locaux
-  const findLocalIntent = (query: string) => {
+  // ============================================
+  // LOGIQUE HYBRIDE : LOCAL D'ABORD, GPT ENSUITE
+  // ============================================
+  
+  // Trouver une réponse dans les Intents locaux (FAQ pré-remplies)
+  // Cette fonction est appelée EN PREMIER avant tout appel à l'API OpenAI
+  const findLocalIntent = (query: string): { intent: typeof CHATBOT_INTENTS[0] | null; source: 'LOCAL_FAQ' | 'NOT_FOUND' } => {
     const normalizedQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     
-    // Score de correspondance simple
+    // Score de correspondance simple basé sur les mots-clés
     let bestMatch = null;
     let maxScore = 0;
 
@@ -313,7 +318,14 @@ export default function Chatbot() {
       }
     }
 
-    return bestMatch;
+    // Flag interne pour debug (non affiché à l'utilisateur)
+    if (bestMatch) {
+      console.log(`[Chatbot] Réponse trouvée: LOCAL_FAQ (intent: ${bestMatch.id})`);
+      return { intent: bestMatch, source: 'LOCAL_FAQ' };
+    }
+    
+    console.log('[Chatbot] Aucune réponse locale trouvée, fallback vers GPT');
+    return { intent: null, source: 'NOT_FOUND' };
   };
 
   // Ajouter le fallback hint aux réponses
@@ -2770,15 +2782,22 @@ export default function Chatbot() {
       }
     }
 
-    // 1. Chercher d'abord dans les intents locaux
-    const localIntent = findLocalIntent(content);
+    // ============================================
+    // LOGIQUE HYBRIDE : LOCAL D'ABORD, GPT ENSUITE
+    // ============================================
     
-    if (localIntent) {
-      addBotMessage(addFallbackHint(localIntent.answer), localIntent.followUps as QuickReply[], true);
+    // 1. Essayer d'abord de répondre avec les données locales (FAQ)
+    // Aucune consommation de tokens OpenAI si une réponse locale est trouvée
+    const localResult = findLocalIntent(content);
+    
+    if (localResult.intent) {
+      // Réponse trouvée dans la FAQ locale - pas d'appel API
+      addBotMessage(addFallbackHint(localResult.intent.answer), localResult.intent.followUps as QuickReply[], true);
       return;
     }
 
-    // 2. Si pas trouvé, utiliser OpenAI (Fallback)
+    // 2. Si aucune réponse locale : fallback GPT
+    // Appel GPT uniquement si aucune réponse locale trouvée
     setIsTyping(true);
 
     try {

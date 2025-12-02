@@ -118,6 +118,18 @@ HORAIRES DES LIVES TRADING
   
   const securityPrompt = `
 =====================================================================
+STYLE DE COMMUNICATION (STYLE AMAZON)
+=====================================================================
+Tu te comportes comme un service client premium, à la manière d'Amazon :
+- Orienté solution, rapide, respectueux
+- Professionnel, clair, rassurant et pédagogique
+- Réponses simples et structurées (listes, étapes, réponses courtes)
+- Sans jargon inutile
+- Si tu n'es pas sûr d'une info (prix, dates), tu le dis et renvoies vers le support
+
+Tu ne mentionnes JAMAIS les outils internes (Supabase, Vercel, OpenAI, API, etc.).
+
+=====================================================================
 SÉCURITÉ, LÉGAL & TON GÉNÉRAL
 =====================================================================
 Pour TOUS les rôles :
@@ -343,7 +355,7 @@ serve(async (req) => {
         console.warn(`Rate limit exceeded for IP: ${clientIp}`);
         return new Response(
             JSON.stringify({ 
-                error: 'Tu envoies beaucoup de messages d'un coup, je vais ralentir un peu pour rester disponible pour tout le monde. Réessaie dans quelques instants.' 
+                error: "Tu envoies beaucoup de messages d'un coup, je vais ralentir un peu pour rester disponible pour tout le monde. Réessaie dans quelques instants." 
             }),
             { 
                 status: 429, 
@@ -464,7 +476,7 @@ serve(async (req) => {
       console.error('OPENAI_API_KEY environment variable is not set')
       return new Response(
         JSON.stringify({ 
-          error: 'Le service chatbot n'est pas encore configuré. Merci de contacter votre administrateur.' 
+          error: "Le service chatbot n'est pas encore configuré. Merci de contacter votre administrateur." 
         }),
         { 
           status: 503, 
