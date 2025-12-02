@@ -34,6 +34,11 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}'],
         // Exclure les gros fichiers d'arrière-plan du cache
         globIgnores: ['**/background.png', '**/video_background.mp4'],
+        // Forcer la mise à jour immédiate du SW
+        skipWaiting: true,
+        clientsClaim: true,
+        // Nettoyer les anciens caches
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.origin === 'https://api.supabase.co',
@@ -54,6 +59,18 @@ export default defineConfig({
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          // Fichiers JS/CSS toujours depuis le réseau en priorité
+          {
+            urlPattern: ({ request }) => request.destination === 'script' || request.destination === 'style',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24, // 24 heures max
               },
             },
           },
