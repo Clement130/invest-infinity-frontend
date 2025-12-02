@@ -13,6 +13,7 @@ import {
   defaultResponses,
   actionRequirements,
 } from './types';
+import type { Attachment } from './ChatInput';
 import { CHATBOT_INTENTS } from '../../config/chatbot/faqIntents';
 import {
   logChatOpen,
@@ -58,6 +59,21 @@ export default function Chatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Gestion de la connexion internet
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // État pour le flux de planification RDV (machine à états complète)
   const [rdvFlow, setRdvFlow] = useState<{
@@ -1047,16 +1063,26 @@ export default function Chatbot() {
   }, [navigate, user, profile, role, userType, config.quickReplies, checkActionPermission, filterQuickReplies, rdvFlow, contactFlow, supportFlow, addBotMessage]);
 
   // Gérer l'envoi d'un message utilisateur
-  const handleSendMessage = useCallback(async (content: string) => {
+  const handleSendMessage = useCallback(async (content: string, attachments?: Attachment[]) => {
     // Logger le message
     logMessageSent(userType, content, user?.id);
+
+    // Préparer les attachements si présents
+    const messageAttachments = attachments?.map(att => ({
+      url: att.preview || URL.createObjectURL(att.file),
+      type: att.type,
+      name: att.file.name,
+      size: att.file.size,
+    }));
 
     // Ajouter le message utilisateur
     const userMessage: Message = {
       id: generateId(),
-      content,
+      content: content || (messageAttachments?.length ? `[${messageAttachments.length} fichier(s) joint(s)]` : ''),
       sender: 'user',
       timestamp: new Date(),
+      attachments: messageAttachments,
+      type: messageAttachments?.length ? (messageAttachments[0].type === 'image' ? 'image' : 'file') : 'text',
     };
     setMessages(prev => [...prev, userMessage]);
 
@@ -2023,6 +2049,7 @@ export default function Chatbot() {
         botName={config.botName}
         isMinimized={isMinimized}
         onToggleMinimize={() => setIsMinimized(prev => !prev)}
+        isOnline={isOnline}
       />
       
       <ChatWidget

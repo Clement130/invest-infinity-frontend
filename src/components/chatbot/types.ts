@@ -2,16 +2,29 @@
 
 export type UserType = 'visitor' | 'client' | 'admin';
 
+export interface MessageAttachment {
+  url: string;
+  type: 'image' | 'file';
+  name: string;
+  size?: number;
+}
+
 export interface Message {
   id: string;
   content: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  type?: 'text' | 'quick-reply' | 'card' | 'loading' | 'feedback';
+  type?: 'text' | 'quick-reply' | 'card' | 'loading' | 'feedback' | 'image' | 'file';
   quickReplies?: QuickReply[];
   cards?: Card[];
   showFeedback?: boolean;
   feedbackGiven?: 'positive' | 'negative' | null;
+  // Attachment support
+  attachmentUrl?: string;
+  attachmentType?: string;
+  attachments?: MessageAttachment[];
+  // Database ID for persistence
+  dbId?: string;
 }
 
 export interface QuickReply {

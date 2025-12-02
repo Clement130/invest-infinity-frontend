@@ -1,21 +1,23 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Minimize2, Maximize2, RotateCcw } from 'lucide-react';
+import { Bot, Minimize2, Maximize2, RotateCcw, MoreVertical, Download, Copy, Check, WifiOff } from 'lucide-react';
 import ChatMessage from './ChatMessage';
-import ChatInput from './ChatInput';
+import ChatInput, { type Attachment } from './ChatInput';
 import type { Message } from './types';
+import { exportConversationAsText, copyToClipboard } from '../../services/chatbotPersistence';
 
 interface ChatWindowProps {
   isOpen: boolean;
   messages: Message[];
   isTyping: boolean;
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, attachments?: Attachment[]) => void;
   onQuickReply: (action: string) => void;
   onFeedback: (messageId: string, isPositive: boolean) => void;
   onReset: () => void;
   botName: string;
   isMinimized: boolean;
   onToggleMinimize: () => void;
+  isOnline?: boolean;
 }
 
 export default function ChatWindow({
@@ -29,8 +31,12 @@ export default function ChatWindow({
   botName,
   isMinimized,
   onToggleMinimize,
+  isOnline = true,
 }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll vers le bas
   useEffect(() => {
@@ -39,11 +45,48 @@ export default function ChatWindow({
     }
   }, [messages, isTyping, isMinimized]);
 
+  // Fermer le menu au clic extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Trouver le dernier message du bot pour afficher le feedback
   const lastBotMessageIndex = [...messages].reverse().findIndex(m => m.sender === 'bot' && m.type !== 'loading');
   const lastBotMessageId = lastBotMessageIndex !== -1 
     ? messages[messages.length - 1 - lastBotMessageIndex]?.id 
     : null;
+
+  // Export conversation
+  const handleExport = () => {
+    const text = exportConversationAsText(messages);
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-investinfinity-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowMenu(false);
+  };
+
+  // Copy conversation
+  const handleCopyAll = async () => {
+    const text = exportConversationAsText(messages);
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+    setShowMenu(false);
+  };
 
   return (
     <AnimatePresence>
@@ -90,8 +133,17 @@ export default function ChatWindow({
               <div>
                 <h3 className="text-white font-medium text-sm">{botName}</h3>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs text-gray-400">En ligne</span>
+                  {isOnline ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-xs text-gray-400">En ligne</span>
+                    </>
+                  ) : (
+                    <>
+                      <WifiOff size={10} className="text-orange-400" />
+                      <span className="text-xs text-orange-400">Hors ligne</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -104,6 +156,44 @@ export default function ChatWindow({
               >
                 <RotateCcw size={16} />
               </button>
+              
+              {/* Menu options */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-2 text-gray-400 hover:text-pink-400 hover:bg-pink-500/10 rounded-lg transition-colors"
+                  title="Plus d'options"
+                >
+                  <MoreVertical size={16} />
+                </button>
+                
+                <AnimatePresence>
+                  {showMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                      className="absolute right-0 top-full mt-1 w-48 bg-[#1a1a1f] border border-pink-500/20 rounded-lg shadow-xl overflow-hidden z-50"
+                    >
+                      <button
+                        onClick={handleExport}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-pink-500/10 hover:text-pink-300 transition-colors"
+                      >
+                        <Download size={14} />
+                        Exporter la conversation
+                      </button>
+                      <button
+                        onClick={handleCopyAll}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-pink-500/10 hover:text-pink-300 transition-colors"
+                      >
+                        {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                        {copied ? 'Copié !' : 'Copier tout'}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              
               <button
                 onClick={onToggleMinimize}
                 className="p-2 text-gray-400 hover:text-pink-400 hover:bg-pink-500/10 rounded-lg transition-colors"
@@ -157,11 +247,22 @@ export default function ChatWindow({
                   <div ref={messagesEndRef} />
                 </div>
 
+                {/* Offline warning */}
+                {!isOnline && (
+                  <div className="px-4 py-2 bg-orange-500/10 border-t border-orange-500/20">
+                    <p className="text-xs text-orange-400 text-center flex items-center justify-center gap-2">
+                      <WifiOff size={12} />
+                      Connexion perdue. Tes messages seront envoyés une fois reconnecté.
+                    </p>
+                  </div>
+                )}
+
                 {/* Input */}
                 <ChatInput
                   onSend={onSendMessage}
-                  disabled={isTyping}
-                  placeholder={isTyping ? "Le bot écrit..." : "Pose ta question..."}
+                  disabled={isTyping || !isOnline}
+                  placeholder={!isOnline ? "Hors ligne..." : isTyping ? "Le bot écrit..." : "Pose ta question..."}
+                  allowAttachments={true}
                 />
               </motion.div>
             )}

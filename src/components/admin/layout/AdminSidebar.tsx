@@ -26,6 +26,7 @@ import {
   GraduationCap,
   X,
   HelpCircle,
+  Bot,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -79,6 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'paiements', label: 'Paiements', icon: CreditCard, path: '/admin/paiements' },
       { id: 'analytiques', label: 'Analytiques', icon: BarChart3, path: '/admin/analytiques' },
+      { id: 'chatbot', label: 'Chatbot', icon: Bot, path: '/admin/chatbot' },
     ],
   },
   {

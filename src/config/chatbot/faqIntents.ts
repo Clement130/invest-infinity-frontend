@@ -23,6 +23,17 @@ export type ChatbotIntentId =
   | 'earnings_promise'
   | 'results_transparency'
   | 'broker_choice'
+  | 'guarantee_14_days'
+  | 'change_offer'
+  | 'minimum_capital'
+  | 'explain_propfirm'
+  | 'hardware_requirements'
+  | 'cancel_subscription'
+  | 'payment_installments'
+  | 'certificate'
+  | 'replay_lives'
+  | 'time_required'
+  | 'difference_offers'
   | 'other';
 
 export type ChatbotIntent = {
@@ -189,6 +200,113 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     answer: "Besoin d'aide personnalisée ? 🤝\n\nVous pouvez nous contacter :\n1. Sur le Discord (ticket support)\n2. Par email à support@investinfinity.fr\n3. Via ce chat en demandant 'Parler à un humain'",
     followUps: [
       { id: 'human', label: 'Parler à un humain', action: 'contact_human', icon: '👤' }
+    ]
+  },
+
+  // --- NOUVEAUX INTENTS ---
+  {
+    id: 'guarantee_14_days',
+    category: 'Tarifs',
+    patterns: ['garantie', '14 jours', 'remboursement', 'satisfait ou remboursé', 'rembourser', 'pas satisfait'],
+    answer: "Nous offrons une **garantie satisfait ou remboursé de 14 jours** sur l'offre Premium ! 🛡️\n\n✅ Si la formation ne te convient pas, tu peux demander un remboursement complet dans les 14 jours suivant ton achat.\n✅ Aucune condition, aucune question.\n✅ Remboursement sous 5-7 jours ouvrés.\n\nPour faire une demande, contacte-nous via le support.",
+    followUps: [
+      { id: 'contact', label: 'Contacter le support', action: 'contact_human', icon: '💬' },
+      { id: 'pricing', label: 'Voir les offres', action: 'show_pricing', icon: '💎' }
+    ]
+  },
+  {
+    id: 'change_offer',
+    category: 'Tarifs',
+    patterns: ['changer offre', 'upgrade', 'passer premium', 'monter en gamme', 'améliorer abonnement', 'changer formule'],
+    answer: "Tu veux passer à une offre supérieure ? Excellente idée ! 🚀\n\n**Comment faire :**\n1. Contacte notre support\n2. On calcule la différence de prix\n3. Tu paies uniquement le complément\n\nExemple : Si tu as Starter (147€) et veux Premium (497€), tu paies 350€.\n\nLe changement est effectif immédiatement !",
+    followUps: [
+      { id: 'contact', label: 'Demander un upgrade', action: 'contact_human', icon: '⬆️' },
+      { id: 'pricing', label: 'Comparer les offres', action: 'show_pricing', icon: '⚖️' }
+    ]
+  },
+  {
+    id: 'minimum_capital',
+    category: 'Formation',
+    patterns: ['capital minimum', 'combien investir', 'argent nécessaire', 'budget trading', 'commencer avec combien', 'minimum pour trader'],
+    answer: "Question importante ! 💰\n\n**Pour la formation :** Aucun capital requis. Tu apprends d'abord sur compte démo.\n\n**Pour trader en réel :**\n- Prop firms (TopStep, Apex) : 0€ de capital propre, tu trades leur argent\n- Compte perso : On recommande minimum 500-1000€ pour bien gérer le risque\n\n⚠️ **Règle d'or** : N'investis JAMAIS de l'argent que tu ne peux pas te permettre de perdre.",
+    followUps: [
+      { id: 'propfirm', label: "C'est quoi une prop firm ?", action: 'explain_propfirm', icon: '🏢' },
+      { id: 'start', label: 'Commencer la formation', action: 'show_pricing', icon: '🚀' }
+    ]
+  },
+  {
+    id: 'explain_propfirm',
+    category: 'Formation',
+    patterns: ['prop firm', 'propfirm', 'topstep', 'apex', 'ftmo', 'funded trader', 'compte financé'],
+    answer: "Les **Prop Firms** (Proprietary Trading Firms) te permettent de trader avec leur capital ! 🏢\n\n**Comment ça marche :**\n1. Tu passes un challenge (évaluation)\n2. Si tu réussis, tu trades leur argent (jusqu'à 150 000€+)\n3. Tu gardes 80-90% des profits\n\n**Avantages :**\n✅ Pas besoin de capital personnel\n✅ Risque limité au coût du challenge\n✅ Gains potentiels importants\n\nDans la formation, on t'explique comment passer ces challenges !",
+    followUps: [
+      { id: 'pricing', label: 'Voir la formation', action: 'show_pricing', icon: '📚' }
+    ]
+  },
+  {
+    id: 'hardware_requirements',
+    category: 'Technique',
+    patterns: ['matériel', 'ordinateur', 'pc', 'mac', 'téléphone', 'tablette', 'configuration', 'prérequis technique'],
+    answer: "Bonne nouvelle : pas besoin d'un PC gaming ! 💻\n\n**Minimum requis :**\n✅ Ordinateur (PC ou Mac) ou tablette\n✅ Connexion internet stable\n✅ Navigateur récent (Chrome, Firefox, Safari)\n\n**Recommandé pour trader :**\n✅ 2 écrans (confort, pas obligatoire)\n✅ Connexion fibre ou 4G stable\n\n📱 Tu peux suivre la formation sur téléphone, mais pour trader on recommande un écran plus grand.",
+    followUps: [
+      { id: 'start', label: 'Commencer', action: 'show_pricing', icon: '🚀' }
+    ]
+  },
+  {
+    id: 'cancel_subscription',
+    category: 'Compte',
+    patterns: ['annuler', 'résilier', 'arrêter abonnement', 'supprimer compte', 'désinscrire', 'quitter'],
+    answer: "Tu veux annuler ? Pas de souci, c'est simple ! 👋\n\n**Important à savoir :**\n- Nos offres sont en **paiement unique** (pas d'abonnement mensuel)\n- Tu gardes l'accès **à vie** après achat\n- Pas de résiliation nécessaire !\n\n**Si tu veux supprimer ton compte :**\nContacte le support et on s'en occupe sous 48h.\n\n**Garantie 14 jours :** Si tu n'es pas satisfait dans les 14 premiers jours, on te rembourse.",
+    followUps: [
+      { id: 'contact', label: 'Contacter le support', action: 'contact_human', icon: '💬' },
+      { id: 'guarantee', label: 'Garantie 14 jours', action: 'show_guarantee', icon: '🛡️' }
+    ]
+  },
+  {
+    id: 'payment_installments',
+    category: 'Tarifs',
+    patterns: ['paiement plusieurs fois', 'payer en 3 fois', '3x sans frais', 'facilité paiement', 'échelonner', 'mensualité'],
+    answer: "Oui, tu peux payer en plusieurs fois ! 💳\n\n**Options disponibles :**\n\n🔹 **Premium (497€)** → 3x 166€/mois sans frais\n🔹 **Bootcamp Élite (1997€)** → 3x 666€/mois sans frais\n\n**Comment ça marche :**\n- Paiement via Klarna à la commande\n- Prélèvements automatiques\n- 0% de frais supplémentaires\n\nL'accès est immédiat dès le premier paiement !",
+    followUps: [
+      { id: 'pricing', label: 'Voir les offres', action: 'show_pricing', icon: '💎' }
+    ]
+  },
+  {
+    id: 'certificate',
+    category: 'Formation',
+    patterns: ['certificat', 'diplôme', 'attestation', 'certification', 'preuve formation'],
+    answer: "Tu recevras un **certificat de complétion** ! 🎓\n\n**Inclus dans :**\n✅ Bootcamp Élite (automatique)\n✅ Premium (sur demande après avoir terminé tous les modules)\n\n**Le certificat atteste :**\n- Ton nom et prénom\n- La formation suivie\n- La date de complétion\n- Signé par Mickaël\n\nC'est un plus pour ton parcours, mais rappelle-toi : ce qui compte vraiment, ce sont tes résultats en trading !",
+    followUps: [
+      { id: 'bootcamp', label: 'Découvrir le Bootcamp', action: 'show_immersion', icon: '👑' }
+    ]
+  },
+  {
+    id: 'replay_lives',
+    category: 'Formation',
+    patterns: ['replay', 'revoir live', 'enregistrement', 'rattraper', 'manqué live', 'rediffusion'],
+    answer: "Tous les lives sont enregistrés ! 📹\n\n**Accès aux replays :**\n✅ **Premium & Bootcamp** : Replays illimités disponibles 24h après le live\n❌ **Starter** : Pas d'accès aux replays\n\n**Où les trouver :**\nDans ton espace membre, section \"Replays\" ou sur le Discord dans le salon dédié.\n\nTu peux les regarder autant de fois que tu veux, à ton rythme !",
+    followUps: [
+      { id: 'upgrade', label: 'Passer à Premium', action: 'show_transformation', icon: '⬆️' }
+    ]
+  },
+  {
+    id: 'time_required',
+    category: 'Formation',
+    patterns: ['temps nécessaire', 'combien de temps', 'durée formation', 'heures par semaine', 'rythme'],
+    answer: "Le temps dépend de ton rythme ! ⏰\n\n**Formation complète :**\n- ~20-30h de contenu vidéo\n- À ton rythme, accès à vie\n\n**Recommandation :**\n- 5-10h/semaine pour bien progresser\n- 2-3 mois pour maîtriser les bases\n- 6-12 mois pour être vraiment autonome\n\n**Lives trading :**\n- ~10h/semaine (optionnel mais recommandé)\n\nLe trading s'apprend avec la pratique. Pas de rush ! 🎯",
+    followUps: [
+      { id: 'start', label: 'Commencer maintenant', action: 'show_pricing', icon: '🚀' }
+    ]
+  },
+  {
+    id: 'difference_offers',
+    category: 'Tarifs',
+    patterns: ['différence offres', 'comparer formules', 'starter vs premium', 'quelle offre choisir', 'laquelle prendre'],
+    answer: "Voici les différences principales ! 📊\n\n**🌱 Starter (147€)**\n- Lives trading\n- Communauté Discord\n- Alertes trading\n- ❌ Pas de formation vidéo\n- ❌ Pas de replays\n\n**🚀 Premium (497€)** ⭐ Best-seller\n- Tout Starter +\n- Formation complète\n- Replays illimités\n- Accompagnement 7j/7\n- Garantie 14 jours\n\n**👑 Bootcamp (1997€)**\n- Tout Premium +\n- 1 semaine en présentiel\n- Trading live avec Mickaël\n- Certificat\n\n**Mon conseil :** Premium si tu veux vraiment progresser !",
+    followUps: [
+      { id: 'starter', label: 'Détails Starter', action: 'show_entree', icon: '🌱' },
+      { id: 'premium', label: 'Détails Premium', action: 'show_transformation', icon: '🚀' },
+      { id: 'bootcamp', label: 'Détails Bootcamp', action: 'show_immersion', icon: '👑' }
     ]
   }
 ];

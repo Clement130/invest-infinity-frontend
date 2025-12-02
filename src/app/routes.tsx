@@ -24,6 +24,7 @@ const AdminSettingsPage = lazy(() => import('../pages/admin/SettingsPage'));
 const ManageImmersionSessions = lazy(() => import('../pages/admin/ManageImmersionSessions'));
 const AppointmentsPage = lazy(() => import('../pages/admin/AppointmentsPage'));
 const HelpPage = lazy(() => import('../pages/admin/HelpPage'));
+const ChatbotAnalytics = lazy(() => import('../pages/admin/ChatbotAnalytics'));
 const ModulePage = lazy(() => import('../pages/ModulePage'));
 const LessonPlayerPage = lazy(() => import('../pages/LessonPlayerPage'));
 const MemberDashboard = lazy(() => import('../pages/MemberDashboard'));
@@ -154,6 +155,7 @@ export const adminRoutes: AdminRouteConfig[] = [
   { path: '/admin/events', element: <AdminLayout activeSection="events"><AdminEventsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/immersion', element: <AdminLayout activeSection="immersion"><ManageImmersionSessions /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/appointments', element: <AdminLayout activeSection="appointments"><AppointmentsPage /></AdminLayout>, allowedRoles: ['admin'] },
+  { path: '/admin/chatbot', element: <AdminLayout activeSection="chatbot"><ChatbotAnalytics /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/settings', element: <AdminLayout activeSection="settings"><AdminSettingsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/help', element: <AdminLayout activeSection="help"><HelpPage /></AdminLayout>, allowedRoles: ['admin'] },
 ];
