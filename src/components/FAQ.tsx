@@ -41,16 +41,16 @@ const faqCategories = [
     title: "Trading & Alertes",
     questions: [
       {
-        question: "Comment est organisée la formation ?",
-        answer: "Vous avez une partie sur notre Discord qui englobe :\n\nles lives trading, la zone chill, et la zone premium pour échanger avec nous et les élèves actuels.\n\nEt vous avez une autre partie sur le site, dans votre espace membre dédié, avec toute la formation incluse."
+        question: "Quand est-ce qu'il y a les live trading ?",
+        answer: "Lundi et mardi de 16h à 17h30,\n\net du mercredi au vendredi de 15h à 17h30."
       },
       {
-        question: "Donnez-vous des signaux de trading ?",
-        answer: "Non, et c'est volontaire ! On ne donne pas de \"signaux\" à copier bêtement. Nos experts partagent leurs positions avec une analyse complète : point d'entrée, stop-loss, take profit, et surtout le POURQUOI derrière chaque trade. L'objectif est de te rendre autonome, pas dépendant."
+        question: "Comment se passe l'accompagnement ?",
+        answer: "Tu auras accès à un groupe exclusif qui te permettra de poser toutes les questions que tu veux, de partager tes futures analyses et zones tracées à n'importe quelle heure, pour qu'on puisse te corriger ou valider ce que tu fais, et échanger avec nous dessus et en live aussi."
       },
       {
-        question: "Quels sont les résultats de nos experts ?",
-        answer: "Nos experts partagent leurs résultats en toute transparence sur le Discord. Tu peux consulter leur track record complet avec les gains ET les pertes. En moyenne, ils visent un Risk/Reward de 3:1 avec 1-2 positions par jour. Les lives permettent de voir leur analyse en temps réel."
+        question: "Que vais-je apprendre dans la formation ?",
+        answer: "Tout est conçu pour tous les niveaux, du débutant au plus avancé.\n\nTout est mis en place pour que tu puisses comprendre : du vocabulaire jusqu'à la manière de prendre une position sur les marchés, avec une vraie stratégie qui rentable."
       }
     ]
   },
@@ -75,10 +75,6 @@ const faqCategories = [
       {
         question: "Comment contacter le support ?",
         answer: "Plusieurs options :\n\n💬 Sur Discord : mentionne @investinfinity\n🤖 Via le chatbot : disponible sur le site\n🎥 En live : pose tes questions directement à nos experts\n\nOn répond généralement sous 24h, souvent beaucoup plus vite !"
-      },
-      {
-        question: "Y a-t-il des lives réguliers ?",
-        answer: "Oui, Les lives trading sont le lundi & Mardi de 16h à 17h30 et de mercredi à vendredi de 15h à 17h30"
       }
     ]
   },

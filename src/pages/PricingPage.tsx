@@ -177,16 +177,16 @@ export default function PricingPage() {
       answer: 'L\'offre Transformation inclut une garantie 14 jours satisfait ou remboursé.',
     },
     {
-      question: 'Acceptez-vous les virements bancaires ?',
-      answer: 'Nous acceptons les cartes de crédit via Stripe. Contactez-nous pour les virements.',
+      question: 'Quand est-ce qu\'il y a les live trading ?',
+      answer: 'Lundi et mardi de 16h à 17h30, et du mercredi au vendredi de 15h à 17h30.',
     },
     {
-      question: 'Comment fonctionne la garantie ?',
-      answer: 'Satisfait ou remboursé pendant 14 jours sur l\'offre Transformation. Aucune question posée.',
+      question: 'Comment se passe l\'accompagnement ?',
+      answer: 'Tu auras accès à un groupe exclusif qui te permettra de poser toutes les questions que tu veux, de partager tes futures analyses et zones tracées à n\'importe quelle heure, pour qu\'on puisse te corriger ou valider ce que tu fais, et échanger avec nous dessus et en live aussi.',
     },
     {
-      question: 'Comment se passe l\'Immersion Élite ?',
-      answer: 'L\'Immersion Élite est une formation présentielle d\'une semaine à Marseille, près de Halo. Les sessions ont lieu du lundi au vendredi de 9h à 17h, avec un maximum de 5-8 élèves par session pour un coaching personnalisé. Les déjeuners sont inclus. Vous gérez votre transport et logement.',
+      question: 'Que vais-je apprendre dans la formation ?',
+      answer: 'Tout est conçu pour tous les niveaux, du débutant au plus avancé. Tout est mis en place pour que tu puisses comprendre : du vocabulaire jusqu\'à la manière de prendre une position sur les marchés, avec une vraie stratégie qui rentable.',
     },
   ];
 
