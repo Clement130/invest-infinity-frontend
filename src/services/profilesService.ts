@@ -44,3 +44,37 @@ export async function listProfiles(): Promise<Profile[]> {
     return [];
   }
 }
+
+export type LicenseType = 'none' | 'entree' | 'transformation' | 'immersion';
+
+export async function updateProfileLicense(userId: string, license: LicenseType): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ license })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[profilesService] Erreur lors de la mise à jour de la licence:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function updateProfileRole(userId: string, role: 'client' | 'admin'): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ role })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[profilesService] Erreur lors de la mise à jour du rôle:', error);
+    throw error;
+  }
+
+  return data;
+}

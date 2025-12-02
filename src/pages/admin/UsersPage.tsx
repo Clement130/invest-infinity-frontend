@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Eye, X, Users, Crown, RefreshCw, Ban, ExternalLink, Mail } from 'lucide-react';
-import { listProfiles } from '../../services/profilesService';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Eye, X, Users, Crown, RefreshCw, Ban, ExternalLink, Mail, Save, Shield } from 'lucide-react';
+import { listProfiles, updateProfileLicense, updateProfileRole, type LicenseType } from '../../services/profilesService';
 import { getAccessList, revokeAccess } from '../../services/trainingService';
 import { getPurchasesForAdmin } from '../../services/purchasesService';
 import { getProgressSummary } from '../../services/progressService';
@@ -222,6 +222,11 @@ function UserDetailModal({
   user: Profile;
   onClose: () => void;
 }) {
+  const queryClient = useQueryClient();
+  const [selectedLicense, setSelectedLicense] = useState<LicenseType>((user.license as LicenseType) || 'none');
+  const [selectedRole, setSelectedRole] = useState<'client' | 'admin'>(user.role as 'client' | 'admin');
+  const [isSaving, setIsSaving] = useState(false);
+
   const { data: accessList = [] } = useQuery({
     queryKey: ['admin', 'access', user.id],
     queryFn: () => getAccessList(),
@@ -244,6 +249,43 @@ function UserDetailModal({
     queryFn: () => getProgressSummary(user.id),
   });
 
+  const hasChanges = selectedLicense !== (user.license || 'none') || selectedRole !== user.role;
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      const promises = [];
+      
+      if (selectedLicense !== (user.license || 'none')) {
+        promises.push(updateProfileLicense(user.id, selectedLicense));
+      }
+      
+      if (selectedRole !== user.role) {
+        promises.push(updateProfileRole(user.id, selectedRole));
+      }
+      
+      await Promise.all(promises);
+      
+      // Rafraîchir la liste des profils
+      queryClient.invalidateQueries({ queryKey: ['admin', 'profiles'] });
+      
+      toast.success('Modifications enregistrées');
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const licenseOptions: { value: LicenseType; label: string; color: string }[] = [
+    { value: 'none', label: 'Aucune licence', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
+    { value: 'entree', label: 'Starter (Entrée)', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+    { value: 'transformation', label: 'Pro (Transformation)', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+    { value: 'immersion', label: 'Elite (Immersion)', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 rounded-xl border border-white/10 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -261,12 +303,80 @@ function UserDetailModal({
         </div>
 
         <div className="space-y-6">
+          {/* Gestion du statut - NOUVEAU */}
+          <div className="rounded-lg border border-purple-500/30 bg-purple-500/10 p-4">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-400" />
+              Gestion du statut
+            </h3>
+            
+            {/* Licence */}
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Licence / Abonnement</label>
+              <div className="grid grid-cols-2 gap-2">
+                {licenseOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedLicense(option.value)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition border ${
+                      selectedLicense === option.value
+                        ? option.color
+                        : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    {option.value === 'immersion' && <Crown className="w-3 h-3 inline mr-1" />}
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Rôle */}
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Rôle</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedRole('client')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition border ${
+                    selectedRole === 'client'
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  Client
+                </button>
+                <button
+                  onClick={() => setSelectedRole('admin')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition border ${
+                    selectedRole === 'admin'
+                      ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  Admin
+                </button>
+              </div>
+            </div>
+
+            {/* Bouton de sauvegarde */}
+            {hasChanges && (
+              <button
+                onClick={handleSaveChanges}
+                disabled={isSaving}
+                className="w-full mt-2 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </button>
+            )}
+          </div>
+
           {/* Informations générales */}
           <div className="rounded-lg border border-white/10 bg-white/5 p-4">
             <h3 className="text-lg font-semibold text-white mb-4">Informations</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-400">Rôle:</span>
+                <span className="text-gray-400">Rôle actuel:</span>
                 <span className="ml-2 text-white">{user.role}</span>
               </div>
               <div>
