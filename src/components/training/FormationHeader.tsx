@@ -94,14 +94,13 @@ const StatCard = memo(function StatCard({
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, duration: 0.4, ease: 'easeOut' }}
-      whileHover={{ scale: 1.02, y: -2 }}
       className={clsx(
         // Mobile-first: padding réduit, rounded plus petit
-        'relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5',
+        'relative overflow-hidden rounded-xl sm:rounded-2xl p-2.5 sm:p-3 lg:p-5',
         'bg-gradient-to-br backdrop-blur-sm',
         'border transition-all duration-300',
         `${c.bg} ${c.border}`,
-        'hover:shadow-lg',
+        'sm:hover:shadow-lg sm:hover:scale-[1.02] sm:hover:-translate-y-0.5',
         c.glow,
         // Assure que la carte ne dépasse pas
         'w-full min-w-0'
@@ -110,24 +109,24 @@ const StatCard = memo(function StatCard({
       {/* Glow effect - plus petit sur mobile */}
       <div className="absolute top-0 right-0 w-12 sm:w-20 h-12 sm:h-20 bg-white/5 rounded-full blur-2xl" />
       
-      <div className="relative flex items-center gap-2 sm:gap-3 lg:gap-4">
+      <div className="relative flex items-center gap-1.5 sm:gap-2 lg:gap-4">
         {/* Icon - plus petit sur mobile */}
         <div className={clsx(
-          'w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0',
+          'w-8 h-8 sm:w-9 sm:h-9 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0',
           'bg-gradient-to-br shadow-lg',
           c.icon, c.glow
         )}>
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-white" />
         </div>
         
         {/* Text - tronqué si nécessaire */}
         <div className="flex-1 min-w-0 overflow-hidden">
-          <p className={clsx('text-[10px] sm:text-xs lg:text-sm font-medium truncate', c.text)}>{label}</p>
+          <p className={clsx('text-[9px] sm:text-[10px] lg:text-sm font-medium truncate', c.text)}>{label}</p>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: delay + 0.2 }}
-            className={clsx('text-xl sm:text-2xl lg:text-3xl font-bold', c.value)}
+            className={clsx('text-lg sm:text-xl lg:text-3xl font-bold', c.value)}
           >
             {value}
           </motion.p>
@@ -194,7 +193,7 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
         </motion.div>
 
         {/* Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2.5 lg:gap-4 w-full">
           <StatCard
             label="Total"
             value={stats.total}
