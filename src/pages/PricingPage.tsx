@@ -58,8 +58,7 @@ export default function PricingPage() {
       features.push('Accès à l\'intégralité de la formation');
       features.push('Groupe exclusif');
       features.push('Accompagnement 7j/7');
-      features.push('2 stratégies de trading rentables');
-      features.push('1 coaching individuel de 30 min en visio');
+      features.push('Ma stratégie de trading rentable');
     } else if (offer.offerId === 'immersion_elite') {
       // Bootcamp Élite - 1997€
       features.push('Tout Premium inclus');

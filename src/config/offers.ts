@@ -124,7 +124,7 @@ export const OFFERS: Record<OfferId, OfferConfig> = {
   transformation: {
     offerId: 'transformation',
     name: 'Premium',
-    description: 'Formation + accompagnement en live',
+    description: 'Formation + accompagnement',
     price: 497,
     paymentType: 'one-time',
     paymentDescription: 'paiement 3 fois • accès à vie',

@@ -57,7 +57,7 @@ const OFFERS_CONFIG = {
   premium: {
     id: 'transformation' as PlanType,
     name: 'Premium',
-    subtitle: 'Formation + accompagnement en live',
+    subtitle: 'Formation + accompagnement',
     price: 497,
     priceText: '497€',
     paymentDescription: 'paiement 3 fois • accès à vie',
@@ -68,8 +68,7 @@ const OFFERS_CONFIG = {
       'Accès à l\'intégralité de la formation',
       'Groupe exclusif',
       'Accompagnement 7j/7',
-      '2 stratégies de trading rentables',
-      '1 coaching individuel de 30 min en visio',
+      'Ma stratégie de trading rentable',
     ],
     icon: Star,
     iconColor: 'text-pink-400',
