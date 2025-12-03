@@ -1,15 +1,21 @@
 import { supabase } from '../lib/supabaseClient';
-import type { Purchase } from '../types/training';
+import type { Payment } from '../types/training';
 
-export async function getPurchasesForCurrentUser(): Promise<Purchase[]> {
+// Libellés pour les types de licence
+const LICENSE_LABELS: Record<string, string> = {
+  starter: 'Starter (Entrée)',
+  pro: 'Pro (Transformation)',
+  elite: 'Elite (Immersion)',
+};
+
+export async function getPaymentsForCurrentUser(): Promise<Payment[]> {
   try {
     const { data, error } = await supabase
-      .from('purchases')
+      .from('payments')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      // Ne pas logger les erreurs si la table n'existe pas (PGRST205) ou erreur RLS
       const isTableNotFound = error.code === 'PGRST205' || 
                              error.message?.includes('Could not find the table') ||
                              error.message?.includes('table') && error.message?.includes('not found');
@@ -18,38 +24,33 @@ export async function getPurchasesForCurrentUser(): Promise<Purchase[]> {
                         error.message?.includes('RLS');
       
       if (isTableNotFound || isRLSError) {
-        // Table n'existe pas ou erreur RLS - retourner un tableau vide silencieusement
         return [];
       }
       
-      // Pour les autres erreurs, throw
       throw error;
     }
 
     return data ?? [];
   } catch (err: any) {
-    // Ne pas logger si c'est une erreur de table non trouvée
     const isTableNotFound = err?.code === 'PGRST205' || 
                            err?.message?.includes('Could not find the table') ||
                            err?.message?.includes('table') && err?.message?.includes('not found');
     
     if (!isTableNotFound) {
-      console.error('[purchasesService] Exception dans getPurchasesForCurrentUser:', err);
+      console.error('[purchasesService] Exception dans getPaymentsForCurrentUser:', err);
     }
-    // Retourner un tableau vide au lieu de throw pour éviter de bloquer l'interface
     return [];
   }
 }
 
-export async function getPurchasesForAdmin(): Promise<Purchase[]> {
+export async function getPaymentsForAdmin(): Promise<Payment[]> {
   try {
     const { data, error } = await supabase
-      .from('purchases')
+      .from('payments')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      // Ne pas logger les erreurs si la table n'existe pas (PGRST205) ou erreur RLS
       const isTableNotFound = error.code === 'PGRST205' || 
                              error.message?.includes('Could not find the table') ||
                              error.message?.includes('table') && error.message?.includes('not found');
@@ -58,31 +59,38 @@ export async function getPurchasesForAdmin(): Promise<Purchase[]> {
                         error.message?.includes('RLS');
       
       if (isTableNotFound) {
-        // Table n'existe pas encore - retourner un tableau vide silencieusement
         return [];
       }
       
       if (isRLSError) {
-        // Erreur RLS - retourner un tableau vide silencieusement
         return [];
       }
       
-      // Pour les autres erreurs, logger mais ne pas throw
-      console.error('[purchasesService] Erreur lors de la récupération des achats:', error);
+      console.error('[purchasesService] Erreur lors de la récupération des paiements:', error);
       return [];
     }
 
     return data ?? [];
   } catch (err: any) {
-    // Ne pas logger si c'est une erreur de table non trouvée
     const isTableNotFound = err?.code === 'PGRST205' || 
                            err?.message?.includes('Could not find the table') ||
                            err?.message?.includes('table') && err?.message?.includes('not found');
     
     if (!isTableNotFound) {
-      console.error('[purchasesService] Exception dans getPurchasesForAdmin:', err);
+      console.error('[purchasesService] Exception dans getPaymentsForAdmin:', err);
     }
-    // Retourner un tableau vide au lieu de throw pour éviter de bloquer l'interface
     return [];
   }
 }
+
+// Fonction utilitaire pour obtenir le libellé d'une licence
+export function getLicenseLabel(licenseType: string | null): string {
+  if (!licenseType) return 'Inconnu';
+  return LICENSE_LABELS[licenseType] || licenseType;
+}
+
+// Anciennes fonctions pour rétrocompatibilité (deprecated)
+/** @deprecated Utiliser getPaymentsForCurrentUser à la place */
+export const getPurchasesForCurrentUser = getPaymentsForCurrentUser;
+/** @deprecated Utiliser getPaymentsForAdmin à la place */
+export const getPurchasesForAdmin = getPaymentsForAdmin;

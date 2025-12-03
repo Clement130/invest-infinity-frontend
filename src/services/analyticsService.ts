@@ -5,18 +5,17 @@
 import { supabase } from '../lib/supabaseClient';
 import { getModules, getAccessList } from './trainingService';
 import { listProfiles } from './profilesService';
-import { getPurchasesForAdmin } from './purchasesService';
+import { getPaymentsForAdmin } from './purchasesService';
 import { getProgressSummary } from './progressService';
-import type { TrainingModule, TrainingAccess } from '../types/training';
+import type { TrainingModule, TrainingAccess, Payment } from '../types/training';
 import type { Profile } from './profilesService';
-import type { Purchase } from '../types/training';
 
 export interface AnalyticsOverview {
   totalUsers: number;
   activeUsers: number; // Utilisateurs ayant accès à au moins une formation
   totalRevenue: number; // En centimes
-  totalPurchases: number;
-  completedPurchases: number;
+  totalPayments: number;
+  completedPayments: number;
   totalModules: number;
   activeModules: number;
   totalLessons: number;
@@ -26,7 +25,7 @@ export interface AnalyticsOverview {
 export interface RevenueStats {
   total: number;
   byMonth: Array<{ month: string; revenue: number; count: number }>;
-  byModule: Array<{ moduleId: string; moduleTitle: string; revenue: number; count: number }>;
+  byLicense: Array<{ licenseType: string; licenseLabel: string; revenue: number; count: number }>;
 }
 
 export interface UserStats {
@@ -59,11 +58,11 @@ export interface LessonStats {
  * Récupère les statistiques générales de la plateforme
  */
 export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
-  const [profiles, modules, accessList, purchases] = await Promise.all([
+  const [profiles, modules, accessList, payments] = await Promise.all([
     listProfiles(),
     getModules({ includeInactive: true }),
     getAccessList(),
-    getPurchasesForAdmin(),
+    getPaymentsForAdmin(),
   ]);
 
   // Compter les leçons
@@ -77,9 +76,9 @@ export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
   const usersWithAccess = new Set(accessList.map((a) => a.user_id));
   const activeUsers = usersWithAccess.size;
 
-  // Revenus
-  const completedPurchases = purchases.filter((p) => p.status === 'completed');
-  const totalRevenue = completedPurchases.reduce(
+  // Revenus (inclure les paiements complétés et en attente de mot de passe)
+  const completedPayments = payments.filter((p) => p.status === 'completed' || p.status === 'pending_password');
+  const totalRevenue = completedPayments.reduce(
     (sum, p) => sum + (p.amount || 0),
     0
   );
@@ -88,8 +87,8 @@ export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
     totalUsers: profiles.length,
     activeUsers,
     totalRevenue,
-    totalPurchases: purchases.length,
-    completedPurchases: completedPurchases.length,
+    totalPayments: payments.length,
+    completedPayments: completedPayments.length,
     totalModules: modules.length,
     activeModules: modules.filter((m) => m.is_active).length,
     totalLessons,
@@ -101,55 +100,60 @@ export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
  * Récupère les statistiques de revenus
  */
 export async function getRevenueStats(): Promise<RevenueStats> {
-  const purchases = await getPurchasesForAdmin();
-  const modules = await getModules({ includeInactive: true });
+  const payments = await getPaymentsForAdmin();
 
-  const completedPurchases = purchases.filter((p) => p.status === 'completed');
+  const completedPayments = payments.filter((p) => p.status === 'completed' || p.status === 'pending_password');
+
+  // Libellés des licences
+  const licenseLabels: Record<string, string> = {
+    starter: 'Starter (Entrée)',
+    pro: 'Pro (Transformation)',
+    elite: 'Elite (Immersion)',
+  };
 
   // Revenus par mois
   const revenueByMonth = new Map<string, { revenue: number; count: number }>();
-  completedPurchases.forEach((purchase) => {
-    if (!purchase.created_at) return;
-    const date = new Date(purchase.created_at);
+  completedPayments.forEach((payment) => {
+    if (!payment.created_at) return;
+    const date = new Date(payment.created_at);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
     const existing = revenueByMonth.get(monthKey) || { revenue: 0, count: 0 };
     revenueByMonth.set(monthKey, {
-      revenue: existing.revenue + (purchase.amount || 0),
+      revenue: existing.revenue + (payment.amount || 0),
       count: existing.count + 1,
     });
   });
 
-  // Revenus par module
-  const revenueByModule = new Map<
+  // Revenus par type de licence
+  const revenueByLicense = new Map<
     string,
-    { moduleTitle: string; revenue: number; count: number }
+    { licenseLabel: string; revenue: number; count: number }
   >();
-  completedPurchases.forEach((purchase) => {
-    if (!purchase.module_id) return;
-    const module = modules.find((m) => m.id === purchase.module_id);
-    const moduleTitle = module?.title || 'Module inconnu';
+  completedPayments.forEach((payment) => {
+    const licenseType = payment.license_type || 'unknown';
+    const licenseLabel = licenseLabels[licenseType] || 'Inconnu';
 
-    const existing = revenueByModule.get(purchase.module_id) || {
-      moduleTitle,
+    const existing = revenueByLicense.get(licenseType) || {
+      licenseLabel,
       revenue: 0,
       count: 0,
     };
-    revenueByModule.set(purchase.module_id, {
-      moduleTitle,
-      revenue: existing.revenue + (purchase.amount || 0),
+    revenueByLicense.set(licenseType, {
+      licenseLabel,
+      revenue: existing.revenue + (payment.amount || 0),
       count: existing.count + 1,
     });
   });
 
   return {
-    total: completedPurchases.reduce((sum, p) => sum + (p.amount || 0), 0),
+    total: completedPayments.reduce((sum, p) => sum + (p.amount || 0), 0),
     byMonth: Array.from(revenueByMonth.entries())
       .map(([month, data]) => ({ month, ...data }))
       .sort((a, b) => a.month.localeCompare(b.month)),
-    byModule: Array.from(revenueByModule.values()).sort(
-      (a, b) => b.revenue - a.revenue
-    ),
+    byLicense: Array.from(revenueByLicense.entries())
+      .map(([licenseType, data]) => ({ licenseType, ...data }))
+      .sort((a, b) => b.revenue - a.revenue),
   };
 }
 

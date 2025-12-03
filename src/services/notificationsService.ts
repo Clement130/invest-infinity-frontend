@@ -4,7 +4,7 @@
  */
 
 import { listLeads } from './leadsService';
-import { getPurchasesForAdmin } from './purchasesService';
+import { getPaymentsForAdmin, getLicenseLabel } from './purchasesService';
 
 export type NotificationType = 'lead' | 'purchase' | 'error' | 'info';
 
@@ -60,30 +60,31 @@ export async function getNewNotifications(): Promise<Notification[]> {
     });
 
     // Vérifier les nouveaux paiements (dernières 24h)
-    const purchases = await getPurchasesForAdmin();
-    const recentPurchases = purchases.filter((purchase) => {
-      if (!purchase.created_at) return false;
-      const purchaseDate = new Date(purchase.created_at);
-      const isRecent = now.getTime() - purchaseDate.getTime() < 24 * 60 * 60 * 1000; // 24h
-      const isNew = !knownPurchaseIds.has(purchase.id);
-      if (isNew && isRecent && purchase.status === 'completed') {
-        knownPurchaseIds.add(purchase.id);
+    const payments = await getPaymentsForAdmin();
+    const recentPayments = payments.filter((payment) => {
+      if (!payment.created_at) return false;
+      const paymentDate = new Date(payment.created_at);
+      const isRecent = now.getTime() - paymentDate.getTime() < 24 * 60 * 60 * 1000; // 24h
+      const isNew = !knownPurchaseIds.has(payment.id);
+      if (isNew && isRecent && (payment.status === 'completed' || payment.status === 'pending_password')) {
+        knownPurchaseIds.add(payment.id);
         return true;
       }
       return false;
     });
 
-    recentPurchases.forEach((purchase) => {
-      const amount = (purchase.amount || 0) / 100;
+    recentPayments.forEach((payment) => {
+      const amount = (payment.amount || 0) / 100;
+      const licenseLabel = getLicenseLabel(payment.license_type);
       notifications.push({
-        id: `purchase-${purchase.id}`,
+        id: `payment-${payment.id}`,
         type: 'purchase',
         title: 'Nouveau paiement',
-        message: `Paiement de €${amount.toFixed(2)} reçu`,
-        timestamp: new Date(purchase.created_at),
+        message: `${licenseLabel} - €${amount.toFixed(2)}`,
+        timestamp: new Date(payment.created_at),
         read: false,
         actionUrl: '/admin/paiements',
-        metadata: { purchaseId: purchase.id, amount: purchase.amount },
+        metadata: { paymentId: payment.id, amount: payment.amount, license: payment.license_type },
       });
     });
 
@@ -92,7 +93,7 @@ export async function getNewNotifications(): Promise<Notification[]> {
       leads.forEach((lead) => knownLeadIds.add(lead.id));
     }
     if (lastPurchaseCheck === null) {
-      purchases.forEach((p) => knownPurchaseIds.add(p.id));
+      payments.forEach((p) => knownPurchaseIds.add(p.id));
     }
 
     lastLeadCheck = now;

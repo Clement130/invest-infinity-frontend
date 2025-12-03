@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, X, Users, Crown, RefreshCw, Ban, ExternalLink, Mail, Save, Shield } from 'lucide-react';
 import { listProfiles, updateProfileLicense, updateProfileRole, type LicenseType } from '../../services/profilesService';
 import { getAccessList, revokeAccess } from '../../services/trainingService';
-import { getPurchasesForAdmin } from '../../services/purchasesService';
+import { getPaymentsForAdmin, getLicenseLabel } from '../../services/purchasesService';
 import { getProgressSummary } from '../../services/progressService';
 import { getModules } from '../../services/trainingService';
 import type { Profile } from '../../services/profilesService';
@@ -240,9 +240,9 @@ function UserDetailModal({
     select: (data) => data.filter((a) => a.user_id === user.id),
   });
 
-  const { data: purchases = [] } = useQuery({
-    queryKey: ['admin', 'purchases', user.id],
-    queryFn: () => getPurchasesForAdmin(),
+  const { data: payments = [] } = useQuery({
+    queryKey: ['admin', 'payments', user.id],
+    queryFn: () => getPaymentsForAdmin(),
     select: (data) => data.filter((p) => p.user_id === user.id),
   });
 
@@ -448,29 +448,37 @@ function UserDetailModal({
           <div className="rounded-lg border border-white/10 bg-white/5 p-4">
             <h3 className="text-lg font-semibold text-white mb-4">Historique des paiements</h3>
             <div className="space-y-2">
-              {purchases.map((purchase) => {
-                const module = modules.find((m) => m.id === purchase.module_id);
+              {payments.map((payment) => {
+                const statusLabels: Record<string, { label: string; color: string }> = {
+                  completed: { label: 'Complété', color: 'text-green-400' },
+                  pending: { label: 'En attente', color: 'text-yellow-400' },
+                  pending_password: { label: 'En attente (mot de passe)', color: 'text-yellow-400' },
+                  failed: { label: 'Échoué', color: 'text-red-400' },
+                  refunded: { label: 'Remboursé', color: 'text-orange-400' },
+                };
+                const statusInfo = statusLabels[payment.status] || { label: payment.status, color: 'text-gray-400' };
+                
                 return (
                   <div
-                    key={purchase.id}
+                    key={payment.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-black/40"
                   >
                     <div>
                       <p className="text-white font-medium">
-                        {module?.title || 'Module inconnu'}
+                        {getLicenseLabel(payment.license_type)}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {new Date(purchase.created_at).toLocaleDateString('fr-FR')} •{' '}
-                        {purchase.status}
+                        {new Date(payment.created_at).toLocaleDateString('fr-FR')} •{' '}
+                        <span className={statusInfo.color}>{statusInfo.label}</span>
                       </p>
                     </div>
                     <p className="text-white font-semibold">
-                      {purchase.amount ? `${(purchase.amount / 100).toFixed(2)} €` : '-'}
+                      {payment.amount ? `${(payment.amount / 100).toFixed(2)} €` : '-'}
                     </p>
                   </div>
                 );
               })}
-              {purchases.length === 0 && (
+              {payments.length === 0 && (
                 <p className="text-gray-400 text-sm">Aucun paiement</p>
               )}
             </div>

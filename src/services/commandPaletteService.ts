@@ -6,7 +6,7 @@
 import { listProfiles } from './profilesService';
 import { listLeads } from './leadsService';
 import { getModules } from './trainingService';
-import { getPurchasesForAdmin } from './purchasesService';
+import { getPaymentsForAdmin, getLicenseLabel } from './purchasesService';
 
 export type CommandPaletteItem = {
   id: string;

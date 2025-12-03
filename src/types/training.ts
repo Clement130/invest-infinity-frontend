@@ -6,6 +6,7 @@ export type TrainingModule = Tables<'training_modules'>;
 export type TrainingLesson = Tables<'training_lessons'>;
 export type TrainingProgress = Tables<'training_progress'>;
 export type Purchase = Tables<'purchases'>;
+export type Payment = Tables<'payments'>;
 
 export type AccessType = 'full' | 'trial' | 'preview';
 

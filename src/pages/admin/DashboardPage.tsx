@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Users, Video, CreditCard, TrendingUp, TrendingDown, RefreshCw, AlertCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { getModules } from '../../services/trainingService';
 import { listProfiles } from '../../services/profilesService';
-import { getPurchasesForAdmin } from '../../services/purchasesService';
+import { getPaymentsForAdmin } from '../../services/purchasesService';
 import { listLeads } from '../../services/leadsService';
 
 export default function DashboardPage() {
@@ -31,11 +31,11 @@ export default function DashboardPage() {
     refetchOnWindowFocus: false,
   });
 
-  const purchasesQuery = useQuery({
-    queryKey: ['admin', 'purchases'],
+  const paymentsQuery = useQuery({
+    queryKey: ['admin', 'payments'],
     queryFn: () => {
-      console.log('[Dashboard] Chargement des achats...');
-      return getPurchasesForAdmin();
+      console.log('[Dashboard] Chargement des paiements...');
+      return getPaymentsForAdmin();
     },
     staleTime: 2 * 60 * 1000, // 2 minutes (données plus dynamiques)
     gcTime: 10 * 60 * 1000,
@@ -53,17 +53,17 @@ export default function DashboardPage() {
     refetchOnWindowFocus: false,
   });
 
-  const isLoading = modulesQuery.isLoading || profilesQuery.isLoading || purchasesQuery.isLoading || leadsQuery.isLoading;
+  const isLoading = modulesQuery.isLoading || profilesQuery.isLoading || paymentsQuery.isLoading || leadsQuery.isLoading;
   
   // Les services ne lancent plus d'erreurs, donc hasError devrait toujours être false
   // On garde cette logique au cas où, mais normalement elle ne devrait jamais être vraie
-  const hasError = modulesQuery.isError || profilesQuery.isError || purchasesQuery.isError || leadsQuery.isError;
+  const hasError = modulesQuery.isError || profilesQuery.isError || paymentsQuery.isError || leadsQuery.isError;
 
   // Récupération des erreurs individuelles (normalement toujours null maintenant)
   const errors = {
     modules: modulesQuery.error,
     profiles: profilesQuery.error,
-    purchases: purchasesQuery.error,
+    payments: paymentsQuery.error,
     leads: leadsQuery.error,
   };
 
@@ -71,11 +71,11 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     const profiles = profilesQuery.data || [];
     const modules = modulesQuery.data || [];
-    const purchases = purchasesQuery.data || [];
+    const payments = paymentsQuery.data || [];
     const leads = leadsQuery.data || [];
 
-    const completedPurchases = purchases.filter((p) => p.status === 'completed');
-    const totalRevenue = completedPurchases.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
+    const completedPayments = payments.filter((p) => p.status === 'completed' || p.status === 'pending_password');
+    const totalRevenue = completedPayments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
 
     // Calcul des tendances (comparaison avec période précédente simulée)
     const activeModules = modules.filter((m) => m.is_active).length;

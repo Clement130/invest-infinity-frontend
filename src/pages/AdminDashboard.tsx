@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { useSession } from '../hooks/useSession';
 import { getModules, getAccessList } from '../services/trainingService';
 import { listProfiles } from '../services/profilesService';
-import { getPurchasesForAdmin } from '../services/purchasesService';
+import { getPaymentsForAdmin } from '../services/purchasesService';
 import type { Profile } from '../services/profilesService';
 import type { TrainingModule } from '../types/training';
 
-type Tab = 'overview' | 'users' | 'modules' | 'purchases';
+type Tab = 'overview' | 'users' | 'modules' | 'payments';
 
 export default function AdminDashboard() {
   const { user, signOut } = useSession();
@@ -32,28 +32,28 @@ export default function AdminDashboard() {
     queryFn: () => getAccessList(),
   });
 
-  const purchasesQuery = useQuery({
-    queryKey: ['admin', 'purchases'],
-    queryFn: () => getPurchasesForAdmin(),
+  const paymentsQuery = useQuery({
+    queryKey: ['admin', 'payments'],
+    queryFn: () => getPaymentsForAdmin(),
   });
 
   const isLoading =
     modulesQuery.isLoading ||
     profilesQuery.isLoading ||
     accessQuery.isLoading ||
-    purchasesQuery.isLoading;
+    paymentsQuery.isLoading;
 
   const hasError =
     modulesQuery.isError ||
     profilesQuery.isError ||
     accessQuery.isError ||
-    purchasesQuery.isError;
+    paymentsQuery.isError;
 
   const stats = useMemo(() => {
     const modules = modulesQuery.data ?? [];
     const profiles = profilesQuery.data ?? [];
     const accessList = accessQuery.data ?? [];
-    const purchases = purchasesQuery.data ?? [];
+    const payments = paymentsQuery.data ?? [];
 
     const activeModules = modules.filter((m) => m.is_active).length;
     const inactiveModules = modules.length - activeModules;
@@ -61,13 +61,13 @@ export default function AdminDashboard() {
     const clients = profiles.filter((p) => p.role === 'client').length;
     const admins = profiles.filter((p) => p.role === 'admin').length;
 
-    // Calculer le revenu total
-    const totalRevenue = purchases
-      .filter((p) => p.status === 'completed')
+    // Calculer le revenu total (inclure les paiements complétés et en attente de mot de passe)
+    const totalRevenue = payments
+      .filter((p) => p.status === 'completed' || p.status === 'pending_password')
       .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    // Achats par statut
-    const purchasesByStatus = purchases.reduce((acc, p) => {
+    // Paiements par statut
+    const paymentsByStatus = payments.reduce((acc, p) => {
       acc[p.status] = (acc[p.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -76,15 +76,15 @@ export default function AdminDashboard() {
       modules,
       profiles,
       accessList,
-      purchases,
+      payments,
       activeModules,
       inactiveModules,
       clients,
       admins,
       totalRevenue,
-      purchasesByStatus,
+      paymentsByStatus,
     };
-  }, [accessQuery.data, modulesQuery.data, profilesQuery.data, purchasesQuery.data]);
+  }, [accessQuery.data, modulesQuery.data, profilesQuery.data, paymentsQuery.data]);
 
   // Filtrer les profils selon la recherche
   const filteredProfiles = useMemo(() => {
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
             { id: 'overview' as Tab, label: 'Vue d\'ensemble', icon: BarChart3 },
             { id: 'users' as Tab, label: 'Utilisateurs', icon: Users },
             { id: 'modules' as Tab, label: 'Modules', icon: Video },
-            { id: 'purchases' as Tab, label: 'Achats', icon: BarChart3 },
+            { id: 'payments' as Tab, label: 'Paiements', icon: BarChart3 },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -229,16 +229,16 @@ export default function AdminDashboard() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Achats</h3>
+                <h3 className="text-lg font-semibold">Paiements</h3>
                 {isLoading ? (
                   <p className="text-gray-400">Chargement...</p>
                 ) : (
                   <div className="space-y-2 text-gray-300">
                     <p>
-                      Total achats :{' '}
-                      <span className="font-semibold text-white">{stats.purchases.length}</span>
+                      Total paiements :{' '}
+                      <span className="font-semibold text-white">{stats.payments.length}</span>
                     </p>
-                    {Object.entries(stats.purchasesByStatus).map(([status, count]) => (
+                    {Object.entries(stats.paymentsByStatus).map(([status, count]) => (
                       <p key={status}>
                         {status} : <span className="font-semibold text-white">{count}</span>
                       </p>
@@ -361,14 +361,14 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Liste des achats */}
-        {activeTab === 'purchases' && (
+        {/* Liste des paiements */}
+        {activeTab === 'payments' && (
           <div className="space-y-4">
             {isLoading ? (
-              <p className="text-gray-400 text-center py-8">Chargement des achats...</p>
-            ) : stats.purchases.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">Chargement des paiements...</p>
+            ) : stats.payments.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
-                Aucun achat enregistré pour le moment.
+                Aucun paiement enregistré pour le moment.
               </div>
             ) : (
               <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                     <thead className="bg-white/5 border-b border-white/10">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Module
+                          Formule
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                           Utilisateur
@@ -394,33 +394,33 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                      {stats.purchases.map((purchase) => (
-                        <tr key={purchase.id} className="hover:bg-white/5 transition">
+                      {stats.payments.map((payment) => (
+                        <tr key={payment.id} className="hover:bg-white/5 transition">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                            {purchase.module_id}
+                            {payment.license_type || 'Inconnu'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {purchase.user_id?.substring(0, 8)}...
+                            {payment.user_id?.substring(0, 8)}...
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                            {purchase.amount ? `${(purchase.amount / 100).toFixed(2)} €` : '-'}
+                            {payment.amount ? `${(payment.amount / 100).toFixed(2)} €` : '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 py-1 text-xs rounded-full uppercase ${
-                                purchase.status === 'completed'
+                                payment.status === 'completed' || payment.status === 'pending_password'
                                   ? 'bg-emerald-500/20 text-emerald-400'
-                                  : purchase.status === 'pending'
+                                  : payment.status === 'pending'
                                   ? 'bg-yellow-500/20 text-yellow-400'
                                   : 'bg-red-500/20 text-red-400'
                               }`}
                             >
-                              {purchase.status}
+                              {payment.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                            {purchase.created_at
-                              ? new Date(purchase.created_at).toLocaleDateString('fr-FR')
+                            {payment.created_at
+                              ? new Date(payment.created_at).toLocaleDateString('fr-FR')
                               : '-'}
                           </td>
                         </tr>

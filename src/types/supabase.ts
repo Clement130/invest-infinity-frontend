@@ -98,6 +98,50 @@ export type Database = {
           }
         ]
       }
+      payments: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_session_id: string
+          stripe_payment_intent: string | null
+          amount: number | null
+          currency: string
+          status: 'pending' | 'pending_password' | 'completed' | 'failed' | 'refunded'
+          license_type: 'starter' | 'pro' | 'elite' | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_session_id: string
+          stripe_payment_intent?: string | null
+          amount?: number | null
+          currency?: string
+          status?: 'pending' | 'pending_password' | 'completed' | 'failed' | 'refunded'
+          license_type?: 'starter' | 'pro' | 'elite' | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_session_id?: string
+          stripe_payment_intent?: string | null
+          amount?: number | null
+          currency?: string
+          status?: 'pending' | 'pending_password' | 'completed' | 'failed' | 'refunded'
+          license_type?: 'starter' | 'pro' | 'elite' | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       training_access: {
         Row: {
           id: string
