@@ -9,13 +9,32 @@
  * au-dessus de la BottomNav sur mobile.
  */
 
-import { type ReactNode, memo } from 'react';
+import { type ReactNode, memo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import ClientSidebar from '../components/navigation/ClientSidebar';
 import DashboardHeader from '../components/navigation/DashboardHeader';
 import BottomNav from '../components/navigation/BottomNav';
-import { MobileSidebarProvider } from '../context/MobileSidebarContext';
 import { useSession } from '../hooks/useSession';
+
+// Context inline pour éviter les problèmes de bundling
+import { createContext, useContext } from 'react';
+
+interface MobileSidebarContextType {
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+}
+
+const MobileSidebarContext = createContext<MobileSidebarContextType | undefined>(undefined);
+
+export function useMobileSidebar(): MobileSidebarContextType {
+  const context = useContext(MobileSidebarContext);
+  if (context === undefined) {
+    throw new Error('useMobileSidebar doit être utilisé dans MobileSidebarProvider');
+  }
+  return context;
+}
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -120,8 +139,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile } = useSession();
   const themeKey = (profile?.theme as ThemeKey) ?? 'default';
 
+  // State pour le sidebar mobile - inline pour éviter les problèmes de bundling
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const open = useCallback(() => setIsOpen(true), []);
+  const close = useCallback(() => setIsOpen(false), []);
+  const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+
+  const sidebarValue: MobileSidebarContextType = { isOpen, open, close, toggle };
+
   return (
-    <MobileSidebarProvider>
+    <MobileSidebarContext.Provider value={sidebarValue}>
       <div className="flex min-h-screen bg-black text-white overflow-hidden">
         {/* Animated Background - ne se re-render jamais */}
         <AnimatedBackground themeKey={themeKey} />
@@ -146,6 +173,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Bottom Navigation - Mobile uniquement */}
         <BottomNav />
       </div>
-    </MobileSidebarProvider>
+    </MobileSidebarContext.Provider>
   );
 }

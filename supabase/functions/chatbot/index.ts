@@ -428,43 +428,51 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 4. Vérifier l'authentification et récupérer les infos utilisateur
+    // 4. Vérifier l'authentification et récupérer les infos utilisateur (OPTIONNEL)
     const authHeader = req.headers.get('Authorization');
     let userRole: ChatbotUserRole = 'prospect';
     let userContext: ChatbotContext = context || { userRole: 'prospect' };
 
-    if (authHeader) {
+    // Authentification optionnelle - ne pas bloquer si pas de token
+    if (authHeader && authHeader !== 'Bearer ' && authHeader !== 'Bearer') {
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (token && token.length > 10) {
+        try {
+          const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
-      if (!authError && user) {
-        // Récupérer le profil utilisateur pour avoir le rôle et la licence
-        const { data: profile } = await supabaseAdmin
-          .from('profiles')
-          .select('role, license, first_name')
-          .eq('id', user.id)
-          .single();
+          if (!authError && user) {
+            // Récupérer le profil utilisateur pour avoir le rôle et la licence
+            const { data: profile } = await supabaseAdmin
+              .from('profiles')
+              .select('role, license, first_name')
+              .eq('id', user.id)
+              .single();
 
-        if (profile) {
-          // Déterminer le rôle pour le chatbot
-          if (profile.role === 'admin') {
-            userRole = 'admin';
-          } else if (profile.license && profile.license !== 'none') {
-            userRole = 'client';
-          } else {
-            userRole = 'prospect';
+            if (profile) {
+              // Déterminer le rôle pour le chatbot
+              if (profile.role === 'admin') {
+                userRole = 'admin';
+              } else if (profile.license && profile.license !== 'none') {
+                userRole = 'client';
+              } else {
+                userRole = 'prospect';
+              }
+
+              // Enrichir le contexte avec les infos serveur (plus fiables)
+              userContext = {
+                userRole,
+                userName: profile.first_name || undefined,
+                userEmail: user.email || undefined,
+                customerOffers: profile.license && profile.license !== 'none' ? [profile.license] : undefined,
+                ...context, // Garder les éventuelles infos supplémentaires du frontend
+              };
+              // S'assurer que le rôle serveur prend le dessus
+              userContext.userRole = userRole;
+            }
           }
-
-          // Enrichir le contexte avec les infos serveur (plus fiables)
-          userContext = {
-            userRole,
-            userName: profile.first_name || undefined,
-            userEmail: user.email || undefined,
-            customerOffers: profile.license && profile.license !== 'none' ? [profile.license] : undefined,
-            ...context, // Garder les éventuelles infos supplémentaires du frontend
-          };
-          // S'assurer que le rôle serveur prend le dessus
-          userContext.userRole = userRole;
+        } catch (authErr) {
+          // Ignorer les erreurs d'authentification - continuer en mode prospect
+          console.log('Auth check failed, continuing as prospect:', authErr);
         }
       }
     }

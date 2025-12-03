@@ -30,7 +30,7 @@ import { useRef, useEffect, memo, useCallback } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { useQuery } from '@tanstack/react-query';
 import { getUserStats } from '../../services/memberStatsService';
-import { useMobileSidebar } from '../../context/MobileSidebarContext';
+import { useMobileSidebar } from '../../layouts/DashboardLayout';
 import clsx from 'clsx';
 
 interface NavItem {

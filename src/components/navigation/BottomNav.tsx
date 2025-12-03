@@ -20,7 +20,7 @@ import {
   Menu,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useMobileSidebar } from '../../context/MobileSidebarContext';
+import { useMobileSidebar } from '../../layouts/DashboardLayout';
 
 interface NavItem {
   label: string;
