@@ -5,7 +5,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      // Babel pour une meilleure compatibilité mobile (iOS Safari)
+      babel: {
+        plugins: [],
+      },
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -78,10 +83,20 @@ export default defineConfig({
       },
     }),
   ],
+  // Target ES2017 pour dev aussi (compatibilité mobile)
+  esbuild: {
+    target: 'es2017',
+  },
   optimizeDeps: {
     exclude: ['lucide-react'],
+    // Forcer esbuild à cibler ES2017 pour les dépendances
+    esbuildOptions: {
+      target: 'es2017',
+    },
   },
   build: {
+    // Target ES2017 pour compatibilité iOS Safari 12+
+    target: ['es2017', 'chrome64', 'firefox60', 'safari12', 'edge79'],
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
