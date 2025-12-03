@@ -5,7 +5,7 @@
  * (Événements, Partenariats, etc.) non visibles dans la bottom nav.
  */
 
-import * as React from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 interface MobileSidebarContextType {
   isOpen: boolean;
@@ -14,29 +14,43 @@ interface MobileSidebarContextType {
   toggle: () => void;
 }
 
-const MobileSidebarContext = React.createContext<MobileSidebarContextType | undefined>(undefined);
+const MobileSidebarContext = createContext<MobileSidebarContextType | undefined>(undefined);
 
-export function MobileSidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = React.useState(false);
+export function MobileSidebarProvider({ children }: { children: ReactNode }) {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const open = React.useCallback(() => setIsOpen(true), []);
-  const close = React.useCallback(() => setIsOpen(false), []);
-  const toggle = React.useCallback(() => setIsOpen((prev: boolean) => !prev), []);
+  const open = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const toggle = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const value: MobileSidebarContextType = {
+    isOpen,
+    open,
+    close,
+    toggle,
+  };
 
   return (
-    <MobileSidebarContext.Provider value={{ isOpen, open, close, toggle }}>
+    <MobileSidebarContext.Provider value={value}>
       {children}
     </MobileSidebarContext.Provider>
   );
 }
 
-export function useMobileSidebar() {
-  const context = React.useContext(MobileSidebarContext);
+export function useMobileSidebar(): MobileSidebarContextType {
+  const context = useContext(MobileSidebarContext);
   
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useMobileSidebar doit être utilisé dans MobileSidebarProvider');
   }
   
   return context;
 }
-
