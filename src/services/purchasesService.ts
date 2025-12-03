@@ -3,6 +3,11 @@ import type { Payment } from '../types/training';
 
 // Libellés pour les types de licence
 const LICENSE_LABELS: Record<string, string> = {
+  // Anciens noms de licence (dans la base)
+  entree: 'Starter (Entrée)',
+  transformation: 'Pro (Transformation)',
+  immersion: 'Elite (Immersion)',
+  // Nouveaux noms (pour compatibilité)
   starter: 'Starter (Entrée)',
   pro: 'Pro (Transformation)',
   elite: 'Elite (Immersion)',
