@@ -11,14 +11,14 @@ const services = [
     icon: Bell,
     title: 'Alertes Trading',
     description:
-      'Reçois des alertes de trading chaque jours grâce aux analyses de nos experts pour saisir les meilleures opportunités du marché.',
+      'Reçois des alertes de trading chaque jour grâce aux analyses de nos experts pour saisir les meilleures opportunités du marché.',
     image: '/images/services/alertes.png',
     stats: [
       { value: '3', label: 'Risk/Reward moyen' },
       { value: '1', label: 'Positions par jours' },
     ],
     features: [
-      'Alertes précises et facile à prendre',
+      'Alertes précises et faciles à prendre',
       'Notifications en temps réel',
       'Risk management sérieux',
       'Track record (suivis des performances)',
@@ -160,7 +160,7 @@ export default function Services({ onOpenRegister }: ServicesProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-            Une communautée créée
+            Une communauté créée
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-500 mt-2">
               pour ta réussite
             </span>

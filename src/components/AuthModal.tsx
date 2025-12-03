@@ -291,6 +291,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="email"
+                        autoComplete="email"
                         value={loginData.email}
                         onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
                         required
@@ -308,6 +309,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="password"
+                        autoComplete="current-password"
                         value={loginData.password}
                         onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                         required

@@ -247,12 +247,40 @@ export async function getSecureEmbedUrl(
   videoId: string,
   expiryHours: number = 24
 ): Promise<string> {
-  // Récupérer le token d'authentification
+  // Récupérer le token d'authentification avec refresh automatique si expiré
   const { supabase } = await import('../lib/supabaseClient');
-  const { data: { session } } = await supabase.auth.getSession();
+  
+  // D'abord essayer de rafraîchir la session si nécessaire
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error('[BunnyStream] Erreur de session:', sessionError);
+    throw new Error('Erreur de session. Veuillez vous reconnecter.');
+  }
 
   if (!session) {
     throw new Error('Vous devez être connecté pour accéder aux vidéos');
+  }
+  
+  // Vérifier si le token est proche de l'expiration (moins de 5 minutes)
+  const expiresAt = session.expires_at;
+  const now = Math.floor(Date.now() / 1000);
+  const timeUntilExpiry = expiresAt ? expiresAt - now : 0;
+  
+  let accessToken = session.access_token;
+  
+  // Si le token expire dans moins de 5 minutes, le rafraîchir
+  if (timeUntilExpiry < 300) {
+    console.log('[BunnyStream] Token proche de l\'expiration, rafraîchissement...');
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+    
+    if (refreshError || !refreshData.session) {
+      console.error('[BunnyStream] Erreur de rafraîchissement:', refreshError);
+      throw new Error('Session expirée. Veuillez vous reconnecter.');
+    }
+    
+    accessToken = refreshData.session.access_token;
+    console.log('[BunnyStream] Token rafraîchi avec succès');
   }
 
   const functionsBaseUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL ??
@@ -263,7 +291,7 @@ export async function getSecureEmbedUrl(
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${session.access_token}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
