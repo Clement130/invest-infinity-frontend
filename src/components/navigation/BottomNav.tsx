@@ -4,6 +4,7 @@
  * Caractéristiques :
  * - Visible uniquement sur mobile (< lg)
  * - 5 icônes + labels pour accès rapide aux sections principales
+ * - Bouton "Plus" pour ouvrir le sidebar complet (Événements, Partenariats, etc.)
  * - Zone de clic min 48px de hauteur
  * - Safe area padding pour iPhone avec notch
  * - Ne chevauche pas le chatbot (chatbot décalé au-dessus)
@@ -16,18 +17,21 @@ import {
   BookOpen,
   TrendingUp,
   Target,
-  Settings,
+  Menu,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { openMobileSidebar } from './ClientSidebar';
 
 interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  path: string;
+  path?: string;
+  action?: 'openSidebar';
   badge?: number;
 }
 
 // 5 items max pour une bottom nav efficace
+// Le dernier item "Plus" ouvre le sidebar avec tous les onglets
 const navItems: NavItem[] = [
   {
     label: 'Dashboard',
@@ -51,9 +55,9 @@ const navItems: NavItem[] = [
     badge: 2,
   },
   {
-    label: 'Compte',
-    icon: Settings,
-    path: '/app/settings',
+    label: 'Plus',
+    icon: Menu,
+    action: 'openSidebar',
   },
 ];
 
@@ -68,8 +72,12 @@ function BottomNav() {
     return location.pathname.startsWith(path);
   }, [location.pathname]);
 
-  const handleNavClick = useCallback((path: string) => {
-    navigate(path);
+  const handleNavClick = useCallback((item: NavItem) => {
+    if (item.action === 'openSidebar') {
+      openMobileSidebar();
+    } else if (item.path) {
+      navigate(item.path);
+    }
   }, [navigate]);
 
   return (
@@ -84,13 +92,13 @@ function BottomNav() {
       >
         <div className="flex items-center justify-around px-2">
           {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
+              const Icon = item.icon;
+              const active = item.path ? isActive(item.path) : false;
 
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNavClick(item.path)}
+              return (
+                <button
+                  key={item.path || item.action}
+                  onClick={() => handleNavClick(item)}
                 className={clsx(
                   'flex flex-col items-center justify-center py-2 px-3 min-w-[64px] min-h-[56px] rounded-xl transition-all duration-200 relative',
                   'active:scale-95', // Feedback tactile

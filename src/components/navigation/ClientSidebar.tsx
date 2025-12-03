@@ -67,16 +67,16 @@ const navItems: NavItem[] = [
     gradient: 'from-orange-500 to-amber-500',
   },
   {
-    label: 'Événements',
-    icon: Calendar,
-    path: '/app/events',
-    gradient: 'from-purple-500 to-violet-500',
-  },
-  {
     label: 'Partenariats',
     icon: Handshake,
     path: '/app/partnerships',
     gradient: 'from-amber-500 to-orange-500',
+  },
+  {
+    label: 'Événements',
+    icon: Calendar,
+    path: '/app/events',
+    gradient: 'from-purple-500 to-violet-500',
   },
 ];
 
@@ -99,22 +99,25 @@ const sidebarVariants = {
   },
 };
 
-// Export pour permettre l'ouverture du drawer depuis l'extérieur (BottomNav)
-export const useMobileSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  return {
-    isOpen,
-    open: () => setIsOpen(true),
-    close: () => setIsOpen(false),
-    toggle: () => setIsOpen(prev => !prev),
-  };
-};
+// Événement global pour ouvrir le sidebar mobile (évite les problèmes de contexte React)
+const OPEN_SIDEBAR_EVENT = 'openMobileSidebar';
+
+export function openMobileSidebar() {
+  window.dispatchEvent(new CustomEvent(OPEN_SIDEBAR_EVENT));
+}
 
 function ClientSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signOut } = useSession();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Écouter l'événement global pour ouvrir le sidebar
+  useEffect(() => {
+    const handleOpen = () => setIsMobileOpen(true);
+    window.addEventListener(OPEN_SIDEBAR_EVENT, handleOpen);
+    return () => window.removeEventListener(OPEN_SIDEBAR_EVENT, handleOpen);
+  }, []);
 
   // Track if this is the initial mount to prevent animations on subsequent renders
   const isInitialMount = useRef(true);
