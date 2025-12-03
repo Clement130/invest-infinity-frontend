@@ -87,10 +87,10 @@ export default function DashboardPage() {
     // Revenus des 30 derniers jours
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentPurchases = completedPurchases.filter(
+    const recentPayments = completedPayments.filter(
       (p) => new Date(p.created_at) >= thirtyDaysAgo
     );
-    const recentRevenue = recentPurchases.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
+    const recentRevenue = recentPayments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
 
     return {
       totalUsers: profiles.length,
@@ -98,8 +98,8 @@ export default function DashboardPage() {
       totalAdmins: admins,
       totalModules: modules.length,
       activeModules,
-      totalPurchases: purchases.length,
-      completedPurchases: completedPurchases.length,
+      totalPurchases: payments.length,
+      completedPurchases: completedPayments.length,
       totalRevenue,
       recentRevenue,
       totalLeads: leads.length,
@@ -107,12 +107,12 @@ export default function DashboardPage() {
       conversionRate: leads.length > 0 ? ((convertedLeads / leads.length) * 100).toFixed(1) : '0',
       totalCapital,
     };
-  }, [profilesQuery.data, modulesQuery.data, purchasesQuery.data, leadsQuery.data]);
+  }, [profilesQuery.data, modulesQuery.data, paymentsQuery.data, leadsQuery.data]);
 
   const handleRefresh = () => {
     modulesQuery.refetch();
     profilesQuery.refetch();
-    purchasesQuery.refetch();
+    paymentsQuery.refetch();
     leadsQuery.refetch();
   };
 
@@ -176,20 +176,20 @@ export default function DashboardPage() {
               </button>
             </div>
           )}
-          {errors.purchases && (
+          {errors.payments && (
             <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-red-200">Erreur lors du chargement des achats</p>
+                  <p className="text-sm font-medium text-red-200">Erreur lors du chargement des paiements</p>
                   <p className="text-xs text-red-300/80 mt-1">
-                    {errors.purchases instanceof Error ? errors.purchases.message : 'Erreur inconnue'}
+                    {errors.payments instanceof Error ? errors.payments.message : 'Erreur inconnue'}
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => purchasesQuery.refetch()}
-                disabled={purchasesQuery.isLoading}
+                onClick={() => paymentsQuery.refetch()}
+                disabled={paymentsQuery.isLoading}
                 className="px-3 py-1.5 text-xs rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-200 transition disabled:opacity-50"
               >
                 Réessayer
@@ -286,7 +286,7 @@ export default function DashboardPage() {
 
       {/* Activités récentes */}
       <RecentActivity
-        purchases={purchasesQuery.data || []}
+        purchases={paymentsQuery.data || []}
         leads={leadsQuery.data || []}
         isLoading={isLoading}
       />
