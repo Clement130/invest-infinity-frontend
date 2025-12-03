@@ -9,32 +9,12 @@
  * au-dessus de la BottomNav sur mobile.
  */
 
-import { type ReactNode, memo, useState, useCallback } from 'react';
+import { type ReactNode, memo } from 'react';
 import { motion } from 'framer-motion';
 import ClientSidebar from '../components/navigation/ClientSidebar';
 import DashboardHeader from '../components/navigation/DashboardHeader';
 import BottomNav from '../components/navigation/BottomNav';
 import { useSession } from '../hooks/useSession';
-
-// Context inline pour éviter les problèmes de bundling
-import { createContext, useContext } from 'react';
-
-interface MobileSidebarContextType {
-  isOpen: boolean;
-  open: () => void;
-  close: () => void;
-  toggle: () => void;
-}
-
-const MobileSidebarContext = createContext<MobileSidebarContextType | undefined>(undefined);
-
-export function useMobileSidebar(): MobileSidebarContextType {
-  const context = useContext(MobileSidebarContext);
-  if (context === undefined) {
-    throw new Error('useMobileSidebar doit être utilisé dans MobileSidebarProvider');
-  }
-  return context;
-}
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -133,46 +113,38 @@ const AnimatedBackground = memo(function AnimatedBackground({ themeKey }: { them
 });
 
 // Composants mémorisés pour éviter les re-renders
+const MemoizedSidebar = memo(ClientSidebar);
 const MemoizedHeader = memo(DashboardHeader);
+const MemoizedBottomNav = memo(BottomNav);
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile } = useSession();
   const themeKey = (profile?.theme as ThemeKey) ?? 'default';
 
-  // State pour le sidebar mobile - inline pour éviter les problèmes de bundling
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const open = useCallback(() => setIsOpen(true), []);
-  const close = useCallback(() => setIsOpen(false), []);
-  const toggle = useCallback(() => setIsOpen(prev => !prev), []);
-
-  const sidebarValue: MobileSidebarContextType = { isOpen, open, close, toggle };
-
   return (
-    <MobileSidebarContext.Provider value={sidebarValue}>
-      <div className="flex min-h-screen bg-black text-white overflow-hidden">
-        {/* Animated Background - ne se re-render jamais */}
-        <AnimatedBackground themeKey={themeKey} />
+    <div className="flex min-h-screen bg-black text-white overflow-hidden">
+      {/* Animated Background - ne se re-render jamais */}
+      <AnimatedBackground themeKey={themeKey} />
 
-        {/* Sidebar - Desktop uniquement (géré dans ClientSidebar) */}
-        <ClientSidebar />
+      {/* Sidebar - Desktop uniquement (géré dans ClientSidebar) */}
+      <MemoizedSidebar />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
-          {/* Header - reste statique lors des navigations */}
-          <MemoizedHeader />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
+        {/* Header - reste statique lors des navigations */}
+        <MemoizedHeader />
 
-          {/* Content - seule partie qui change */}
-          {/* Padding augmenté sur mobile pour éviter le rognage */}
-          <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 overflow-x-hidden overflow-y-auto">
-            <div className="max-w-7xl mx-auto w-full">
-              {children}
-            </div>
-          </main>
-        </div>
-
-        {/* Bottom Navigation - Mobile uniquement */}
-        <BottomNav />
+        {/* Content - seule partie qui change */}
+        {/* Padding augmenté sur mobile pour éviter le rognage */}
+        <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 overflow-x-hidden overflow-y-auto">
+          <div className="max-w-7xl mx-auto w-full">
+            {children}
+          </div>
+        </main>
       </div>
-    </MobileSidebarContext.Provider>
+
+      {/* Bottom Navigation - Mobile uniquement */}
+      <MemoizedBottomNav />
+    </div>
   );
 }
