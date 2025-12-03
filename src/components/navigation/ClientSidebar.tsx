@@ -68,16 +68,16 @@ const navItems: NavItem[] = [
     gradient: 'from-orange-500 to-amber-500',
   },
   {
-    label: 'Événements',
-    icon: Calendar,
-    path: '/app/events',
-    gradient: 'from-purple-500 to-violet-500',
-  },
-  {
     label: 'Partenariats',
     icon: Handshake,
     path: '/app/partnerships',
     gradient: 'from-amber-500 to-orange-500',
+  },
+  {
+    label: 'Événements',
+    icon: Calendar,
+    path: '/app/events',
+    gradient: 'from-purple-500 to-violet-500',
   },
 ];
 
