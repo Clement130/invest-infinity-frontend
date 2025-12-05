@@ -21,7 +21,8 @@ export async function getStripePrices(): Promise<Record<string, string>> {
       .eq('is_active', true);
 
     if (error) {
-      console.error('Error fetching Stripe prices:', error);
+      // Gérer les erreurs CORS et autres erreurs réseau gracieusement
+      console.warn('Error fetching Stripe prices (using fallback):', error.message || error);
       // Fallback vers les valeurs hardcodées en cas d'erreur
       return {
         entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V',
@@ -30,14 +31,37 @@ export async function getStripePrices(): Promise<Record<string, string>> {
       };
     }
 
+    // Vérifier que les données sont valides
+    if (!data || data.length === 0) {
+      console.warn('No Stripe prices found in database (using fallback)');
+      return {
+        entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V',
+        transformation: 'price_1SYloMKaUb6KDbNFAF6XfNvI',
+        immersion: 'price_1SYkswKaUb6KDbNFvwoV35RW',
+      };
+    }
+
     const prices: Record<string, string> = {};
-    data?.forEach((price) => {
-      prices[price.plan_type] = price.stripe_price_id;
+    data.forEach((price) => {
+      // Ne pas utiliser les placeholders
+      if (price.stripe_price_id && !price.stripe_price_id.includes('PLACEHOLDER')) {
+        prices[price.plan_type] = price.stripe_price_id;
+      }
     });
+
+    // S'assurer que tous les prix sont présents, sinon utiliser fallback
+    if (!prices.entree || !prices.transformation || !prices.immersion) {
+      console.warn('Some Stripe prices missing, using fallback for missing ones');
+      return {
+        entree: prices.entree || 'price_1SYkswKaUb6KDbNFvH1x4v0V',
+        transformation: prices.transformation || 'price_1SYloMKaUb6KDbNFAF6XfNvI',
+        immersion: prices.immersion || 'price_1SYkswKaUb6KDbNFvwoV35RW',
+      };
+    }
 
     return prices;
   } catch (error) {
-    console.error('Error in getStripePrices:', error);
+    console.warn('Exception in getStripePrices (using fallback):', error);
     // Fallback vers les valeurs hardcodées
     return {
       entree: 'price_1SYkswKaUb6KDbNFvH1x4v0V',

@@ -26,8 +26,15 @@ export async function getLicenseStatus(): Promise<LicenseStatus | null> {
     .maybeSingle();
 
   if (error) {
-    console.error('Erreur lors de la récupération du statut de la licence:', error);
-    throw error;
+    // Si erreur d'autorisation (RLS), retourner null au lieu de throw
+    // pour permettre au code de continuer sans bloquer l'application
+    if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+      console.warn('Accès à developer_license refusé (RLS):', error.message);
+      return null;
+    }
+    // Pour les autres erreurs (réseau, etc.), loguer mais ne pas bloquer
+    console.warn('Erreur lors de la récupération du statut de la licence:', error);
+    return null;
   }
 
   return data;

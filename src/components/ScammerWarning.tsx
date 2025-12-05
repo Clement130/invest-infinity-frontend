@@ -34,8 +34,11 @@ export default function ScammerWarning() {
         if (now >= deadline) {
           setShowWarning(true);
         }
-      } catch (error) {
-        console.error('Erreur lors de la vérification de la licence:', error);
+      } catch (error: any) {
+        // Gérer gracieusement les erreurs d'accès (RLS, CORS, etc.)
+        // Ne pas afficher le warning si on ne peut pas vérifier la licence
+        console.warn('Impossible de vérifier la licence (accès restreint):', error?.message || error);
+        setShowWarning(false);
       } finally {
         setIsLoading(false);
       }
