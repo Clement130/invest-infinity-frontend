@@ -15,6 +15,12 @@ export type DataTableState<T> = {
   selectedRows: Set<string | number>;
 };
 
+/**
+ * Fonction de tri personnalisée pour une colonne
+ * Retourne un nombre négatif si a < b, positif si a > b, 0 si égaux
+ */
+export type CustomSortFn<T> = (a: T, b: T, direction: 'asc' | 'desc') => number;
+
 export type UseDataTableOptions<T> = {
   data: T[];
   pageSize?: number;
@@ -23,6 +29,12 @@ export type UseDataTableOptions<T> = {
   searchableColumns?: (keyof T)[];
   persistState?: boolean;
   storageKey?: string;
+  /**
+   * Fonctions de tri personnalisées par colonne
+   * Permet d'implémenter un tri métier (ex: tri par priorité d'abonnement)
+   * plutôt qu'un tri alphabétique standard
+   */
+  customSortFns?: Partial<Record<keyof T, CustomSortFn<T>>>;
 };
 
 export function useDataTable<T extends Record<string, any>>({
@@ -33,6 +45,7 @@ export function useDataTable<T extends Record<string, any>>({
   searchableColumns,
   persistState = false,
   storageKey = 'datatable-state',
+  customSortFns,
 }: UseDataTableOptions<T>) {
   const [state, setState] = useState<DataTableState<T>>(() => {
     if (persistState) {
@@ -98,9 +111,20 @@ export function useDataTable<T extends Record<string, any>>({
       return filteredData;
     }
 
+    const sortColumn = state.sort.column;
+    const sortDirection = state.sort.direction;
+    
+    // Vérifier si une fonction de tri personnalisée existe pour cette colonne
+    const customSortFn = customSortFns?.[sortColumn];
+
     return [...filteredData].sort((a, b) => {
-      const aValue = a[state.sort.column!];
-      const bValue = b[state.sort.column!];
+      // Utiliser la fonction de tri personnalisée si disponible
+      if (customSortFn) {
+        return customSortFn(a, b, sortDirection);
+      }
+
+      const aValue = a[sortColumn];
+      const bValue = b[sortColumn];
 
       // Gérer les valeurs null/undefined
       if (aValue == null && bValue == null) return 0;
@@ -109,20 +133,20 @@ export function useDataTable<T extends Record<string, any>>({
 
       // Comparaison numérique
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return state.sort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
-      // Comparaison de chaînes
+      // Comparaison de chaînes (tri alphabétique par défaut)
       const aStr = String(aValue).toLowerCase();
       const bStr = String(bValue).toLowerCase();
 
-      if (state.sort.direction === 'asc') {
+      if (sortDirection === 'asc') {
         return aStr.localeCompare(bStr, 'fr');
       } else {
         return bStr.localeCompare(aStr, 'fr');
       }
     });
-  }, [filteredData, state.sort]);
+  }, [filteredData, state.sort, customSortFns]);
 
   // Pagination
   const paginatedData = useMemo(() => {

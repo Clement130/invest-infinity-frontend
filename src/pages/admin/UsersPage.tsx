@@ -8,9 +8,74 @@ import { getProgressSummary } from '../../services/progressService';
 import { getModules } from '../../services/trainingService';
 import type { Profile } from '../../services/profilesService';
 import DataTable, { type Column } from '../../components/admin/DataTable';
+import type { CustomSortFn } from '../../hooks/useDataTable';
 import toast from 'react-hot-toast';
+import {
+  getSubscriptionWeight,
+  getSubscriptionLabel,
+  getSubscriptionColor,
+  isEliteLicense,
+  hasLicenseAccess,
+  profileToSystemLicense,
+} from '../../utils/subscriptionUtils';
 
 type FilterType = 'all' | 'client' | 'admin' | 'with-access' | 'without-access';
+
+/**
+ * Type étendu pour les données du tableau avec le nombre de formations
+ */
+type UserTableRow = Profile & { 
+  /** Nombre de formations/modules accessibles (basé sur licence + accès explicites) */
+  formationsCount: number;
+};
+
+/**
+ * Calcule le nombre de formations accessibles pour un utilisateur
+ * 
+ * LOGIQUE DE CALCUL :
+ * 1. Compte les modules auxquels l'utilisateur a accès via sa licence (required_license)
+ * 2. Ajoute les modules avec accès explicite dans training_access (si pas déjà comptés)
+ * 
+ * La source de vérité combine :
+ * - La table `training_modules` avec le champ `required_license`
+ * - La table `training_access` pour les accès explicites
+ * - La licence de l'utilisateur dans son profil
+ */
+function calculateFormationsCount(
+  userLicense: string | null | undefined,
+  userId: string,
+  modules: { id: string; required_license?: string | null }[],
+  accessList: { user_id: string; module_id: string }[]
+): number {
+  // Set pour éviter les doublons
+  const accessibleModuleIds = new Set<string>();
+  
+  // 1. Modules accessibles via la licence de l'utilisateur
+  // Convertir la licence profile en licence système pour la comparaison
+  const userSystemLicense = profileToSystemLicense(userLicense);
+  
+  if (userSystemLicense !== 'none') {
+    modules.forEach(module => {
+      // Les modules utilisent 'starter', 'pro', 'elite' dans required_license
+      const moduleRequiredLicense = module.required_license || 'starter';
+      
+      // Vérifier si la licence utilisateur permet l'accès à ce module
+      if (hasLicenseAccess(userSystemLicense, moduleRequiredLicense)) {
+        accessibleModuleIds.add(module.id);
+      }
+    });
+  }
+  
+  // 2. Ajouter les modules avec accès explicite dans training_access
+  // (même si l'utilisateur n'a pas de licence, il peut avoir des accès spécifiques)
+  accessList
+    .filter(access => access.user_id === userId)
+    .forEach(access => {
+      accessibleModuleIds.add(access.module_id);
+    });
+  
+  return accessibleModuleIds.size;
+}
 
 export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<FilterType>('all');
@@ -26,6 +91,12 @@ export default function UsersPage() {
     queryFn: () => getAccessList(),
   });
 
+  // Récupérer tous les modules pour calculer les formations accessibles
+  const { data: modules = [] } = useQuery({
+    queryKey: ['admin', 'modules'],
+    queryFn: () => getModules({ includeInactive: false }),
+  });
+
   const filteredProfiles = useMemo(() => {
     let filtered = profiles;
 
@@ -35,17 +106,31 @@ export default function UsersPage() {
     } else if (roleFilter === 'admin') {
       filtered = filtered.filter((p) => p.role === 'admin');
     } else if (roleFilter === 'with-access') {
-      const usersWithAccess = new Set(accessList.map((a) => a.user_id));
-      filtered = filtered.filter((p) => usersWithAccess.has(p.id));
+      // Un utilisateur a accès s'il a une licence active OU des accès explicites
+      filtered = filtered.filter((p) => {
+        const hasLicense = p.license && p.license !== 'none';
+        const hasExplicitAccess = accessList.some((a) => a.user_id === p.id);
+        return hasLicense || hasExplicitAccess;
+      });
     } else if (roleFilter === 'without-access') {
-      const usersWithAccess = new Set(accessList.map((a) => a.user_id));
-      filtered = filtered.filter((p) => !usersWithAccess.has(p.id));
+      // Un utilisateur n'a pas d'accès s'il n'a ni licence ni accès explicites
+      filtered = filtered.filter((p) => {
+        const hasLicense = p.license && p.license !== 'none';
+        const hasExplicitAccess = accessList.some((a) => a.user_id === p.id);
+        return !hasLicense && !hasExplicitAccess;
+      });
     }
 
     return filtered;
   }, [profiles, roleFilter, accessList]);
 
-  const columns: Column<Profile & { accessCount: number }>[] = [
+  /**
+   * Définition des colonnes du tableau
+   * 
+   * Note: La colonne 'license' utilise un tri métier (pas alphabétique)
+   * via customSortFns plus bas
+   */
+  const columns: Column<UserTableRow>[] = [
     {
       key: 'email',
       label: 'Email',
@@ -64,29 +149,15 @@ export default function UsersPage() {
       label: 'Abonnement',
       sortable: true,
       render: (value) => {
-        const licenseColors: Record<string, string> = {
-          none: 'bg-gray-500/20 text-gray-400',
-          starter: 'bg-blue-500/20 text-blue-400',
-          entree: 'bg-blue-500/20 text-blue-400',
-          pro: 'bg-purple-500/20 text-purple-400',
-          transformation: 'bg-purple-500/20 text-purple-400',
-          elite: 'bg-amber-500/20 text-amber-400',
-          immersion: 'bg-amber-500/20 text-amber-400',
-        };
-        const licenseLabels: Record<string, string> = {
-          none: 'Aucun',
-          starter: 'Starter',
-          entree: 'Starter',
-          pro: 'Pro',
-          transformation: 'Pro',
-          elite: 'Elite',
-          immersion: 'Elite',
-        };
-        const isElite = value === 'elite' || value === 'immersion';
+        // Utilisation des fonctions utilitaires centralisées
+        const colorClass = getSubscriptionColor(value as string);
+        const label = getSubscriptionLabel(value as string);
+        const showCrown = isEliteLicense(value as string);
+        
         return (
-          <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${licenseColors[value as string] || licenseColors.none}`}>
-            {isElite && <Crown className="w-3 h-3" />}
-            {licenseLabels[value as string] || 'Aucun'}
+          <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${colorClass}`}>
+            {showCrown && <Crown className="w-3 h-3" />}
+            {label}
           </span>
         );
       },
@@ -115,14 +186,19 @@ export default function UsersPage() {
         value ? new Date(value).toLocaleDateString('fr-FR') : '-',
     },
     {
-      key: 'accessCount',
+      key: 'formationsCount',
       label: 'Accès',
       sortable: true,
-      render: (value) => (
-        <span className="text-gray-400">
-          {value} formation{Number(value) > 1 ? 's' : ''}
-        </span>
-      ),
+      render: (value) => {
+        // Gestion du pluriel : 0 formation, 1 formation, X formations
+        const count = Number(value) || 0;
+        const label = count <= 1 ? 'formation' : 'formations';
+        return (
+          <span className="text-gray-400">
+            {count} {label}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
@@ -142,13 +218,52 @@ export default function UsersPage() {
     },
   ];
 
-  const tableData = filteredProfiles.map((profile) => {
-    const userAccess = accessList.filter((a) => a.user_id === profile.id);
-    return {
-      ...profile,
-      accessCount: userAccess.length,
-    };
-  });
+  /**
+   * Fonctions de tri personnalisées pour les colonnes
+   * 
+   * La colonne 'license' utilise un tri métier basé sur la hiérarchie :
+   * - Tri ascendant : Aucun (0) → Starter (1) → Pro (2) → Elite (3)
+   * - Tri descendant : Elite (3) → Pro (2) → Starter (1) → Aucun (0)
+   * 
+   * Ce tri n'est PAS alphabétique car le métier requiert cette hiérarchie
+   * spécifique pour une meilleure UX admin.
+   */
+  const customSortFns: Partial<Record<keyof UserTableRow, CustomSortFn<UserTableRow>>> = {
+    license: (a, b, direction) => {
+      const weightA = getSubscriptionWeight(a.license);
+      const weightB = getSubscriptionWeight(b.license);
+      
+      if (direction === 'asc') {
+        return weightA - weightB;
+      }
+      return weightB - weightA;
+    },
+  };
+
+  /**
+   * Préparation des données du tableau
+   * 
+   * Pour chaque profil, on calcule le nombre de formations accessibles
+   * en combinant :
+   * - Les modules accessibles via la licence (required_license)
+   * - Les accès explicites dans training_access
+   */
+  const tableData: UserTableRow[] = useMemo(() => {
+    return filteredProfiles.map((profile) => {
+      // Calculer le nombre de formations accessibles pour cet utilisateur
+      const formationsCount = calculateFormationsCount(
+        profile.license,
+        profile.id,
+        modules,
+        accessList
+      );
+      
+      return {
+        ...profile,
+        formationsCount,
+      };
+    });
+  }, [filteredProfiles, modules, accessList]);
 
   // Stats
   const totalUsers = profiles.length;
@@ -209,6 +324,7 @@ export default function UsersPage() {
           persistState={true}
           storageKey="users-table"
           onRowClick={(row) => setSelectedUser(row)}
+          customSortFns={customSortFns}
         />
       )}
 
