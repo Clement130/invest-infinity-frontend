@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, ChevronDown, ChevronUp, Trash2, GripVertical, ChevronUp as MoveUp, ChevronDown as MoveDown } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, ChevronUp, Trash2, GripVertical } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getModuleWithLessons, deleteModule, createOrUpdateLesson } from '../services/trainingService';
 import { useSession } from '../hooks/useSession';
@@ -184,7 +184,7 @@ function SortableLessonItem({
               className="p-0.5 hover:bg-white/10 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
               title="Monter"
             >
-              <MoveUp className="w-3 h-3 text-gray-500" />
+              <ChevronUp className="w-3 h-3 text-gray-500" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
@@ -192,7 +192,7 @@ function SortableLessonItem({
               className="p-0.5 hover:bg-white/10 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
               title="Descendre"
             >
-              <MoveDown className="w-3 h-3 text-gray-500" />
+              <ChevronDown className="w-3 h-3 text-gray-500" />
             </button>
           </div>
         </div>
