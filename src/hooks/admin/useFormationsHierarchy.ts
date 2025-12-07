@@ -82,7 +82,9 @@ export const useFormationsHierarchy = () => {
 
       const modulesWithLessons: ModuleWithLessons[] = (modulesData || []).map((module: any) => ({
         ...module,
-        lessons: (module.training_lessons || []) as TrainingLesson[],
+        // Trier les leçons par position
+        lessons: ((module.training_lessons || []) as TrainingLesson[])
+          .sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
       }));
 
       // Calculer les statistiques

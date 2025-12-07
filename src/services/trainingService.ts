@@ -202,15 +202,16 @@ export async function getAccessibleModulesForUser(
 export async function createOrUpdateModule(
   payload: Partial<TrainingModule> & { title: string }
 ): Promise<TrainingModule> {
-  const base = {
-    title: payload.title,
-    description: payload.description ?? null,
-    position: payload.position ?? 0,
-    is_active: payload.is_active ?? true,
-    required_license: payload.required_license ?? 'starter',
-  };
-
+  // Pour les mises à jour
   if (payload.id) {
+    const base = {
+      title: payload.title,
+      description: payload.description ?? null,
+      position: payload.position ?? 0,
+      is_active: payload.is_active ?? true,
+      required_license: payload.required_license ?? 'starter',
+    };
+
     const { data, error } = await supabase
       .from('training_modules')
       .update(base)
@@ -225,6 +226,17 @@ export async function createOrUpdateModule(
 
     return data;
   }
+
+  // Pour les créations, assigner automatiquement la prochaine position
+  const nextPosition = payload.position ?? await getNextModulePosition();
+  
+  const base = {
+    title: payload.title,
+    description: payload.description ?? null,
+    position: nextPosition,
+    is_active: payload.is_active ?? true,
+    required_license: payload.required_license ?? 'starter',
+  };
 
   const { data, error } = await supabase
     .from('training_modules')
@@ -267,16 +279,17 @@ export async function deleteModule(id: string): Promise<void> {
 export async function createOrUpdateLesson(
   payload: Partial<TrainingLesson> & { title: string; module_id: string }
 ): Promise<TrainingLesson> {
-  const base = {
-    title: payload.title,
-    module_id: payload.module_id,
-    description: payload.description ?? null,
-    bunny_video_id: payload.bunny_video_id ?? null,
-    position: payload.position ?? 0,
-    is_preview: payload.is_preview ?? false,
-  };
-
+  // Pour les mises à jour
   if (payload.id) {
+    const base = {
+      title: payload.title,
+      module_id: payload.module_id,
+      description: payload.description ?? null,
+      bunny_video_id: payload.bunny_video_id ?? null,
+      position: payload.position ?? 0,
+      is_preview: payload.is_preview ?? false,
+    };
+
     const { data, error } = await supabase
       .from('training_lessons')
       .update(base)
@@ -291,6 +304,18 @@ export async function createOrUpdateLesson(
 
     return data;
   }
+
+  // Pour les créations, assigner automatiquement la prochaine position
+  const nextPosition = payload.position ?? await getNextLessonPosition(payload.module_id);
+  
+  const base = {
+    title: payload.title,
+    module_id: payload.module_id,
+    description: payload.description ?? null,
+    bunny_video_id: payload.bunny_video_id ?? null,
+    position: nextPosition,
+    is_preview: payload.is_preview ?? false,
+  };
 
   const { data, error } = await supabase
     .from('training_lessons')
@@ -372,5 +397,138 @@ export async function revokeAccess(accessId: string): Promise<void> {
     console.error('Erreur lors de la révocation de l\'accès:', error);
     throw error;
   }
+}
+
+/**
+ * Réordonne les modules selon l'ordre des IDs fournis
+ * @param moduleIds - Liste ordonnée des IDs de modules
+ */
+export async function reorderModules(moduleIds: string[]): Promise<void> {
+  console.log('[trainingService] Réordonnancement de', moduleIds.length, 'modules');
+  
+  // Créer les mises à jour avec les nouvelles positions
+  const updates = moduleIds.map((id, index) => ({
+    id,
+    position: index,
+  }));
+
+  // Mettre à jour chaque module avec sa nouvelle position
+  // On utilise Promise.all pour faire les mises à jour en parallèle
+  const results = await Promise.all(
+    updates.map(async ({ id, position }) => {
+      const { error } = await supabase
+        .from('training_modules')
+        .update({ position })
+        .eq('id', id);
+      
+      if (error) {
+        console.error(`Erreur lors de la mise à jour du module ${id}:`, error);
+        throw error;
+      }
+      return { id, position };
+    })
+  );
+
+  console.log('[trainingService] Modules réordonnés avec succès:', results);
+}
+
+/**
+ * Réordonne les leçons d'un module selon l'ordre des IDs fournis
+ * @param moduleId - ID du module parent
+ * @param lessonIds - Liste ordonnée des IDs de leçons
+ */
+export async function reorderLessons(moduleId: string, lessonIds: string[]): Promise<void> {
+  console.log('[trainingService] Réordonnancement de', lessonIds.length, 'leçons pour le module', moduleId);
+  
+  // Créer les mises à jour avec les nouvelles positions
+  const updates = lessonIds.map((id, index) => ({
+    id,
+    position: index,
+  }));
+
+  // Mettre à jour chaque leçon avec sa nouvelle position
+  const results = await Promise.all(
+    updates.map(async ({ id, position }) => {
+      const { error } = await supabase
+        .from('training_lessons')
+        .update({ position })
+        .eq('id', id)
+        .eq('module_id', moduleId); // Sécurité supplémentaire
+      
+      if (error) {
+        console.error(`Erreur lors de la mise à jour de la leçon ${id}:`, error);
+        throw error;
+      }
+      return { id, position };
+    })
+  );
+
+  console.log('[trainingService] Leçons réordonnées avec succès:', results);
+}
+
+/**
+ * Obtient la prochaine position disponible pour un nouveau module
+ */
+export async function getNextModulePosition(): Promise<number> {
+  const { data, error } = await supabase
+    .from('training_modules')
+    .select('position')
+    .order('position', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error('Erreur lors de la récupération de la dernière position:', error);
+    return 0;
+  }
+
+  return data && data.length > 0 ? (data[0].position ?? 0) + 1 : 0;
+}
+
+/**
+ * Obtient la prochaine position disponible pour une nouvelle leçon dans un module
+ */
+export async function getNextLessonPosition(moduleId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('training_lessons')
+    .select('position')
+    .eq('module_id', moduleId)
+    .order('position', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error('Erreur lors de la récupération de la dernière position:', error);
+    return 0;
+  }
+
+  return data && data.length > 0 ? (data[0].position ?? 0) + 1 : 0;
+}
+
+/**
+ * Déplace une leçon vers un autre module
+ */
+export async function moveLessonToModule(
+  lessonId: string, 
+  newModuleId: string,
+  position?: number
+): Promise<TrainingLesson> {
+  // Si position non spécifiée, mettre à la fin
+  const newPosition = position ?? await getNextLessonPosition(newModuleId);
+  
+  const { data, error } = await supabase
+    .from('training_lessons')
+    .update({ 
+      module_id: newModuleId,
+      position: newPosition 
+    })
+    .eq('id', lessonId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erreur lors du déplacement de la leçon:', error);
+    throw error;
+  }
+
+  return data;
 }
 
