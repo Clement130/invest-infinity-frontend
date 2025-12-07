@@ -15,7 +15,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { LessonRow } from './LessonRow';
 import type { TrainingLesson } from '../../../types/training';
 
@@ -33,9 +33,17 @@ interface SortableLessonListProps {
 
 function SortableLessonItem({
   lesson,
+  index,
+  totalLessons,
+  onMoveUp,
+  onMoveDown,
   ...props
 }: {
   lesson: TrainingLesson;
+  index: number;
+  totalLessons: number;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   selectedLessonId?: string;
   selectedLessons?: Set<string>;
   onSelectLesson?: (lessonId: string) => void;
@@ -60,14 +68,36 @@ function SortableLessonItem({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <div className="flex items-center gap-2">
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition"
-        >
-          <GripVertical className="w-4 h-4 text-gray-600" />
+    <div ref={setNodeRef} style={style} className="group">
+      <div className="flex items-center gap-1">
+        {/* Contrôles de réorganisation */}
+        <div className="flex items-center gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition"
+            title="Glisser pour réorganiser"
+          >
+            <GripVertical className="w-4 h-4 text-gray-500" />
+          </div>
+          <div className="flex flex-col">
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+              disabled={index === 0}
+              className="p-0.5 hover:bg-white/10 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Monter"
+            >
+              <ChevronUp className="w-3 h-3 text-gray-500" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+              disabled={index === totalLessons - 1}
+              className="p-0.5 hover:bg-white/10 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Descendre"
+            >
+              <ChevronDown className="w-3 h-3 text-gray-500" />
+            </button>
+          </div>
         </div>
         <div className="flex-1">
           <LessonRow lesson={lesson} {...props} showCheckbox={true} />
@@ -83,7 +113,11 @@ export function SortableLessonList({
   ...props
 }: SortableLessonListProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -108,6 +142,19 @@ export function SortableLessonList({
     }
   };
 
+  const handleMoveLesson = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= lessons.length) return;
+
+    const newLessons = arrayMove(lessons, index, newIndex);
+    const updatedLessons = newLessons.map((lesson, idx) => ({
+      ...lesson,
+      position: idx,
+    }));
+
+    onReorder?.(updatedLessons);
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -119,8 +166,16 @@ export function SortableLessonList({
         strategy={verticalListSortingStrategy}
       >
         <div className="space-y-2">
-          {lessons.map((lesson) => (
-            <SortableLessonItem key={lesson.id} lesson={lesson} {...props} />
+          {lessons.map((lesson, index) => (
+            <SortableLessonItem
+              key={lesson.id}
+              lesson={lesson}
+              index={index}
+              totalLessons={lessons.length}
+              onMoveUp={() => handleMoveLesson(index, 'up')}
+              onMoveDown={() => handleMoveLesson(index, 'down')}
+              {...props}
+            />
           ))}
         </div>
       </SortableContext>

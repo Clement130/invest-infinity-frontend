@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
-import { ModuleSection } from './ModuleSection';
-import type { ModuleWithLessons } from '../../hooks/admin/useFormationsHierarchy';
+import { SortableModuleList } from './SortableModuleList';
+import type { ModuleWithLessons } from '../../../hooks/admin/useFormationsHierarchy';
 import type { TrainingLesson } from '../../../types/training';
 
 interface FormationTreeViewProps {
@@ -19,6 +19,7 @@ interface FormationTreeViewProps {
   onEditModule?: (module: ModuleWithLessons) => void;
   onDeleteModule?: (moduleId: string) => void;
   onReorderLessons?: (lessons: TrainingLesson[]) => void;
+  onReorderModules?: (modules: ModuleWithLessons[]) => void;
 }
 
 export function FormationTreeView({
@@ -37,6 +38,7 @@ export function FormationTreeView({
   onEditModule,
   onDeleteModule,
   onReorderLessons,
+  onReorderModules,
 }: FormationTreeViewProps) {
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const totalVideos = modules.reduce(
@@ -66,7 +68,7 @@ export function FormationTreeView({
         )}
       </div>
 
-      {/* Liste des modules */}
+      {/* Liste des modules avec drag & drop */}
       <div className="space-y-3">
         {modules.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
@@ -82,28 +84,23 @@ export function FormationTreeView({
             )}
           </div>
         ) : (
-          modules.map((module) => (
-            <ModuleSection
-              key={module.id}
-              module={module}
-              lessons={module.lessons}
-              isExpanded={expandedModules.has(module.id)}
-              onToggleExpand={() => {
-                onToggleModule?.(module.id);
-              }}
-              onAddLesson={onAddLesson}
-              onEditModule={onEditModule}
-              onDeleteModule={onDeleteModule}
-              onEditLesson={onEditLesson}
-              onDeleteLesson={onDeleteLesson}
-              onReplaceVideo={onReplaceVideo}
-              onAssignVideo={onAssignVideo}
-              selectedLessonId={selectedLessonId}
-              selectedLessons={selectedLessons}
-              onSelectLesson={onSelectLesson}
-              onReorderLessons={(lessons) => onReorderLessons?.(lessons)}
-            />
-          ))
+          <SortableModuleList
+            modules={modules}
+            selectedLessonId={selectedLessonId}
+            selectedLessons={selectedLessons}
+            expandedModules={expandedModules}
+            onToggleModule={onToggleModule}
+            onSelectLesson={onSelectLesson}
+            onEditLesson={onEditLesson}
+            onDeleteLesson={onDeleteLesson}
+            onReplaceVideo={onReplaceVideo}
+            onAssignVideo={onAssignVideo}
+            onAddLesson={onAddLesson}
+            onEditModule={onEditModule}
+            onDeleteModule={onDeleteModule}
+            onReorderLessons={onReorderLessons}
+            onReorderModules={onReorderModules}
+          />
         )}
       </div>
     </div>

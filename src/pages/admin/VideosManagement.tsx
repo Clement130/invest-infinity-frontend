@@ -208,6 +208,27 @@ export default function VideosManagement() {
     },
   });
 
+  const reorderModulesMutation = useMutation({
+    mutationFn: async (modules: { id: string; position: number }[]) => {
+      // Mettre à jour toutes les positions des modules
+      await Promise.all(
+        modules.map((module) =>
+          createOrUpdateModule({
+            id: module.id,
+            position: module.position,
+          })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+      toast.success('Ordre des modules mis à jour');
+    },
+    onError: (error: any) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
+
   // Handlers
   const handleToggleModule = useCallback((moduleId: string) => {
     setExpandedModules((prev) => {
@@ -343,6 +364,12 @@ export default function VideosManagement() {
     reorderLessonsMutation.mutate(lessons);
   }, [reorderLessonsMutation]);
 
+  const handleReorderModules = useCallback((modules: TrainingModule[]) => {
+    reorderModulesMutation.mutate(
+      modules.map((m) => ({ id: m.id, position: m.position ?? 0 }))
+    );
+  }, [reorderModulesMutation]);
+
   const handleSelectVideoFromLibrary = useCallback((videoId: string) => {
     if (selectedLessonId) {
       updateLessonMutation.mutate({
@@ -451,6 +478,7 @@ export default function VideosManagement() {
                 onEditModule={handleEditModule}
                 onDeleteModule={handleDeleteModule}
                 onReorderLessons={handleReorderLessons}
+                onReorderModules={handleReorderModules}
               />
             </Suspense>
           </div>
