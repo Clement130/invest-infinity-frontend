@@ -364,13 +364,23 @@ function UserDetailModal({
 
   const { data: modules = [] } = useQuery({
     queryKey: ['admin', 'modules'],
-    queryFn: () => getModules({ includeInactive: true }),
+    queryFn: () => getModules({ includeInactive: false }),
   });
 
   const { data: progress } = useQuery({
     queryKey: ['admin', 'progress', user.id],
     queryFn: () => getProgressSummary(user.id),
   });
+
+  // Calculer les modules accessibles via la licence de l'utilisateur
+  const userSystemLicense = profileToSystemLicense(user.license);
+  const modulesAccessibleByLicense = useMemo(() => {
+    if (userSystemLicense === 'none') return [];
+    return modules.filter(module => {
+      const moduleRequiredLicense = module.required_license || 'starter';
+      return hasLicenseAccess(userSystemLicense, moduleRequiredLicense);
+    });
+  }, [modules, userSystemLicense]);
 
   const hasChanges = selectedLicense !== (user.license || 'none') || selectedRole !== user.role;
 
@@ -410,8 +420,8 @@ function UserDetailModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-xl border border-white/10 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+      <div className="bg-slate-900 rounded-xl border border-white/10 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative z-[101]">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-white">{user.full_name || user.email}</h2>
@@ -517,45 +527,85 @@ function UserDetailModal({
           <div className="rounded-lg border border-white/10 bg-white/5 p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Accès aux formations</h3>
-              <span className="text-sm text-gray-400">{accessList.length} accès</span>
+              <span className="text-sm text-gray-400">
+                {modulesAccessibleByLicense.length + accessList.filter(a => !modulesAccessibleByLicense.some(m => m.id === a.module_id)).length} accès
+              </span>
             </div>
             <div className="space-y-2">
-              {accessList.map((access) => {
-                const module = modules.find((m) => m.id === access.module_id);
-                return (
-                  <div
-                    key={access.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-black/40"
-                  >
-                    <div>
-                      <p className="text-white font-medium">
-                        {module?.title || 'Module inconnu'}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Type: {access.access_type} • Accordé le{' '}
-                        {new Date(access.granted_at).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        if (confirm('Révoquer cet accès ?')) {
-                          try {
-                            await revokeAccess(access.id);
-                            toast.success('Accès révoqué');
-                          } catch (error) {
-                            toast.error('Erreur lors de la révocation');
-                          }
-                        }
-                      }}
-                      className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm transition"
+              {/* Modules accessibles via la licence */}
+              {modulesAccessibleByLicense.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <Crown className="w-3 h-3" />
+                    Via licence ({getSubscriptionLabel(user.license)})
+                  </p>
+                  {modulesAccessibleByLicense.map((module) => (
+                    <div
+                      key={`license-${module.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20 mb-2"
                     >
-                      Révoquer
-                    </button>
-                  </div>
-                );
-              })}
-              {accessList.length === 0 && (
-                <p className="text-gray-400 text-sm">Aucun accès</p>
+                      <div>
+                        <p className="text-white font-medium">{module.title}</p>
+                        <p className="text-xs text-green-400">
+                          Accès inclus avec la licence
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400">
+                        Licence
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Accès explicites (qui ne sont pas déjà couverts par la licence) */}
+              {accessList.filter(a => !modulesAccessibleByLicense.some(m => m.id === a.module_id)).length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+                    Accès manuels
+                  </p>
+                  {accessList
+                    .filter(a => !modulesAccessibleByLicense.some(m => m.id === a.module_id))
+                    .map((access) => {
+                      const module = modules.find((m) => m.id === access.module_id);
+                      return (
+                        <div
+                          key={access.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-black/40 mb-2"
+                        >
+                          <div>
+                            <p className="text-white font-medium">
+                              {module?.title || 'Module inconnu'}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Type: {access.access_type} • Accordé le{' '}
+                              {new Date(access.granted_at).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              if (confirm('Révoquer cet accès ?')) {
+                                try {
+                                  await revokeAccess(access.id);
+                                  queryClient.invalidateQueries({ queryKey: ['admin', 'access'] });
+                                  toast.success('Accès révoqué');
+                                } catch (error) {
+                                  toast.error('Erreur lors de la révocation');
+                                }
+                              }
+                            }}
+                            className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm transition"
+                          >
+                            Révoquer
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
+              {modulesAccessibleByLicense.length === 0 && accessList.length === 0 && (
+                <p className="text-gray-400 text-sm">Aucun accès - L'utilisateur n'a pas de licence active</p>
               )}
             </div>
           </div>
