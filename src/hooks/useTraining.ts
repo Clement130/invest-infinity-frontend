@@ -7,6 +7,9 @@ import {
   deleteModule,
   createOrUpdateLesson,
   deleteLesson,
+  reorderModules,
+  reorderLessons,
+  moveLessonToModule,
 } from '../services/trainingService';
 import { getUserProgressSummary } from '../services/progressService';
 import { markLessonAsViewed, markLessonAsCompleted } from '../services/progressTrackingService';
@@ -124,7 +127,47 @@ export function useModuleMutations() {
     },
   });
 
-  return { createUpdateModule, removeModule };
+  const reorderModulesMutation = useMutation({
+    mutationFn: (moduleIds: string[]) => reorderModules(moduleIds),
+    onMutate: async (moduleIds) => {
+      // Annuler les queries en cours
+      await queryClient.cancelQueries({ queryKey: TRAINING_KEYS.modules() });
+
+      // Snapshot de l'état actuel
+      const previousModules = queryClient.getQueryData(TRAINING_KEYS.modules());
+
+      // Mise à jour optimiste - réordonner les modules selon l'ordre des IDs
+      queryClient.setQueryData(TRAINING_KEYS.modules(), (old: TrainingModule[] | undefined) => {
+        if (!old) return old;
+        
+        // Créer une map pour un accès rapide
+        const moduleMap = new Map(old.map(m => [m.id, m]));
+        
+        // Reconstruire le tableau dans le nouvel ordre avec les positions mises à jour
+        return moduleIds
+          .map((id, index) => {
+            const module = moduleMap.get(id);
+            if (!module) return null;
+            return { ...module, position: index };
+          })
+          .filter(Boolean) as TrainingModule[];
+      });
+
+      return { previousModules };
+    },
+    onError: (err, moduleIds, context) => {
+      // Rollback en cas d'erreur
+      if (context?.previousModules) {
+        queryClient.setQueryData(TRAINING_KEYS.modules(), context.previousModules);
+      }
+    },
+    onSettled: () => {
+      // Refetch pour synchroniser
+      queryClient.invalidateQueries({ queryKey: TRAINING_KEYS.modules() });
+    },
+  });
+
+  return { createUpdateModule, removeModule, reorderModulesMutation };
 }
 
 export function useLessonMutations(moduleId: string) {
@@ -211,7 +254,57 @@ export function useLessonMutations(moduleId: string) {
     },
   });
 
-  return { createUpdateLesson, removeLesson };
+  const reorderLessonsMutation = useMutation({
+    mutationFn: (lessonIds: string[]) => reorderLessons(moduleId, lessonIds),
+    onMutate: async (lessonIds) => {
+      // Annuler les queries en cours
+      await queryClient.cancelQueries({ queryKey: TRAINING_KEYS.lessons(moduleId) });
+
+      // Snapshot de l'état actuel
+      const previousLessons = queryClient.getQueryData(TRAINING_KEYS.lessons(moduleId));
+
+      // Mise à jour optimiste - réordonner les leçons selon l'ordre des IDs
+      queryClient.setQueryData(TRAINING_KEYS.lessons(moduleId), (old: TrainingLesson[] | undefined) => {
+        if (!old) return old;
+        
+        // Créer une map pour un accès rapide
+        const lessonMap = new Map(old.map(l => [l.id, l]));
+        
+        // Reconstruire le tableau dans le nouvel ordre avec les positions mises à jour
+        return lessonIds
+          .map((id, index) => {
+            const lesson = lessonMap.get(id);
+            if (!lesson) return null;
+            return { ...lesson, position: index };
+          })
+          .filter(Boolean) as TrainingLesson[];
+      });
+
+      return { previousLessons };
+    },
+    onError: (err, lessonIds, context) => {
+      // Rollback en cas d'erreur
+      if (context?.previousLessons) {
+        queryClient.setQueryData(TRAINING_KEYS.lessons(moduleId), context.previousLessons);
+      }
+    },
+    onSettled: () => {
+      // Refetch pour synchroniser
+      queryClient.invalidateQueries({ queryKey: TRAINING_KEYS.lessons(moduleId) });
+    },
+  });
+
+  const moveLessonMutation = useMutation({
+    mutationFn: ({ lessonId, newModuleId, position }: { lessonId: string; newModuleId: string; position?: number }) =>
+      moveLessonToModule(lessonId, newModuleId, position),
+    onSuccess: (_, { newModuleId }) => {
+      // Invalider les deux modules concernés
+      queryClient.invalidateQueries({ queryKey: TRAINING_KEYS.lessons(moduleId) });
+      queryClient.invalidateQueries({ queryKey: TRAINING_KEYS.lessons(newModuleId) });
+    },
+  });
+
+  return { createUpdateLesson, removeLesson, reorderLessonsMutation, moveLessonMutation };
 }
 
 // Clés de cache pour la progression
