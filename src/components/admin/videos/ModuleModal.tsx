@@ -5,9 +5,9 @@ import type { TrainingModule } from '../../../types/training';
 type LicenseType = 'starter' | 'pro' | 'elite';
 
 const LICENSE_OPTIONS: { value: LicenseType; label: string; icon: React.ReactNode; color: string }[] = [
-  { value: 'starter', label: 'Starter (97€)', icon: <Zap className="w-4 h-4" />, color: 'text-pink-400' },
-  { value: 'pro', label: 'Pro (347€)', icon: <Star className="w-4 h-4" />, color: 'text-blue-400' },
-  { value: 'elite', label: 'Elite (497€)', icon: <Crown className="w-4 h-4" />, color: 'text-yellow-400' },
+  { value: 'starter', label: 'Starter (147€)', icon: <Zap className="w-4 h-4" />, color: 'text-pink-400' },
+  { value: 'pro', label: 'Premium (497€)', icon: <Star className="w-4 h-4" />, color: 'text-purple-400' },
+  { value: 'elite', label: 'Bootcamp Élite (1997€)', icon: <Crown className="w-4 h-4" />, color: 'text-yellow-400' },
 ];
 
 interface ModuleModalProps {

@@ -3,26 +3,27 @@
  * 
  * Utilise la configuration des offres pour déterminer ce à quoi l'utilisateur a accès
  * selon sa licence actuelle.
+ * 
+ * IMPORTANT: La DB stocke les licences directement en format système:
+ * - profiles.license: 'none' | 'starter' | 'pro' | 'elite'
+ * - training_modules.required_license: 'starter' | 'pro' | 'elite'
  */
 
 import { useMemo } from 'react';
 import { useSession } from './useSession';
 import {
   hasLicenseAccess,
-  profileLicenseToSystemLicense,
-  type OfferId,
   type OfferConfig,
-  getAllOffers,
   OFFERS,
 } from '../config/offers';
 import type { TrainingModule } from '../types/training';
 import { isSuperAdmin } from '../lib/auth';
 
+export type SystemLicense = 'starter' | 'pro' | 'elite' | 'none';
+
 export interface UserEntitlements {
-  /** Licence système de l'utilisateur */
-  systemLicense: 'starter' | 'pro' | 'elite' | 'none';
-  /** Licence profile de l'utilisateur */
-  profileLicense: 'entree' | 'transformation' | 'immersion' | 'none';
+  /** Licence de l'utilisateur (format système) */
+  systemLicense: SystemLicense;
   /** Offre correspondante */
   offer: OfferConfig | null;
   /** Vérifie si l'utilisateur a accès à un module */
@@ -34,17 +35,55 @@ export interface UserEntitlements {
 }
 
 /**
+ * Normalise la licence du profil vers le format système
+ * Supporte les deux formats:
+ * - Ancien: 'entree', 'transformation', 'immersion'
+ * - Nouveau: 'starter', 'pro', 'elite'
+ */
+function normalizeToSystemLicense(license: string | null | undefined): SystemLicense {
+  if (!license || license === 'none') return 'none';
+  
+  const mapping: Record<string, SystemLicense> = {
+    // Format ancien (stocké dans profiles.license)
+    entree: 'starter',
+    transformation: 'pro',
+    immersion: 'elite',
+    // Format système (déjà normalisé)
+    starter: 'starter',
+    pro: 'pro',
+    elite: 'elite',
+  };
+  
+  return mapping[license] || 'none';
+}
+
+/**
+ * Mapping licence système → offre
+ */
+function getOfferFromLicense(license: SystemLicense): OfferConfig | null {
+  switch (license) {
+    case 'starter':
+      return OFFERS.entree;
+    case 'pro':
+      return OFFERS.transformation;
+    case 'elite':
+      return OFFERS.immersion_elite;
+    default:
+      return null;
+  }
+}
+
+/**
  * Hook pour obtenir les entitlements de l'utilisateur actuel
  */
 export function useEntitlements(): UserEntitlements {
   const { profile } = useSession();
   
   const entitlements = useMemo(() => {
-    // Check Super Admin
+    // Check Super Admin - accès total
     if (isSuperAdmin(profile)) {
       return {
         systemLicense: 'elite' as const,
-        profileLicense: 'immersion' as const,
         offer: OFFERS.immersion_elite,
         hasModuleAccess: (_module: TrainingModule) => true,
         hasFeatureAccess: (_feature: keyof OfferConfig['includedFeatures']) => true,
@@ -52,28 +91,18 @@ export function useEntitlements(): UserEntitlements {
       };
     }
 
-    const profileLicense = (profile?.license as 'entree' | 'transformation' | 'immersion' | 'none') || 'none';
-    const systemLicense = profileLicenseToSystemLicense(profileLicense);
+    // Normalise la licence (supporte 'entree'/'starter', 'transformation'/'pro', 'immersion'/'elite')
+    const systemLicense = normalizeToSystemLicense(profile?.license);
     
     // Trouver l'offre correspondante
-    const offer = getAllOffers().find(o => {
-      if (profileLicense === 'entree') return o.offerId === 'entree';
-      if (profileLicense === 'transformation') return o.offerId === 'transformation';
-      if (profileLicense === 'immersion') return o.offerId === 'immersion_elite';
-      return false;
-    }) || null;
+    const offer = getOfferFromLicense(systemLicense);
     
     // Fonction pour vérifier l'accès à un module
+    // Les modules ont required_license: 'starter' | 'pro' | 'elite'
     const checkModuleAccess = (module: TrainingModule): boolean => {
-      // Les modules utilisent 'entree', 'transformation', 'immersion' dans la DB
-      // On doit convertir en 'starter', 'pro', 'elite' pour la comparaison
-      const moduleRequiredLicense = module.required_license || 'entree';
-      const moduleSystemLicense = profileLicenseToSystemLicense(
-        moduleRequiredLicense as 'entree' | 'transformation' | 'immersion' | 'none'
-      );
-      
-      // Comparer la licence système de l'utilisateur avec celle requise par le module
-      return hasLicenseAccess(systemLicense, moduleSystemLicense as 'starter' | 'pro' | 'elite');
+      const moduleRequiredLicense = module.required_license || 'starter';
+      // hasLicenseAccess vérifie si userLicense >= requiredLicense dans la hiérarchie
+      return hasLicenseAccess(systemLicense, moduleRequiredLicense);
     };
     
     // Fonction pour vérifier l'accès à une feature
@@ -89,13 +118,12 @@ export function useEntitlements(): UserEntitlements {
     
     return {
       systemLicense,
-      profileLicense,
       offer,
       hasModuleAccess: checkModuleAccess,
       hasFeatureAccess: checkFeatureAccess,
       accessibleModules: getAccessibleModules,
     };
-  }, [profile?.license]);
+  }, [profile?.license, profile?.email, profile?.role]);
   
   return entitlements;
 }

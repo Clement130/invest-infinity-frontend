@@ -363,9 +363,9 @@ export default function VideosManagement() {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Vérification environnement */}
-        <EnvironmentCheck />
-        <EnvDebug />
+        {/* Vérification environnement (debug désactivé en prod) */}
+        {import.meta.env.DEV && <EnvironmentCheck />}
+        {import.meta.env.DEV && <EnvDebug />}
 
         {/* Dashboard */}
         <Suspense fallback={<div className="bg-white rounded-lg shadow p-6"><div className="animate-pulse h-48 bg-gray-200 rounded"></div></div>}>
