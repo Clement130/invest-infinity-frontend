@@ -1,29 +1,12 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, ChevronDown, ChevronUp, Trash2, GripVertical } from 'lucide-react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { getModuleWithLessons, deleteModule, createOrUpdateLesson } from '../services/trainingService';
+import { ArrowLeft, Play, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getModuleWithLessons, deleteModule } from '../services/trainingService';
 import { useSession } from '../hooks/useSession';
 import { useToast } from '../hooks/useToast';
 import { useEntitlements } from '../hooks/useEntitlements';
-import type { ModuleWithLessons, TrainingLesson } from '../types/training';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import type { ModuleWithLessons } from '../types/training';
 
 // Structure hiérarchique basée sur les images
 // Chaque module peut avoir des sections, et chaque section peut avoir des leçons
@@ -123,97 +106,6 @@ const slugify = (text: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-// Composant pour une leçon draggable (admin uniquement)
-function SortableLessonItem({
-  lesson,
-  lessonIndex,
-  totalLessons,
-  isSelected,
-  isAdmin,
-  onMoveUp,
-  onMoveDown,
-  onClick,
-}: {
-  lesson: { id: string; title: string };
-  lessonIndex: number;
-  totalLessons: number;
-  isSelected: boolean;
-  isAdmin: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onClick: () => void;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: lesson.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-2 hover:bg-white/5 transition-colors ${
-        isSelected ? 'bg-pink-500/10 border-l-2 border-pink-500' : ''
-      }`}
-    >
-      {/* Contrôles de réorganisation (admin uniquement) */}
-      {isAdmin && (
-        <div className="flex items-center gap-0.5 pl-2 opacity-40 hover:opacity-100 transition-opacity">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition"
-            title="Glisser pour réorganiser"
-          >
-            <GripVertical className="w-4 h-4 text-gray-500" />
-          </div>
-          <div className="flex flex-col">
-            <button
-              onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
-              disabled={lessonIndex === 0}
-              className="p-0.5 hover:bg-white/10 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Monter"
-            >
-              <ChevronUp className="w-3 h-3 text-gray-500" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
-              disabled={lessonIndex === totalLessons - 1}
-              className="p-0.5 hover:bg-white/10 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Descendre"
-            >
-              <ChevronDown className="w-3 h-3 text-gray-500" />
-            </button>
-          </div>
-        </div>
-      )}
-      
-      <button
-        onClick={onClick}
-        className="flex-1 flex items-center gap-4 p-4 text-left"
-      >
-        <span className="text-sm font-medium text-gray-300 min-w-[2rem]">
-          {lessonIndex + 1}.
-        </span>
-        <span className="flex-1 text-white font-medium">
-          {lesson.title}
-        </span>
-        <Play className="w-4 h-4 text-gray-400 flex-shrink-0" />
-      </button>
-    </div>
-  );
-}
-
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -229,79 +121,12 @@ export default function ModulePage() {
   // Vérifier si l'utilisateur est admin ou developer
   const isAdmin = role === 'admin' || role === 'developer';
 
-  // Query pour récupérer le module et ses leçons - DOIT être déclaré avant les callbacks qui l'utilisent
+  // Query pour récupérer le module et ses leçons
   const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
     queryKey: ['module-with-lessons', moduleId],
     enabled: Boolean(moduleId),
     queryFn: () => getModuleWithLessons(moduleId!),
   });
-
-  // Sensors pour le drag & drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // Mutation pour réorganiser les leçons
-  const reorderLessonsMutation = useMutation({
-    mutationFn: async (lessons: { id: string; position: number; module_id: string; title: string }[]) => {
-      await Promise.all(
-        lessons.map((lesson) =>
-          createOrUpdateLesson({
-            id: lesson.id,
-            module_id: lesson.module_id,
-            title: lesson.title,
-            position: lesson.position,
-          })
-        )
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['module-with-lessons', moduleId] });
-      toast.success('Ordre des leçons mis à jour');
-    },
-    onError: (error: any) => {
-      toast.error(`Erreur: ${error.message}`);
-    },
-  });
-
-  // Handler pour réorganiser les leçons
-  const handleReorderLessons = useCallback((oldIndex: number, newIndex: number) => {
-    if (!data?.lessons || !moduleId) return;
-    
-    const sortedLessons = [...data.lessons].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-    const reorderedLessons = arrayMove(sortedLessons, oldIndex, newIndex);
-    
-    const updatedLessons = reorderedLessons.map((lesson, index) => ({
-      id: lesson.id,
-      module_id: lesson.module_id,
-      title: lesson.title,
-      position: index,
-    }));
-    
-    reorderLessonsMutation.mutate(updatedLessons);
-  }, [data?.lessons, moduleId, reorderLessonsMutation]);
-
-  // Handler pour le drag end
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over || active.id === over.id || !data?.lessons) return;
-    
-    const sortedLessons = [...data.lessons].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-    const oldIndex = sortedLessons.findIndex((l) => l.id === active.id);
-    const newIndex = sortedLessons.findIndex((l) => l.id === over.id);
-    
-    if (oldIndex !== -1 && newIndex !== -1) {
-      handleReorderLessons(oldIndex, newIndex);
-    }
-  }, [data?.lessons, handleReorderLessons]);
 
   // Handler pour la suppression du module
   const handleDeleteModule = async () => {
@@ -600,47 +425,6 @@ export default function ModulePage() {
                   <div className="border-t border-white/10">
                     {section.lessons.length === 0 ? (
                       <p className="p-4 text-gray-400 text-sm">Aucune leçon dans cette section.</p>
-                    ) : isAdmin ? (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <SortableContext
-                          items={section.lessons.map((l) => l.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          <div className="divide-y divide-white/10">
-                            {section.lessons.map((lesson, lessonIndex) => {
-                              const isSelected = selectedLessonId === lesson.id;
-                              const allLessons = data?.lessons?.sort((a, b) => (a.position ?? 0) - (b.position ?? 0)) || [];
-                              const globalIndex = allLessons.findIndex((l) => l.id === lesson.id);
-                              
-                              return (
-                                <SortableLessonItem
-                                  key={lesson.id}
-                                  lesson={lesson}
-                                  lessonIndex={lessonIndex}
-                                  totalLessons={section.lessons.length}
-                                  isSelected={isSelected}
-                                  isAdmin={isAdmin}
-                                  onMoveUp={() => {
-                                    if (globalIndex > 0) {
-                                      handleReorderLessons(globalIndex, globalIndex - 1);
-                                    }
-                                  }}
-                                  onMoveDown={() => {
-                                    if (globalIndex < allLessons.length - 1) {
-                                      handleReorderLessons(globalIndex, globalIndex + 1);
-                                    }
-                                  }}
-                                  onClick={() => handleLessonClick(lesson.id)}
-                                />
-                              );
-                            })}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
                     ) : (
                       <div className="divide-y divide-white/10">
                         {section.lessons.map((lesson, lessonIndex) => {
