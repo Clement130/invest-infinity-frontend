@@ -229,6 +229,13 @@ export default function ModulePage() {
   // Vérifier si l'utilisateur est admin ou developer
   const isAdmin = role === 'admin' || role === 'developer';
 
+  // Query pour récupérer le module et ses leçons - DOIT être déclaré avant les callbacks qui l'utilisent
+  const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
+    queryKey: ['module-with-lessons', moduleId],
+    enabled: Boolean(moduleId),
+    queryFn: () => getModuleWithLessons(moduleId!),
+  });
+
   // Sensors pour le drag & drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -314,12 +321,6 @@ export default function ModulePage() {
       setShowDeleteConfirm(false);
     }
   };
-
-  const { data, isLoading, isError } = useQuery<ModuleWithLessons | null>({
-    queryKey: ['module-with-lessons', moduleId],
-    enabled: Boolean(moduleId),
-    queryFn: () => getModuleWithLessons(moduleId!),
-  });
 
   // Vérifier l'accès au module (sauf pour les admins)
   useEffect(() => {
