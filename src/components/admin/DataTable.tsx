@@ -3,7 +3,7 @@ import { Checkbox } from '../ui/checkbox';
 import TableSortHeader from './TableSortHeader';
 import TablePagination from './TablePagination';
 import { Download, Search, X } from 'lucide-react';
-import { useDataTable } from '../../hooks/useDataTable';
+import { useDataTable, type CustomSortFn } from '../../hooks/useDataTable';
 import { exportData, type ExportFormat } from '../../services/exportService';
 
 export type Column<T> = {
@@ -32,6 +32,12 @@ export interface DataTableProps<T extends Record<string, any>> {
   storageKey?: string;
   emptyMessage?: string;
   className?: string;
+  /**
+   * Fonctions de tri personnalisées par colonne
+   * Permet d'implémenter un tri métier (ex: tri par priorité d'abonnement)
+   * plutôt qu'un tri alphabétique standard
+   */
+  customSortFns?: Partial<Record<keyof T, CustomSortFn<T>>>;
 }
 
 export default function DataTable<T extends Record<string, any>>({
@@ -52,6 +58,7 @@ export default function DataTable<T extends Record<string, any>>({
   storageKey = 'datatable',
   emptyMessage = 'Aucune donnée disponible',
   className = '',
+  customSortFns,
 }: DataTableProps<T>) {
   const searchableColumns = columns.map((col) => col.key);
 
@@ -82,6 +89,7 @@ export default function DataTable<T extends Record<string, any>>({
     searchableColumns,
     persistState,
     storageKey,
+    customSortFns,
   });
 
   // Notifier les changements de sélection
