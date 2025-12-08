@@ -38,3 +38,23 @@ Quand je crée ou modifie une migration SQL dans `supabase/migrations/`, je DOIS
 - Tester les fonctionnalités critiques en production après déploiement
 - Documenter les changements majeurs dans `docs/`
 
+## Vérification Automatique en Production
+
+**IMPORTANT : Vérification Obligatoire après chaque Modification**
+
+Après chaque commit et push vers `main`, je DOIS :
+1. ✅ Vérifier que le site est accessible en production (https://invest-infinity-frontend.vercel.app)
+2. ✅ Vérifier la page d'accueil se charge correctement
+3. ✅ Vérifier les pages critiques (Tarifs, FAQ, etc.)
+4. ✅ Vérifier la console navigateur pour les erreurs JavaScript
+5. ✅ Tester les fonctionnalités modifiées si applicable
+6. ✅ Informer l'utilisateur du résultat de la vérification
+
+**Processus automatique :**
+- Après chaque push → Vérifier immédiatement en production via MCP Browser
+- Utiliser `mcp_cursor-browser-extension_browser_navigate` pour accéder au site
+- Utiliser `mcp_cursor-browser-extension_browser_console_messages` pour vérifier les erreurs
+- Utiliser `mcp_cursor-browser-extension_browser_snapshot` pour vérifier l'état de la page
+- Tester les pages/fonctionnalités modifiées
+- Documenter tout problème détecté
+
