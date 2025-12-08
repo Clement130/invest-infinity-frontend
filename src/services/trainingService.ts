@@ -281,7 +281,7 @@ export async function createOrUpdateLesson(
 ): Promise<TrainingLesson> {
   // Pour les mises à jour
   if (payload.id) {
-    const base = {
+    const base: any = {
       title: payload.title,
       module_id: payload.module_id,
       description: payload.description ?? null,
@@ -289,6 +289,11 @@ export async function createOrUpdateLesson(
       position: payload.position ?? 0,
       is_preview: payload.is_preview ?? false,
     };
+
+    // Ajouter section_title si présent dans le payload
+    if ('section_title' in payload) {
+      base.section_title = payload.section_title ?? null;
+    }
 
     const { data, error } = await supabase
       .from('training_lessons')
@@ -308,7 +313,7 @@ export async function createOrUpdateLesson(
   // Pour les créations, assigner automatiquement la prochaine position
   const nextPosition = payload.position ?? await getNextLessonPosition(payload.module_id);
   
-  const base = {
+  const base: any = {
     title: payload.title,
     module_id: payload.module_id,
     description: payload.description ?? null,
@@ -316,6 +321,11 @@ export async function createOrUpdateLesson(
     position: nextPosition,
     is_preview: payload.is_preview ?? false,
   };
+
+  // Ajouter section_title si présent dans le payload
+  if ('section_title' in payload) {
+    base.section_title = payload.section_title ?? null;
+  }
 
   const { data, error } = await supabase
     .from('training_lessons')

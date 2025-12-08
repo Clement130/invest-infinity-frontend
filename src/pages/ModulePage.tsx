@@ -166,51 +166,96 @@ export default function ModulePage() {
         is_preview: lesson.is_preview,
         position: lesson.position,
         slug: slugify(lesson.title),
+        section_title: (lesson as any).section_title as string | null | undefined,
       }))
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
     const moduleSlug = slugify(data.module.title);
     const layout = moduleLayouts[moduleSlug];
 
+    // D'abord, grouper les leçons par section_title si défini
+    const lessonsBySection = new Map<string, typeof lessons>();
+    const lessonsWithoutSection: typeof lessons = [];
+
+    lessons.forEach((lesson) => {
+      if (lesson.section_title) {
+        const sectionKey = lesson.section_title.trim();
+        if (!lessonsBySection.has(sectionKey)) {
+          lessonsBySection.set(sectionKey, []);
+        }
+        lessonsBySection.get(sectionKey)!.push(lesson);
+      } else {
+        lessonsWithoutSection.push(lesson);
+      }
+    });
+
+    // Si pas de layout défini, utiliser les sections définies par section_title ou créer des sections par défaut
     if (!layout) {
-      const sectionSize = 6;
       const sectionsList: Section[] = [];
 
-      if (lessons.length <= sectionSize) {
+      // Ajouter les sections définies par section_title
+      lessonsBySection.forEach((sectionLessons, sectionTitle) => {
         sectionsList.push({
-          id: 'section-default',
-          title: 'Leçons',
-          lessons,
+          id: `${moduleSlug}-section-${slugify(sectionTitle)}`,
+          title: sectionTitle,
+          lessons: sectionLessons.sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
         });
-      } else {
-        const firstSection = lessons.slice(0, sectionSize);
-        const secondSection = lessons.slice(sectionSize);
+      });
 
-        sectionsList.push({
-          id: 'section-1',
-          title: 'La Fondation',
-          lessons: firstSection,
-        });
-
-        if (secondSection.length > 0) {
+      // Gérer les leçons sans section_title
+      if (lessonsWithoutSection.length > 0) {
+        const sectionSize = 6;
+        if (lessonsWithoutSection.length <= sectionSize) {
           sectionsList.push({
-            id: 'section-2',
-            title: 'Concepts avancés',
-            lessons: secondSection,
+            id: 'section-default',
+            title: 'Leçons',
+            lessons: lessonsWithoutSection,
           });
+        } else {
+          const firstSection = lessonsWithoutSection.slice(0, sectionSize);
+          const secondSection = lessonsWithoutSection.slice(sectionSize);
+
+          sectionsList.push({
+            id: 'section-1',
+            title: 'La Fondation',
+            lessons: firstSection,
+          });
+
+          if (secondSection.length > 0) {
+            sectionsList.push({
+              id: 'section-2',
+              title: 'Concepts avancés',
+              lessons: secondSection,
+            });
+          }
         }
       }
 
       return sectionsList;
     }
 
+    // Si layout défini, combiner avec les sections définies par section_title
     const usedLessons = new Set<string>();
     const layoutSections: Section[] = layout
       .map((section, sectionIndex) => {
-        const sectionLessons = section.lessons
+        // D'abord, ajouter les leçons qui ont section_title correspondant
+        const sectionLessonsByTitle: typeof lessons = [];
+        lessonsBySection.forEach((sectionLessons, sectionTitle) => {
+          if (slugify(sectionTitle) === slugify(section.title)) {
+            sectionLessons.forEach((lesson) => {
+              if (!usedLessons.has(lesson.id)) {
+                sectionLessonsByTitle.push(lesson);
+                usedLessons.add(lesson.id);
+              }
+            });
+          }
+        });
+
+        // Ensuite, matcher par titre exact comme avant
+        const sectionLessonsByMatch = section.lessons
           .map((lessonTitle) => {
             const normalizedTitle = slugify(lessonTitle);
-            const match = lessons.find(
+            const match = lessonsWithoutSection.find(
               (lesson) => lesson.slug === normalizedTitle && !usedLessons.has(lesson.id)
             );
 
@@ -222,14 +267,37 @@ export default function ModulePage() {
           })
           .filter((lesson): lesson is Section['lessons'][number] => Boolean(lesson));
 
+        const allSectionLessons = [...sectionLessonsByTitle, ...sectionLessonsByMatch].sort(
+          (a, b) => (a.position ?? 0) - (b.position ?? 0)
+        );
+
         return {
           id: `${moduleSlug}-section-${sectionIndex}`,
           title: section.title,
-          lessons: sectionLessons,
+          lessons: allSectionLessons,
         };
       })
       .filter((section) => section.lessons.length > 0);
 
+    // Ajouter les sections définies par section_title qui ne correspondent à aucun layout
+    lessonsBySection.forEach((sectionLessons, sectionTitle) => {
+      const alreadyUsed = layoutSections.some(
+        (s) => slugify(s.title) === slugify(sectionTitle)
+      );
+      if (!alreadyUsed) {
+        const unusedLessons = sectionLessons.filter((l) => !usedLessons.has(l.id));
+        if (unusedLessons.length > 0) {
+          layoutSections.push({
+            id: `${moduleSlug}-section-${slugify(sectionTitle)}`,
+            title: sectionTitle,
+            lessons: unusedLessons.sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+          });
+          unusedLessons.forEach((l) => usedLessons.add(l.id));
+        }
+      }
+    });
+
+    // Les leçons restantes (sans section_title et non matchées) vont dans "Autres leçons"
     const remaining = lessons.filter((lesson) => !usedLessons.has(lesson.id));
 
     if (remaining.length > 0) {

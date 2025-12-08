@@ -1,0 +1,40 @@
+# Règles de Développement - Invest Infinity Frontend
+
+## Migrations Supabase
+
+**IMPORTANT : Application Automatique des Migrations**
+
+Quand je crée ou modifie une migration SQL dans `supabase/migrations/`, je DOIS :
+1. ✅ Appliquer automatiquement la migration via MCP Supabase (`mcp_Supabase_butcher_apply_migration`)
+2. ✅ Vérifier que la migration a été appliquée avec succès
+3. ✅ Ne JAMAIS laisser une migration non appliquée
+
+**Processus automatique :**
+- Dès qu'une migration est créée/modifiée → l'appliquer immédiatement via MCP
+- Utiliser `mcp_Supabase_butcher_apply_migration` avec le project_id
+- Vérifier avec une requête SQL que les changements sont bien appliqués
+- Informer l'utilisateur que la migration est appliquée
+
+**Exception :** Si MCP n'est pas disponible, documenter clairement que la migration doit être appliquée manuellement.
+
+## Conventions de Code
+
+- TypeScript strict mode
+- Utiliser les types Supabase générés (`Tables<'table_name'>`)
+- Gérer les erreurs avec try/catch et messages utilisateur clairs
+- Utiliser React Query pour le cache et la synchronisation
+
+## Structure des Fichiers
+
+- `supabase/migrations/` : Migrations SQL (format: YYYYMMDDHHMMSS_description.sql)
+- `src/services/` : Services API et logique métier
+- `src/components/` : Composants React réutilisables
+- `src/pages/` : Pages de l'application
+- `docs/` : Documentation technique
+
+## Tests et Vérifications
+
+- Vérifier les linter errors après chaque modification
+- Tester les fonctionnalités critiques en production après déploiement
+- Documenter les changements majeurs dans `docs/`
+
