@@ -159,15 +159,20 @@ export default function ModulePage() {
     if (!data?.lessons || !data.module) return [];
 
     const lessons = (data.lessons ?? [])
-      .map((lesson) => ({
-        id: lesson.id,
-        title: lesson.title,
-        description: lesson.description,
-        is_preview: lesson.is_preview,
-        position: lesson.position,
-        slug: slugify(lesson.title),
-        section_title: (lesson as any).section_title as string | null | undefined,
-      }))
+      .map((lesson) => {
+        // Récupérer section_title depuis la leçon (peut être dans lesson directement ou via any)
+        const sectionTitle = (lesson as any).section_title || null;
+        
+        return {
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description,
+          is_preview: lesson.is_preview,
+          position: lesson.position,
+          slug: slugify(lesson.title),
+          section_title: sectionTitle ? String(sectionTitle).trim() : null,
+        };
+      })
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
     const moduleSlug = slugify(data.module.title);

@@ -43,12 +43,13 @@ Quand je crée ou modifie une migration SQL dans `supabase/migrations/`, je DOIS
 **IMPORTANT : Vérification Obligatoire après chaque Modification**
 
 Après chaque commit et push vers `main`, je DOIS :
-1. ✅ Vérifier que le site est accessible en production (https://invest-infinity-frontend.vercel.app)
+1. ✅ Vérifier que le site est accessible en production (https://investinfinity.fr)
 2. ✅ Vérifier la page d'accueil se charge correctement
 3. ✅ Vérifier les pages critiques (Tarifs, FAQ, etc.)
 4. ✅ Vérifier la console navigateur pour les erreurs JavaScript
 5. ✅ Tester les fonctionnalités modifiées si applicable
-6. ✅ Informer l'utilisateur du résultat de la vérification
+6. ✅ **TESTER AUTOMATIQUEMENT LA CONNEXION ADMIN** (nouveau)
+7. ✅ Informer l'utilisateur du résultat de la vérification
 
 **Processus automatique :**
 - Après chaque push → Vérifier immédiatement en production via MCP Browser
@@ -56,5 +57,45 @@ Après chaque commit et push vers `main`, je DOIS :
 - Utiliser `mcp_cursor-browser-extension_browser_console_messages` pour vérifier les erreurs
 - Utiliser `mcp_cursor-browser-extension_browser_snapshot` pour vérifier l'état de la page
 - Tester les pages/fonctionnalités modifiées
+- **Exécuter automatiquement le script de test admin** : `node scripts/test-admin-login-production.js`
 - Documenter tout problème détecté
+
+## Tests Automatiques après Déploiement
+
+**IMPORTANT : Tests Obligatoires après chaque Déploiement**
+
+Après chaque déploiement en production, je DOIS automatiquement :
+
+### 1. Test de Connexion Admin
+- ✅ Exécuter `node scripts/test-admin-login-production.js`
+- ✅ Vérifier que la connexion admin fonctionne
+- ✅ Vérifier que la redirection vers `/admin` fonctionne
+- ✅ Vérifier qu'aucune erreur MIME type n'apparaît
+- ✅ Vérifier que le dashboard admin se charge correctement
+- ✅ Tester les pages admin critiques (`/admin/users`, `/admin/formations`, `/admin/paiements`)
+
+### 2. Test des Erreurs JavaScript
+- ✅ Vérifier qu'aucune erreur "'text/html' is not a valid JavaScript MIME type" n'apparaît
+- ✅ Vérifier qu'aucune erreur de chargement de chunks JavaScript n'apparaît
+- ✅ Vérifier que tous les imports lazy fonctionnent correctement
+
+### 3. Processus de Test
+**Après chaque push vers `main` :**
+1. Attendre 2-3 minutes pour le déploiement Vercel
+2. Exécuter le script de test : `node scripts/test-admin-login-production.js`
+3. Si le test échoue, utiliser MCP Browser pour diagnostiquer :
+   - Naviguer vers `https://investinfinity.fr/admin`
+   - Vérifier les erreurs dans la console
+   - Prendre des captures d'écran si nécessaire
+4. Documenter les résultats dans un fichier de rapport si des erreurs sont détectées
+
+**Scripts de test disponibles :**
+- `scripts/test-admin-login-production.js` : Test complet de connexion admin
+- `scripts/test-production.js` : Tests généraux de production
+- `scripts/test-admin-access.js` : Test d'accès admin via Supabase
+
+**Variables d'environnement pour les tests :**
+- `PRODUCTION_URL` : URL de production (défaut: https://investinfinity.fr)
+- `ADMIN_EMAIL` : Email admin pour les tests (défaut: butcher13550@gmail.com)
+- `ADMIN_PASSWORD` : Mot de passe admin pour les tests
 

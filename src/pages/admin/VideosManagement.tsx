@@ -96,7 +96,8 @@ export default function VideosManagement() {
         bunny_video_id: data.bunny_video_id !== undefined ? data.bunny_video_id : currentLesson.bunny_video_id ?? null,
         position: currentLesson.position ?? 0,
         is_preview: data.is_preview ?? currentLesson.is_preview ?? false,
-      });
+        section_title: (data as any).section_title !== undefined ? (data as any).section_title : (currentLesson as any).section_title ?? null,
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });

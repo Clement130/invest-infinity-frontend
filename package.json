@@ -24,6 +24,7 @@
     "test:progress": "node scripts/test-progress-service.js",
     "test:production": "node scripts/test-production.js",
     "test:production:wait": "node scripts/test-production.js --wait-deploy",
+    "test:admin": "node scripts/test-admin-login-production.js",
     "test:pricing": "node scripts/test-pricing-with-playwright.js",
     "test:module-delete": "node scripts/test-module-delete-production.js",
     "test:analytics": "node scripts/test-analytics-production.js",

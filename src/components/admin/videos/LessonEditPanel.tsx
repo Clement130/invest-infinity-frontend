@@ -29,6 +29,7 @@ export function LessonEditPanel({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    section_title: '',
     bunny_video_id: '',
     is_preview: false,
   });
@@ -41,6 +42,7 @@ export function LessonEditPanel({
       setFormData({
         title: lesson.title,
         description: lesson.description || '',
+        section_title: (lesson as any).section_title || '',
         bunny_video_id: lesson.bunny_video_id || '',
         is_preview: lesson.is_preview || false,
       });
@@ -61,7 +63,8 @@ export function LessonEditPanel({
       await onSave({
         id: lesson.id,
         ...formData,
-      });
+        section_title: formData.section_title.trim() || null,
+      } as any);
       toast.success('Leçon sauvegardée avec succès');
     } catch (error: any) {
       toast.error(`Erreur: ${error.message}`);
@@ -75,6 +78,7 @@ export function LessonEditPanel({
       setFormData({
         title: lesson.title,
         description: lesson.description || '',
+        section_title: (lesson as any).section_title || '',
         bunny_video_id: lesson.bunny_video_id || '',
         is_preview: lesson.is_preview || false,
       });
@@ -134,6 +138,24 @@ export function LessonEditPanel({
           className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40"
           placeholder="Description de la leçon"
         />
+      </div>
+
+      {/* Section */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-400">
+          📁 Section (optionnel)
+        </label>
+        <input
+          type="text"
+          value={formData.section_title}
+          onChange={(e) => setFormData({ ...formData, section_title: e.target.value })}
+          className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+          placeholder="Ex: La base du trading, Gestion du Risque, etc."
+        />
+        <p className="text-xs text-gray-500">
+          Définissez dans quelle section cette leçon doit apparaître côté client. 
+          Si vide, la leçon sera assignée automatiquement ou placée dans "Autres leçons".
+        </p>
       </div>
 
       {/* Vidéo actuelle */}

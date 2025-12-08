@@ -190,6 +190,7 @@ export type Database = {
           bunny_video_id: string | null
           position: number
           is_preview: boolean
+          section_title: string | null
           created_at: string
         }
         Insert: {
@@ -200,6 +201,7 @@ export type Database = {
           bunny_video_id?: string | null
           position?: number
           is_preview?: boolean
+          section_title?: string | null
           created_at?: string
         }
         Update: {
@@ -210,6 +212,7 @@ export type Database = {
           bunny_video_id?: string | null
           position?: number
           is_preview?: boolean
+          section_title?: string | null
           created_at?: string
         }
         Relationships: [

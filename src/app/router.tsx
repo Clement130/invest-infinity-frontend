@@ -1,13 +1,11 @@
-import { Routes, Route, Outlet } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { Suspense } from 'react';
 import MarketingLayout from '../layouts/MarketingLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PageLoader from '../components/PageLoader';
 import { marketingRoutes, clientRoutes, adminRoutes } from './routes';
-
-const DashboardPage = lazy(() => import('../pages/admin/DashboardPage'));
 
 // Layout wrapper persistant pour les routes client /app/*
 function ClientLayoutWrapper() {
@@ -79,9 +77,7 @@ export default function AppRouter() {
           path="/admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AdminLayout activeSection="dashboard">
-                <DashboardPage />
-              </AdminLayout>
+              <Navigate to="/admin" replace />
             </ProtectedRoute>
           }
         />
