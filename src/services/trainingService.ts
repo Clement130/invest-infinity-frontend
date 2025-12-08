@@ -110,7 +110,7 @@ export async function getModuleById(id: string): Promise<TrainingModule | null> 
 export async function getLessonsForModule(moduleId: string): Promise<TrainingLesson[]> {
   const { data, error } = await supabase
     .from('training_lessons')
-    .select('*')
+    .select('id, module_id, title, description, bunny_video_id, position, is_preview, section_title, created_at')
     .eq('module_id', moduleId)
     .order('position', { ascending: true })
     .order('created_at', { ascending: true });
@@ -120,7 +120,7 @@ export async function getLessonsForModule(moduleId: string): Promise<TrainingLes
     throw error;
   }
 
-  return data ?? [];
+  return (data ?? []) as TrainingLesson[];
 }
 
 export async function getLessonsWithModules(): Promise<LessonWithModule[]> {

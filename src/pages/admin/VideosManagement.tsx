@@ -99,9 +99,12 @@ export default function VideosManagement() {
         section_title: (data as any).section_title !== undefined ? (data as any).section_title : (currentLesson as any).section_title ?? null,
       } as any);
     },
-    onSuccess: () => {
+    onSuccess: (updatedLesson) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'bunny-library'] });
+      // Invalider aussi les queries côté client pour rafraîchir l'affichage
+      queryClient.invalidateQueries({ queryKey: ['module-with-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
       toast.success('Leçon mise à jour avec succès');
       setGuideState('success');
       setTimeout(() => setGuideState('idle'), 2000);
