@@ -34,6 +34,7 @@ interface ModuleSectionProps {
   onDeleteLesson?: (lessonId: string) => void;
   onReplaceVideo?: (lessonId: string) => void;
   onAssignVideo?: (lessonId: string) => void;
+  onMoveLesson?: (lesson: TrainingLesson) => void;
   selectedLessonId?: string;
   selectedLessons?: Set<string>;
   onSelectLesson?: (lessonId: string) => void;
@@ -52,6 +53,7 @@ export function ModuleSection({
   onDeleteLesson,
   onReplaceVideo,
   onAssignVideo,
+  onMoveLesson,
   selectedLessonId,
   selectedLessons = new Set(),
   onSelectLesson,
@@ -158,6 +160,7 @@ export function ModuleSection({
               onDeleteLesson={onDeleteLesson}
               onReplaceVideo={onReplaceVideo}
               onAssignVideo={onAssignVideo}
+              onMoveLesson={onMoveLesson}
               onReorder={onReorderLessons}
             />
           ) : (
@@ -172,6 +175,7 @@ export function ModuleSection({
                 onDelete={onDeleteLesson}
                 onReplaceVideo={onReplaceVideo}
                 onAssignVideo={onAssignVideo}
+                onMoveLesson={onMoveLesson}
                 showCheckbox={true}
               />
             ))

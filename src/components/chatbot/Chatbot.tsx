@@ -1403,9 +1403,9 @@ export default function Chatbot() {
           'starter': { name: 'Starter', icon: '🌱', features: ['Lives trading', 'Discord', 'Alertes'] },
           'premium': { name: 'Premium', icon: '🚀', features: ['Tout Starter', 'Formation complète', 'Replays illimités', 'Support 7j/7'] },
           'bootcamp': { name: 'Bootcamp', icon: '👑', features: ['Tout Premium', 'Semaine en présentiel', 'Trading live avec Mickaël'] },
-          'entree': { name: 'Entrée', icon: '🌱', features: ['Lives trading', 'Discord', 'Alertes'] },
-          'transformation': { name: 'Transformation', icon: '🚀', features: ['Tout Entrée', 'Formation complète', 'Replays illimités'] },
-          'immersion': { name: 'Immersion', icon: '👑', features: ['Tout Transformation', 'Semaine en présentiel'] },
+          'entree': { name: 'Starter', icon: '🌱', features: ['Lives trading', 'Discord', 'Alertes'] },
+          'transformation': { name: 'Premium', icon: '🚀', features: ['Tout Starter', 'Formation complète', 'Replays illimités'] },
+          'immersion': { name: 'Bootcamp Élite', icon: '👑', features: ['Tout Premium', 'Semaine en présentiel'] },
         };
         const licenseInfo = licenseLabels[currentLicense] || licenseLabels['none'];
         
@@ -2575,9 +2575,9 @@ export default function Chatbot() {
           
           addBotMessage(
             "Parfait ! 📧\n\nQuelle **offre** as-tu souscrite ?\n\n" +
-            "1️⃣ Entrée (147€)\n" +
-            "2️⃣ Transformation (497€)\n" +
-            "3️⃣ Immersion Élite / Bootcamp (1997€)\n" +
+            "1️⃣ Starter (147€)\n" +
+            "2️⃣ Premium (497€)\n" +
+            "3️⃣ Bootcamp Élite (1997€)\n" +
             "4️⃣ Je ne sais plus",
             [],
             false
@@ -2588,12 +2588,12 @@ export default function Chatbot() {
         case 'ASK_OFFER': {
           let offer = trimmedContent;
           
-          if (lowerContent === '1' || lowerContent.includes('entrée') || lowerContent.includes('entree') || lowerContent.includes('147')) {
-            offer = 'Entrée (147€)';
-          } else if (lowerContent === '2' || lowerContent.includes('transformation') || lowerContent.includes('497')) {
-            offer = 'Transformation (497€)';
-          } else if (lowerContent === '3' || lowerContent.includes('immersion') || lowerContent.includes('bootcamp') || lowerContent.includes('elite') || lowerContent.includes('1997')) {
-            offer = 'Immersion Élite (1997€)';
+          if (lowerContent === '1' || lowerContent.includes('starter') || lowerContent.includes('entrée') || lowerContent.includes('entree') || lowerContent.includes('147')) {
+            offer = 'Starter (147€)';
+          } else if (lowerContent === '2' || lowerContent.includes('premium') || lowerContent.includes('transformation') || lowerContent.includes('497')) {
+            offer = 'Premium (497€)';
+          } else if (lowerContent === '3' || lowerContent.includes('bootcamp') || lowerContent.includes('élite') || lowerContent.includes('elite') || lowerContent.includes('immersion') || lowerContent.includes('1997')) {
+            offer = 'Bootcamp Élite (1997€)';
           } else if (lowerContent === '4' || lowerContent.includes('sais plus') || lowerContent.includes('sais pas')) {
             offer = 'Non précisé';
           }

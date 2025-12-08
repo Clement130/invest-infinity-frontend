@@ -14,6 +14,7 @@ interface FormationTreeViewProps {
   onDeleteLesson?: (lessonId: string) => void;
   onReplaceVideo?: (lessonId: string) => void;
   onAssignVideo?: (lessonId: string) => void;
+  onMoveLesson?: (lesson: TrainingLesson) => void;
   onAddModule?: () => void;
   onAddLesson?: (moduleId: string) => void;
   onEditModule?: (module: ModuleWithLessons) => void;
@@ -33,6 +34,7 @@ export function FormationTreeView({
   onDeleteLesson,
   onReplaceVideo,
   onAssignVideo,
+  onMoveLesson,
   onAddModule,
   onAddLesson,
   onEditModule,
@@ -95,6 +97,7 @@ export function FormationTreeView({
             onDeleteLesson={onDeleteLesson}
             onReplaceVideo={onReplaceVideo}
             onAssignVideo={onAssignVideo}
+            onMoveLesson={onMoveLesson}
             onAddLesson={onAddLesson}
             onEditModule={onEditModule}
             onDeleteModule={onDeleteModule}

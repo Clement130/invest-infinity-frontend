@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Edit2, Trash2, Video as VideoIcon, ExternalLink, GripVertical } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Edit2, Trash2, Video as VideoIcon, ExternalLink, GripVertical, ArrowRight } from 'lucide-react';
 import { LessonStatusIndicator } from './StatusIndicators';
 import type { TrainingLesson } from '../../../types/training';
 import { formatDuration } from '../../../utils/admin/bunnyStreamAPI';
@@ -12,6 +12,7 @@ interface LessonRowProps {
   onDelete?: (lessonId: string) => void;
   onReplaceVideo?: (lessonId: string) => void;
   onAssignVideo?: (lessonId: string) => void;
+  onMoveLesson?: (lesson: TrainingLesson) => void;
   showCheckbox?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function LessonRow({
   onDelete,
   onReplaceVideo,
   onAssignVideo,
+  onMoveLesson,
   showCheckbox = false,
 }: LessonRowProps) {
   const hasVideo = Boolean(lesson.bunny_video_id);
@@ -93,6 +95,18 @@ export function LessonRow({
       )}
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+        {onMoveLesson && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveLesson(lesson);
+            }}
+            className="p-1.5 rounded hover:bg-white/10 transition"
+            title="Déplacer vers un autre module"
+          >
+            <ArrowRight className="w-4 h-4 text-cyan-400" />
+          </button>
+        )}
         {onEdit && (
           <button
             onClick={(e) => {

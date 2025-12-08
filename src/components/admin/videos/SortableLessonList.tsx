@@ -28,6 +28,7 @@ interface SortableLessonListProps {
   onDeleteLesson?: (lessonId: string) => void;
   onReplaceVideo?: (lessonId: string) => void;
   onAssignVideo?: (lessonId: string) => void;
+  onMoveLesson?: (lesson: TrainingLesson) => void;
   onReorder?: (lessons: TrainingLesson[]) => void;
 }
 

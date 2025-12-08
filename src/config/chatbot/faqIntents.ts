@@ -114,7 +114,7 @@ export const CHATBOT_INTENTS: ChatbotIntent[] = [
     id: 'access_duration',
     category: 'Formation',
     patterns: ['combien de temps', 'durée accès', 'accès à vie', 'limite de temps', 'expiration'],
-    answer: "L'accès à nos formations est **à vie** pour les offres Entrée et Transformation ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
+    answer: "L'accès à nos formations est **à vie** pour les offres Starter et Premium ! ♾️\n\nUne fois membre, vous profitez des mises à jour futures du contenu sans surcoût.",
   },
   {
     id: 'what_is_included_client_area',

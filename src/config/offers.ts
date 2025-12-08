@@ -2,9 +2,13 @@
  * Configuration des offres et entitlements (droits d'accès)
  * 
  * SOURCE UNIQUE DE VÉRITÉ pour définir :
- * - Les offres disponibles (Entrée, Transformation, Immersion Élite)
+ * - Les offres disponibles (Starter, Premium, Bootcamp Élite)
  * - Les droits d'accès associés à chaque offre
  * - Le mapping entre les offres et les licences système
+ * 
+ * Note: Les IDs internes ('entree', 'transformation', 'immersion_elite') sont conservés
+ * pour la compatibilité avec Stripe et la base de données, mais les noms affichés
+ * sont toujours Starter, Premium, Bootcamp Élite.
  */
 
 export type OfferId = 'entree' | 'transformation' | 'immersion_elite';

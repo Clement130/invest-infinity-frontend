@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, X, Upload, Trash2, ExternalLink, Play, Eye } from 'lucide-react';
+import { Save, X, Upload, Trash2, ExternalLink, Play, Eye, Video } from 'lucide-react';
 import { getThumbnailUrl, formatDuration } from '../../../lib/bunny';
 import { SecureVideoPreview } from './SecureVideoPreview';
 import type { TrainingLesson } from '../../../types/training';
@@ -13,6 +13,7 @@ interface LessonEditPanelProps {
   onUploadVideo?: () => void;
   onReplaceVideo?: () => void;
   onRemoveVideo?: () => void;
+  onSelectFromLibrary?: () => void;
 }
 
 export function LessonEditPanel({
@@ -23,6 +24,7 @@ export function LessonEditPanel({
   onUploadVideo,
   onReplaceVideo,
   onRemoveVideo,
+  onSelectFromLibrary,
 }: LessonEditPanelProps) {
   const [formData, setFormData] = useState({
     title: '',
@@ -193,13 +195,22 @@ export function LessonEditPanel({
                 <Play className="w-4 h-4" />
                 Prévisualiser
               </button>
+              {onSelectFromLibrary && (
+                <button
+                  onClick={onSelectFromLibrary}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 transition text-sm"
+                >
+                  <Video className="w-4 h-4" />
+                  Changer
+                </button>
+              )}
               {onReplaceVideo && (
                 <button
                   onClick={onReplaceVideo}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10 transition text-sm"
                 >
                   <Upload className="w-4 h-4" />
-                  Remplacer
+                  Uploader
                 </button>
               )}
               {onRemoveVideo && (
@@ -214,17 +225,28 @@ export function LessonEditPanel({
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-white/20 bg-black/40 p-8 text-center">
+          <div className="rounded-lg border border-dashed border-white/20 bg-black/40 p-8 text-center space-y-3">
             <p className="text-sm text-gray-400 mb-3">Aucune vidéo assignée</p>
-            {onUploadVideo && (
-              <button
-                onClick={onUploadVideo}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:from-purple-600 hover:to-pink-600 transition"
-              >
-                <Upload className="w-4 h-4" />
-                Uploader une vidéo
-              </button>
-            )}
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              {onSelectFromLibrary && (
+                <button
+                  onClick={onSelectFromLibrary}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold hover:from-blue-600 hover:to-cyan-600 transition"
+                >
+                  <Video className="w-4 h-4" />
+                  Choisir depuis la bibliothèque
+                </button>
+              )}
+              {onUploadVideo && (
+                <button
+                  onClick={onUploadVideo}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:from-purple-600 hover:to-pink-600 transition"
+                >
+                  <Upload className="w-4 h-4" />
+                  Uploader une vidéo
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

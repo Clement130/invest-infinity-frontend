@@ -16,12 +16,13 @@ const ConfirmDeleteModal = lazy(() => import('../../components/admin/videos/Conf
 const EnvironmentCheck = lazy(() => import('../../components/admin/videos/EnvironmentCheck').then(module => ({ default: module.EnvironmentCheck })));
 const EnvDebug = lazy(() => import('../../components/admin/videos/EnvDebug').then(module => ({ default: module.EnvDebug })));
 const VideoTutorial = lazy(() => import('../../components/admin/videos/VideoTutorial').then(module => ({ default: module.VideoTutorial })));
+const MoveLessonModal = lazy(() => import('../../components/admin/videos/MoveLessonModal').then(module => ({ default: module.MoveLessonModal })));
 
 // Type pour RealTimeGuide
 type GuideState = any;
 import { useFormationsHierarchy } from '../../hooks/admin/useFormationsHierarchy';
 import { useBunnyLibrary } from '../../hooks/admin/useBunnyLibrary';
-import { createOrUpdateLesson, deleteLesson, createOrUpdateModule, deleteModule } from '../../services/trainingService';
+import { createOrUpdateLesson, deleteLesson, createOrUpdateModule, deleteModule, moveLessonToModule } from '../../services/trainingService';
 import type { TrainingLesson, TrainingModule } from '../../types/training';
 
 export default function VideosManagement() {
@@ -43,6 +44,8 @@ export default function VideosManagement() {
   const [showModuleModal, setShowModuleModal] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showMoveLessonModal, setShowMoveLessonModal] = useState(false);
+  const [movingLesson, setMovingLesson] = useState<TrainingLesson | null>(null);
   const [editingModule, setEditingModule] = useState<TrainingModule | null>(null);
   const [editingLesson, setEditingLesson] = useState<TrainingLesson | null>(null);
   const [lessonModalModuleId, setLessonModalModuleId] = useState<string | null>(null);
@@ -375,6 +378,11 @@ export default function VideosManagement() {
       updateLessonMutation.mutate({
         id: selectedLessonId,
         bunny_video_id: videoId,
+      }, {
+        onSuccess: () => {
+          setShowLibraryModal(false);
+          setGuideState('idle');
+        }
       });
     }
   }, [selectedLessonId, updateLessonMutation]);
@@ -386,6 +394,39 @@ export default function VideosManagement() {
       bunny_video_id: null,
     });
   }, [selectedLesson, updateLessonMutation]);
+
+  const handleMoveLesson = useCallback((lesson: TrainingLesson) => {
+    setMovingLesson(lesson);
+    setShowMoveLessonModal(true);
+  }, []);
+
+  const moveLessonMutation = useMutation({
+    mutationFn: async ({ lessonId, newModuleId }: { lessonId: string; newModuleId: string }) => {
+      return moveLessonToModule(lessonId, newModuleId);
+    },
+    onSuccess: (_data, variables) => {
+      // Capturer l'ID de la leçon depuis les variables de la mutation pour éviter le stale closure
+      const movedLessonId = variables.lessonId;
+      
+      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+      toast.success('Leçon déplacée avec succès');
+      setShowMoveLessonModal(false);
+      
+      // Vérifier si la leçon déplacée était sélectionnée avant de la mettre à null
+      if (selectedLessonId === movedLessonId) {
+        setSelectedLessonId(null);
+      }
+      
+      setMovingLesson(null);
+    },
+    onError: (error: any) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
+
+  const handleConfirmMoveLesson = useCallback(async (lessonId: string, newModuleId: string) => {
+    await moveLessonMutation.mutateAsync({ lessonId, newModuleId });
+  }, [moveLessonMutation]);
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -473,6 +514,7 @@ export default function VideosManagement() {
                   setShowLibraryModal(true);
                   setSelectedLessonId(id);
                 }}
+                onMoveLesson={handleMoveLesson}
                 onAddModule={handleCreateModule}
                 onAddLesson={handleCreateLesson}
                 onEditModule={handleEditModule}
@@ -505,6 +547,10 @@ export default function VideosManagement() {
                 if (selectedLesson) handleReplaceVideo(selectedLesson.id);
               }}
               onRemoveVideo={handleRemoveVideo}
+              onSelectFromLibrary={() => {
+                setShowLibraryModal(true);
+                setGuideState('selecting-video');
+              }}
             />
           </div>
         </div>
@@ -572,6 +618,23 @@ export default function VideosManagement() {
           itemName={deleteModuleConfirm?.moduleTitle}
           isDeleting={deleteModuleMutation.isPending}
         />
+
+        {/* Move Lesson Modal */}
+        {movingLesson && (
+          <Suspense fallback={null}>
+            <MoveLessonModal
+              isOpen={showMoveLessonModal}
+              lesson={movingLesson}
+              modules={hierarchy.modules}
+              currentModuleId={movingLesson.module_id}
+              onClose={() => {
+                setShowMoveLessonModal(false);
+                setMovingLesson(null);
+              }}
+              onMove={handleConfirmMoveLesson}
+            />
+          </Suspense>
+        )}
       </div>
     </div>
   );

@@ -173,7 +173,7 @@ export default function PricingPage() {
     },
     {
       question: 'Y a-t-il une période d\'essai ?',
-      answer: 'L\'offre Transformation inclut une garantie 14 jours satisfait ou remboursé.',
+      answer: 'L\'offre Premium inclut une garantie 14 jours satisfait ou remboursé.',
     },
     {
       question: 'Quand est-ce qu\'il y a les live trading ?',

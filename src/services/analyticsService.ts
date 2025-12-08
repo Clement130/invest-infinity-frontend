@@ -106,9 +106,9 @@ export async function getRevenueStats(): Promise<RevenueStats> {
 
   // Libellés des licences
   const licenseLabels: Record<string, string> = {
-    starter: 'Starter (Entrée)',
-    pro: 'Pro (Transformation)',
-    elite: 'Elite (Immersion)',
+    starter: 'Starter',
+    pro: 'Premium',
+    elite: 'Bootcamp Élite',
   };
 
   // Revenus par mois

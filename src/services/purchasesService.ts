@@ -3,14 +3,14 @@ import type { Payment } from '../types/training';
 
 // Libellés pour les types de licence
 const LICENSE_LABELS: Record<string, string> = {
-  // Anciens noms de licence (dans la base)
-  entree: 'Starter (Entrée)',
-  transformation: 'Pro (Transformation)',
-  immersion: 'Elite (Immersion)',
-  // Nouveaux noms (pour compatibilité)
-  starter: 'Starter (Entrée)',
-  pro: 'Pro (Transformation)',
-  elite: 'Elite (Immersion)',
+  // Anciens IDs internes (dans la base) - mapping vers noms affichés
+  entree: 'Starter',
+  transformation: 'Premium',
+  immersion: 'Bootcamp Élite',
+  // Noms système (pour compatibilité)
+  starter: 'Starter',
+  pro: 'Premium',
+  elite: 'Bootcamp Élite',
 };
 
 export async function getPaymentsForCurrentUser(): Promise<Payment[]> {

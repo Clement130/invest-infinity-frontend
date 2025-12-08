@@ -414,9 +414,9 @@ function UserDetailModal({
 
   const licenseOptions: { value: LicenseType; label: string; color: string }[] = [
     { value: 'none', label: 'Aucune licence', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
-    { value: 'entree', label: 'Starter (Entrée)', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-    { value: 'transformation', label: 'Pro (Transformation)', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-    { value: 'immersion', label: 'Elite (Immersion)', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+    { value: 'entree', label: 'Starter', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+    { value: 'transformation', label: 'Premium', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+    { value: 'immersion', label: 'Bootcamp Élite', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   ];
 
   return (

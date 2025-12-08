@@ -31,6 +31,7 @@ interface SortableModuleListProps {
   onDeleteLesson?: (lessonId: string) => void;
   onReplaceVideo?: (lessonId: string) => void;
   onAssignVideo?: (lessonId: string) => void;
+  onMoveLesson?: (lesson: TrainingLesson) => void;
   onAddLesson?: (moduleId: string) => void;
   onEditModule?: (module: ModuleWithLessons) => void;
   onDeleteModule?: (moduleId: string) => void;
