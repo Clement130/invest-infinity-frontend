@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, User, Loader2, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CustomMuiTelInput } from './CustomMuiTelInput';
@@ -267,7 +268,9 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
 
   if (!isOpen) return null;
 
-  return (
+  // Utiliser createPortal pour rendre le modal au niveau du body
+  // Cela évite les problèmes de positionnement fixed à l'intérieur de conteneurs
+  return createPortal(
     <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
       <div className="relative w-full max-w-2xl max-h-[90vh]">
         <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg blur opacity-75" />
@@ -484,6 +487,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
