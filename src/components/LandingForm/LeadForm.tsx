@@ -97,7 +97,6 @@ const LeadForm: React.FC = () => {
         email: formData.email,
         telephone: formData.phone,
         statut: 'Lead',
-        newsLetter: true,
         capital: 0,
       });
 

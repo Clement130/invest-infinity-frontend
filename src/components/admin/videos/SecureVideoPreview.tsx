@@ -7,7 +7,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Play, Loader2, AlertCircle, RefreshCw, X, Maximize2 } from 'lucide-react';
-import { generateSecurePlaybackUrl, getThumbnailUrl, type BunnySecureUrlResponse } from '../../../lib/bunny';
+import { VideoService } from '../../../services/videoService';
+import type { SecurePlaybackUrlResponse } from '../../../types/video';
 
 interface SecureVideoPreviewProps {
   /** ID de la vidéo Bunny */
@@ -31,10 +32,10 @@ export function SecureVideoPreview({
 }: SecureVideoPreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [secureUrl, setSecureUrl] = useState<BunnySecureUrlResponse | null>(null);
+  const [secureUrl, setSecureUrl] = useState<SecurePlaybackUrlResponse | null>(null);
   const [showPlayer, setShowPlayer] = useState(mode === 'inline');
 
-  const thumbnailUrl = getThumbnailUrl(videoId);
+  const thumbnailUrl = VideoService.getThumbnailUrl(videoId);
 
   // Charger l'URL sécurisée
   const loadSecureUrl = useCallback(async () => {
@@ -48,7 +49,7 @@ export function SecureVideoPreview({
 
     try {
       // URL valide 2 heures pour la preview admin
-      const result = await generateSecurePlaybackUrl(videoId, { expiryHours: 2 });
+      const result = await VideoService.getPlaybackUrl(videoId, { expiryHours: 2 });
       setSecureUrl(result);
     } catch (err) {
       console.error('[SecureVideoPreview] Erreur:', err);

@@ -7,7 +7,8 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:5174',
-    // Ajoutez vos domaines de production ici
+    'https://www.investinfinity.fr',
+    'https://investinfinity.fr',
   ];
   
   const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 

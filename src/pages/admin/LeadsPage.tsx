@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Mail, Phone, Euro, Calendar, User } from 'lucide-react';
-import { listLeads, updateLeadStatus } from '../../services/leadsService';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Mail, Phone, Euro, Calendar, User, UserPlus } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { listLeads, updateLeadStatus, convertLeadToUser } from '../../services/leadsService';
 import type { Lead } from '../../services/leadsService';
 import DataTable, { type Column } from '../../components/admin/DataTable';
 
 export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [convertingEmails, setConvertingEmails] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
   const { data: leads = [], isLoading, refetch } = useQuery({
     queryKey: ['admin', 'leads'],
@@ -24,6 +27,35 @@ export default function LeadsPage() {
       refetch();
     } catch (error) {
       console.error('Error updating lead status:', error);
+    }
+  };
+
+  const handleConvertToUser = async (email: string) => {
+    if (convertingEmails.has(email)) return;
+
+    setConvertingEmails((prev) => new Set(prev).add(email));
+    const toastId = toast.loading(`Conversion de ${email} en cours...`);
+
+    try {
+      const result = await convertLeadToUser(email);
+      
+      toast.success(result.message, { id: toastId });
+      
+      // Rafraîchir les données
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ['admin', 'profiles'] }),
+      ]);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la conversion';
+      toast.error(errorMessage, { id: toastId });
+      console.error('Error converting lead to user:', error);
+    } finally {
+      setConvertingEmails((prev) => {
+        const next = new Set(prev);
+        next.delete(email);
+        return next;
+      });
     }
   };
 
@@ -152,6 +184,31 @@ export default function LeadsPage() {
           })}
         </div>
       ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => {
+        const isConverting = convertingEmails.has(row.email);
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleConvertToUser(row.email);
+            }}
+            disabled={isConverting}
+            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors flex items-center gap-2 ${
+              isConverting
+                ? 'bg-gray-500/20 text-gray-400 border-gray-500/30 cursor-not-allowed'
+                : 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30'
+            }`}
+            title="Convertir ce lead en utilisateur"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            {isConverting ? 'Conversion...' : 'Convertir'}
+          </button>
+        );
+      },
     },
   ];
 

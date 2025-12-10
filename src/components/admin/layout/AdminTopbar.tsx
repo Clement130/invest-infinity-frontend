@@ -22,7 +22,6 @@ import {
   BookOpen,
   Video,
   Users,
-  Calendar,
 } from 'lucide-react';
 import { useSession } from '../../../hooks/useSession';
 import { useCommandPalette } from '../../../hooks/useCommandPalette';
@@ -37,7 +36,6 @@ interface AdminTopbarProps {
 const CREATE_OPTIONS = [
   { label: 'Nouvelle formation', icon: BookOpen, path: '/admin/formations?action=create' },
   { label: 'Nouvelle vidéo', icon: Video, path: '/admin/videos?action=upload' },
-  { label: 'Nouvel événement', icon: Calendar, path: '/admin/events?action=create' },
   { label: 'Inviter un utilisateur', icon: Users, path: '/admin/users?action=invite' },
 ];
 

@@ -6,7 +6,6 @@ import type { UserRole } from '../types/training';
 const Home = lazy(() => import('../pages/Home'));
 const Welcome = lazy(() => import('../pages/Welcome'));
 const TradingAccount = lazy(() => import('../pages/TradingAccount'));
-const PropFirmChallenge = lazy(() => import('../pages/PropFirmChallenge'));
 const Login = lazy(() => import('../pages/Login'));
 const ClientApp = lazy(() => import('../pages/ClientApp'));
 const DashboardPage = lazy(() => import('../pages/admin/DashboardPage'));
@@ -17,8 +16,6 @@ const PaiementsPage = lazy(() => import('../pages/admin/PaiementsPage'));
 const AnalyticsPage = lazy(() => import('../pages/admin/AnalyticsPage'));
 const ContenuPage = lazy(() => import('../pages/admin/ContenuPage'));
 const ClientPreviewPage = lazy(() => import('../pages/admin/ClientPreviewPage'));
-const AdminChallengesPage = lazy(() => import('../pages/admin/ChallengesPage'));
-const AdminEventsPage = lazy(() => import('../pages/admin/EventsPage'));
 const VideosManagement = lazy(() => import('../pages/admin/VideosManagement'));
 const AdminSettingsPage = lazy(() => import('../pages/admin/SettingsPage'));
 const ManageImmersionSessions = lazy(() => import('../pages/admin/ManageImmersionSessions'));
@@ -30,8 +27,6 @@ const ModulePage = lazy(() => import('../pages/ModulePage'));
 const LessonPlayerPage = lazy(() => import('../pages/LessonPlayerPage'));
 const MemberDashboard = lazy(() => import('../pages/MemberDashboard'));
 const ProgressPage = lazy(() => import('../pages/ProgressPage'));
-const ClientChallengesPage = lazy(() => import('../pages/ChallengesPage'));
-const EventsPage = lazy(() => import('../pages/EventsPage'));
 const PartnershipsPage = lazy(() => import('../pages/PartnershipsPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
@@ -71,10 +66,6 @@ export const marketingRoutes: MarketingRouteConfig[] = [
     path: '/trading-account',
     element: <TradingAccount />,
     layout: { header: false, footer: true },
-  },
-  {
-    path: '/propfirm-challenge',
-    element: <PropFirmChallenge />,
   },
   {
     path: '/start',
@@ -133,8 +124,6 @@ export const clientRoutes: ClientRouteConfig[] = [
   { path: '', element: <ClientApp /> }, // /app
   { path: 'dashboard', element: <MemberDashboard /> }, // /app/dashboard
   { path: 'progress', element: <ProgressPage /> }, // /app/progress
-  { path: 'challenges', element: <ClientChallengesPage /> }, // /app/challenges
-  { path: 'events', element: <EventsPage /> }, // /app/events
   { path: 'partnerships', element: <PartnershipsPage /> }, // /app/partnerships
   { path: 'settings', element: <SettingsPage /> }, // /app/settings
   { path: 'modules/:moduleId', element: <ModulePage /> }, // /app/modules/:moduleId
@@ -152,8 +141,6 @@ export const adminRoutes: AdminRouteConfig[] = [
   { path: '/admin/contenu', element: <AdminLayout activeSection="contenu"><ContenuPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/preview', element: <AdminLayout activeSection="preview"><ClientPreviewPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/videos', element: <AdminLayout activeSection="videos"><VideosManagement /></AdminLayout>, allowedRoles: ['admin'] },
-  { path: '/admin/challenges', element: <AdminLayout activeSection="challenges"><AdminChallengesPage /></AdminLayout>, allowedRoles: ['admin'] },
-  { path: '/admin/events', element: <AdminLayout activeSection="events"><AdminEventsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/immersion', element: <AdminLayout activeSection="immersion"><ManageImmersionSessions /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/appointments', element: <AdminLayout activeSection="appointments"><AppointmentsPage /></AdminLayout>, allowedRoles: ['admin'] },
   { path: '/admin/chatbot', element: <AdminLayout activeSection="chatbot"><ChatbotAnalytics /></AdminLayout>, allowedRoles: ['admin'] },

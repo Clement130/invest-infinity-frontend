@@ -196,6 +196,48 @@ serve(async (req) => {
     //   `,
     // });
 
+    // ==================== DÉCLENCHEMENT CLOSER IA ====================
+    // Si un numéro de téléphone est fourni, déclencher l'appel automatique via n8n
+    if (phone && phone.trim()) {
+      const n8nWebhookUrl = Deno.env.get('N8N_CLOSER_WEBHOOK_URL');
+      
+      if (n8nWebhookUrl) {
+        // Appel asynchrone pour ne pas bloquer la réponse à l'utilisateur
+        fetch(n8nWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            phone: phone.trim(),
+            subject: subject || '',
+            message,
+            source,
+          }),
+        }).catch((err) => {
+          // Log l'erreur mais ne bloque pas la réponse
+          secureLog('contact', 'Failed to trigger closer IA', {
+            error: err instanceof Error ? err.message : 'Unknown',
+            email,
+            phone: phone.substring(0, 4) + '***', // Masquer le numéro dans les logs
+          });
+        });
+        
+        secureLog('contact', 'Closer IA triggered', {
+          email,
+          hasPhone: true,
+          messageId: data?.id,
+        });
+      } else {
+        secureLog('contact', 'N8N webhook URL not configured', {
+          email,
+          hasPhone: true,
+        });
+      }
+    }
+
     secureLog('contact', 'Contact message saved', { 
       email, 
       subject: subject || 'none',

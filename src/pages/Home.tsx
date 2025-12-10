@@ -6,7 +6,6 @@ import FAQ from '../components/FAQ';
 import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
 import TestimonialCarousel from '../components/TestimonialCarousel';
-import NewsletterForm from '../components/NewsletterForm';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -17,14 +16,7 @@ export default function Home() {
       {/* 1. Hero avec mini badge Trustpilot */}
       <Hero onOpenRegister={() => setIsRegisterOpen(true)} />
       
-      {/* 2. Newsletter Lead Magnet - PDF gratuit */}
-      <section className="relative py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <NewsletterForm />
-        </div>
-      </section>
-      
-      {/* 3. Services / Bénéfices */}
+      {/* 2. Services / Bénéfices */}
       <div className="relative">
         <div className="absolute -top-32 left-0 right-0 h-32 bg-gradient-to-b from-[rgb(15,15,19,0)] to-[rgb(15,15,19,1)] z-10" />
         <Services onOpenRegister={() => setIsRegisterOpen(true)} />

@@ -76,3 +76,36 @@ export async function updateLeadStatus(
   }
 }
 
+export type ConvertLeadResponse = {
+  success: boolean;
+  userId: string;
+  email: string;
+  isNewUser: boolean;
+  message: string;
+};
+
+export async function convertLeadToUser(email: string): Promise<ConvertLeadResponse> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('Vous devez être connecté pour convertir un lead');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/convert-lead-to-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+

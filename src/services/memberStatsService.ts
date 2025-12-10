@@ -66,38 +66,11 @@ export interface Badge {
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
 }
 
-export interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  type: 'weekly' | 'monthly' | 'special';
-  startDate: string;
-  endDate: string;
-  progress: number;
-  target: number;
-  reward: string;
-  participants: number;
-  userRank?: number;
-}
-
 export interface ActivityDay {
   date: string;
   count: number;
   lessonsCompleted: number;
   timeSpent: number;
-}
-
-export interface Event {
-  id: string;
-  title: string;
-  description: string;
-  type: 'live' | 'workshop' | 'masterclass' | 'event';
-  date: string;
-  duration: number; // en minutes
-  speaker?: string;
-  isExclusive: boolean;
-  registrationRequired: boolean;
-  registered: boolean;
 }
 
 // Récupérer les statistiques de l'utilisateur
@@ -451,33 +424,6 @@ async function getUserBadges(
   return allBadges;
 }
 
-// Récupérer les défis actifs
-export async function getActiveChallenges(userId: string): Promise<Challenge[]> {
-  // Utiliser le nouveau service de défis
-  const { getActiveChallenges: getChallenges } = await import('./challengesService');
-  try {
-    const challenges = await getChallenges(userId);
-    
-    // Convertir au format Challenge
-    return challenges.map((c) => ({
-      id: c.id,
-      title: c.title,
-      description: c.description,
-      type: c.type,
-      startDate: c.startDate,
-      endDate: c.endDate,
-      progress: c.progress,
-      target: c.target,
-      reward: c.reward,
-      participants: c.participants,
-      userRank: c.userRank,
-    }));
-  } catch (error) {
-    console.error('Error fetching challenges:', error);
-    // Retourner une liste vide en cas d'erreur (table peut ne pas exister encore)
-    return [];
-  }
-}
 
 // Récupérer la heatmap d'activité (365 derniers jours)
 export async function getActivityHeatmap(userId: string): Promise<ActivityDay[]> {
@@ -620,55 +566,5 @@ async function fetchActiveBooster(userId: string): Promise<ActiveBooster | null>
   };
 }
 
-// Récupérer les événements à venir
-export async function getUpcomingEvents(userId: string): Promise<Event[]> {
-  const { supabase } = await import('../lib/supabaseClient');
-  
-  // Récupérer les événements actifs
-  const { data: eventsData, error: eventsError } = await supabase
-    .from('events')
-    .select('*')
-    .eq('is_active', true)
-    .order('date', { ascending: true });
-
-  if (eventsError) {
-    console.error('Error fetching events:', eventsError);
-    return [];
-  }
-
-  if (!eventsData || eventsData.length === 0) {
-    return [];
-  }
-
-  // Récupérer les inscriptions de l'utilisateur
-  const { data: registrationsData, error: registrationsError } = await supabase
-    .from('event_registrations')
-    .select('event_id')
-    .eq('user_id', userId);
-
-  if (registrationsError) {
-    console.error('Error fetching registrations:', registrationsError);
-  }
-
-  const registeredEventIds = new Set(
-    (registrationsData || []).map((r) => r.event_id)
-  );
-
-  // Transformer les données de la DB vers le format Event
-  const events: Event[] = eventsData.map((event) => ({
-    id: event.id,
-    title: event.title,
-    description: event.description,
-    type: event.type as 'live' | 'workshop' | 'masterclass' | 'event',
-    date: event.date,
-    duration: event.duration,
-    speaker: event.speaker || undefined,
-    isExclusive: event.is_exclusive,
-    registrationRequired: event.registration_required,
-    registered: registeredEventIds.has(event.id),
-  }));
-
-  return events;
-}
 
 

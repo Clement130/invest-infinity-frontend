@@ -1,0 +1,23 @@
+{
+  "devFiles": [],
+  "ampDevFiles": [],
+  "polyfillFiles": [],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [],
+  "pages": {
+    "/_error": [
+      "static/chunks/bde1b_next_dist_compiled_7f26ad97._.js",
+      "static/chunks/bde1b_next_dist_shared_lib_3c956ab9._.js",
+      "static/chunks/bde1b_next_dist_client_a4236ffc._.js",
+      "static/chunks/bde1b_next_dist_dc810f39._.js",
+      "static/chunks/bde1b_next_error_60a3c387.js",
+      "static/chunks/[next]_entry_page-loader_ts_2d4b62e9._.js",
+      "static/chunks/bde1b_react-dom_ebdc4836._.js",
+      "static/chunks/bde1b_1fdf8fdb._.js",
+      "static/chunks/[root-of-the-server]__b2c06d42._.js",
+      "static/chunks/OneDrive_Documents_GitHub_invest-infinity-frontend_src_pages__error_2da965e7._.js",
+      "static/chunks/9f58e_Documents_GitHub_invest-infinity-frontend_src_pages__error_ad1d63a9._.js"
+    ]
+  },
+  "ampFirstPages": []
+}

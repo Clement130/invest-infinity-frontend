@@ -7,8 +7,9 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:5174',
+    'https://www.investinfinity.fr',
+    'https://investinfinity.fr',
     'https://invest-infinity-frontend.vercel.app',
-    'https://invest-infinity-frontend-*.vercel.app',
   ];
   
   // Vérifier si l'origine est autorisée
@@ -18,9 +19,9 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     // Vérifier les correspondances exactes
     if (ALLOWED_ORIGINS.includes(origin)) {
       allowedOrigin = origin;
-    } 
-    // Vérifier les patterns Vercel (wildcard)
-    else if (origin.includes('vercel.app') && ALLOWED_ORIGINS.some(pattern => pattern.includes('vercel.app'))) {
+    }
+    // Vérifier les patterns Vercel (wildcard pour previews)
+    else if (origin.match(/^https:\/\/invest-infinity-frontend.*\.vercel\.app$/)) {
       allowedOrigin = origin;
     }
   }

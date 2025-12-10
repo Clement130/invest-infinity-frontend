@@ -7,10 +7,9 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:5174',
-    'https://invest-infinity-frontend.vercel.app',
-    'https://invest-infinity-frontend-*.vercel.app',
     'https://www.investinfinity.fr',
     'https://investinfinity.fr',
+    'https://invest-infinity-frontend.vercel.app',
   ];
 
   // Vérifier si l'origine est autorisée
@@ -21,8 +20,8 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     if (ALLOWED_ORIGINS.includes(origin)) {
       allowedOrigin = origin;
     }
-    // Vérifier les patterns Vercel (wildcard)
-    else if (origin.includes('vercel.app') && ALLOWED_ORIGINS.some(pattern => pattern.includes('vercel.app'))) {
+    // Vérifier les patterns Vercel (wildcard pour previews)
+    else if (origin.match(/^https:\/\/invest-infinity-frontend.*\.vercel\.app$/)) {
       allowedOrigin = origin;
     }
   }
@@ -116,14 +115,13 @@ serve(async (req) => {
       // 2. L'utilisateur a un enregistrement "training_access" pour le module parent
       // 3. L'utilisateur est admin
 
-      // Récupérer la leçon et son module
-      const { data: lesson, error: lessonError } = await supabase
+      // Récupérer les leçons associées à cette vidéo (peut y en avoir plusieurs)
+      const { data: lessons, error: lessonError } = await supabase
         .from('training_lessons')
         .select('id, is_preview, module_id')
-        .eq('bunny_video_id', videoId)
-        .single();
+        .eq('bunny_video_id', videoId);
 
-      if (lessonError || !lesson) {
+      if (lessonError || !lessons || lessons.length === 0) {
         // Si on ne trouve pas la leçon dans notre BDD, c'est que la vidéo n'est pas censée être là
         // ou que l'ID est invalide.
         console.warn(`Video ID ${videoId} not linked to any lesson.`);
@@ -133,33 +131,42 @@ serve(async (req) => {
         );
       }
 
+      // Vérifier le rôle de l'utilisateur une seule fois
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      const isAdminOrDev = profile?.role === 'admin' || profile?.role === 'developer';
+
+      // Vérifier l'accès : l'utilisateur doit avoir accès à AU MOINS UNE des leçons
       let hasAccess = false;
 
-      // Cas 1 : Preview publique
-      if (lesson.is_preview) {
-        hasAccess = true;
-      } else {
-        // Cas 2 : Admin / Developer ?
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
+      for (const lesson of lessons) {
+        // Cas 1 : Preview publique
+        if (lesson.is_preview) {
+          hasAccess = true;
+          break;
+        }
 
-        if (profile?.role === 'admin' || profile?.role === 'developer') {
-            hasAccess = true;
-        } else {
-            // Cas 3 : Vérifier training_access
-            const { data: access } = await supabase
-                .from('training_access')
-                .select('id')
-                .eq('module_id', lesson.module_id)
-                .eq('user_id', user.id)
-                .single();
+        // Cas 2 : Admin / Developer ont accès à tout
+        if (isAdminOrDev) {
+          hasAccess = true;
+          break;
+        }
 
-            if (access) {
-                hasAccess = true;
-            }
+        // Cas 3 : Vérifier training_access pour cette leçon spécifique
+        const { data: access } = await supabase
+          .from('training_access')
+          .select('id')
+          .eq('module_id', lesson.module_id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (access) {
+          hasAccess = true;
+          break;
         }
       }
 
@@ -177,8 +184,9 @@ serve(async (req) => {
       // Calculer l'expiration (timestamp UNIX)
       const expires = Math.floor(Date.now() / 1000) + (expiryHours * 3600);
 
-      // Générer le token selon la formule Bunny Stream :
-      // SHA256_HEX(token_security_key + video_id + expiration)
+      // Générer le token selon la formule Bunny Stream Embed Token Authentication :
+      // SHA256_HEX(token_security_key + videoId + expiration)
+      // Note: Pour l'embed token, on utilise directement videoId, pas le path complet
       const tokenString = bunnyEmbedTokenKey + videoId + expires;
       const token = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(tokenString));
       const tokenHex = Array.from(new Uint8Array(token))
@@ -186,7 +194,9 @@ serve(async (req) => {
         .join('');
 
       // Construire l'URL sécurisée avec library ID
-      const secureEmbedUrl = `${BUNNY_EMBED_BASE_URL}/${bunnyLibraryId}/${videoId}?token=${tokenHex}&expires=${expires}`;
+      // Format: https://iframe.mediadelivery.net/embed/{libraryId}/{videoId}?token={token}&expires={expires}
+      const path = `/${bunnyLibraryId}/${videoId}`;
+      const secureEmbedUrl = `${BUNNY_EMBED_BASE_URL}${path}?token=${tokenHex}&expires=${expires}`;
 
       return new Response(
         JSON.stringify({

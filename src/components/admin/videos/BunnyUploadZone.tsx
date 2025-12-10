@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Upload, FileVideo, X, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useBunnyUpload, type UploadProgress } from '../../../hooks/admin/useBunnyUpload';
+import { useVideoManagement } from '../../../hooks/useVideoManagement';
+import { VideoService } from '../../../services/videoService';
+import type { UploadStatus } from '../../../types/video';
 import toast from 'react-hot-toast';
 
 interface BunnyUploadZoneProps {
@@ -9,7 +11,7 @@ interface BunnyUploadZoneProps {
 }
 
 export function BunnyUploadZone({ onUploadComplete, multiple = false }: BunnyUploadZoneProps) {
-  const { uploads, uploadVideo, removeUpload } = useBunnyUpload();
+  const { uploads, upload, removeUpload } = useVideoManagement();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDrop = useCallback(
@@ -27,12 +29,14 @@ export function BunnyUploadZone({ onUploadComplete, multiple = false }: BunnyUpl
       }
 
       for (const file of files) {
-        await uploadVideo(file, (videoId) => {
-          onUploadComplete?.(videoId, file.name);
+        const result = await upload({
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          file,
         });
+        onUploadComplete?.(result.guid || result.videoId, file.name);
       }
     },
-    [uploadVideo, onUploadComplete]
+    [upload, onUploadComplete]
   );
 
   const handleFileInput = useCallback(
@@ -44,15 +48,17 @@ export function BunnyUploadZone({ onUploadComplete, multiple = false }: BunnyUpl
       if (files.length === 0) return;
 
       for (const file of files) {
-        await uploadVideo(file, (videoId) => {
-          onUploadComplete?.(videoId, file.name);
+        const result = await upload({
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          file,
         });
+        onUploadComplete?.(result.guid || result.videoId, file.name);
       }
 
       // Reset input
       e.target.value = '';
     },
-    [uploadVideo, onUploadComplete]
+    [upload, onUploadComplete]
   );
 
   const formatFileSize = (bytes: number) => {
@@ -120,17 +126,11 @@ export function BunnyUploadZone({ onUploadComplete, multiple = false }: BunnyUpl
 }
 
 interface UploadProgressItemProps {
-  upload: UploadProgress;
+  upload: UploadStatus;
   onRemove: () => void;
 }
 
 function UploadProgressItem({ upload, onRemove }: UploadProgressItemProps) {
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
 
   return (
     <div className="rounded-lg border border-white/10 bg-black/40 p-4 space-y-2">

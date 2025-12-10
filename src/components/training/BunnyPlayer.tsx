@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, Lock } from 'lucide-react';
 import { VideoProgressTracker, type VideoProgressEvent } from '../../services/progressTrackingService';
-import { getSecureEmbedUrl } from '../../services/bunnyStreamService';
+import { VideoService } from '../../services/videoService';
 
 // Déclaration du type Player.js pour TypeScript
 declare global {
@@ -90,9 +90,9 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     const fetchSecureUrl = async () => {
       try {
         console.log('[BunnyPlayer] Génération du token sécurisé pour:', videoId);
-        const secureUrl = await getSecureEmbedUrl(videoId, 4); // Token valide 4h
+        const result = await VideoService.getPlaybackUrl(videoId, { expiryHours: 4 }); // Token valide 4h
         console.log('[BunnyPlayer] URL sécurisée générée');
-        setEmbedUrl(secureUrl + '&autoplay=false&preload=true');
+        setEmbedUrl(result.embedUrl + '&autoplay=false&preload=true');
         setIsLoading(false);
       } catch (error) {
         console.error('[BunnyPlayer] Erreur génération token:', error);

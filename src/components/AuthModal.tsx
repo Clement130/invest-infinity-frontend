@@ -170,7 +170,6 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
         telephone: formData.phone,
         statut: 'Lead',
         capital: 0,
-        newsLetter: true,
       });
 
       // 2. Créer un compte Supabase avec mot de passe temporaire

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Upload, X, FileVideo, Loader2 } from 'lucide-react';
-import { uploadBunnyVideo } from '../../services/bunnyStreamService';
+import { VideoService } from '../../services/videoService';
 import toast from 'react-hot-toast';
 
 interface VideoUploadModalProps {
@@ -53,12 +53,16 @@ export default function VideoUploadModal({
     setUploadProgress(0);
 
     try {
-      const result = await uploadBunnyVideo(title, file, (progress) => {
-        setUploadProgress(progress);
+      const result = await VideoService.upload({
+        title,
+        file,
+        onProgress: (progress) => {
+          setUploadProgress(progress);
+        },
       });
 
       toast.success('Vidéo uploadée avec succès !');
-      onUploadComplete(result.videoId, result.title);
+      onUploadComplete(result.guid || result.videoId, result.title);
       
       // Réinitialiser le formulaire
       setTitle('');

@@ -184,7 +184,6 @@ export default function SettingsPage() {
     push: false,
     weekly: true,
     newContent: true,
-    challenges: true,
   });
 
   const [privacy, setPrivacy] = useState({
@@ -464,17 +463,6 @@ export default function SettingsPage() {
                 <ToggleSwitch
                   enabled={notifications.newContent}
                   onChange={(v) => setNotifications({ ...notifications, newContent: v })}
-                />
-              </SettingRow>
-
-              <SettingRow
-                icon={Shield}
-                title="Défis et événements"
-                description="Notifications pour les défis et événements à venir"
-              >
-                <ToggleSwitch
-                  enabled={notifications.challenges}
-                  onChange={(v) => setNotifications({ ...notifications, challenges: v })}
                 />
               </SettingRow>
             </div>

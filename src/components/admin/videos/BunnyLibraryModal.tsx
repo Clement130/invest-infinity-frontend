@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Search, Video as VideoIcon, CheckCircle2, AlertCircle, Copy, ExternalLink, Target } from 'lucide-react';
-import { useBunnyLibrary } from '../../../hooks/admin/useBunnyLibrary';
-import { getBunnyThumbnail, formatDuration } from '../../../utils/admin/bunnyStreamAPI';
+import { useVideoManagement } from '../../../hooks/useVideoManagement';
+import { VideoService } from '../../../services/videoService';
+import { supabase } from '../../../lib/supabaseClient';
+import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 interface BunnyLibraryModalProps {
@@ -19,13 +21,61 @@ export function BunnyLibraryModal({
   onAssignVideo,
   selectedLessonTitle,
 }: BunnyLibraryModalProps) {
-  const { videos, orphanVideos, assignedVideos, isLoading, error, isConfigured } = useBunnyLibrary();
+  const { videos, isLoading: isLoadingVideos, error: videosError } = useVideoManagement();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'assigned' | 'orphan'>('all');
 
+  // Récupérer les leçons pour déterminer quelles vidéos sont assignées
+  const { data: lessons } = useQuery({
+    queryKey: ['admin', 'lessons-for-library'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('training_lessons')
+        .select(`
+          id,
+          title,
+          bunny_video_id,
+          training_modules!inner (
+            id,
+            title
+          )
+        `);
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        title: string;
+        bunny_video_id: string | null;
+        training_modules: {
+          id: string;
+          title: string;
+        };
+      }>;
+    },
+  });
+
+  // Enrichir les vidéos avec les informations d'assignation
+  const videosWithAssignments = useMemo(() => {
+    return videos.map((video) => {
+      const lesson = lessons?.find((l) => l.bunny_video_id === video.guid);
+      return {
+        ...video,
+        assignedToLessonId: lesson?.id,
+        assignedToLessonTitle: lesson?.title,
+        assignedToModuleTitle: (lesson as any)?.training_modules?.title,
+        isOrphan: !lesson,
+      };
+    });
+  }, [videos, lessons]);
+
+  const orphanVideos = videosWithAssignments.filter((v) => v.isOrphan);
+  const assignedVideos = videosWithAssignments.filter((v) => !v.isOrphan);
+  const isLoading = isLoadingVideos;
+  const error = videosError;
+  const isConfigured = Boolean(import.meta.env.VITE_BUNNY_STREAM_LIBRARY_ID && import.meta.env.VITE_BUNNY_EMBED_BASE_URL);
+
   if (!isOpen) return null;
 
-  const filteredVideos = videos.filter((video) => {
+  const filteredVideos = videosWithAssignments.filter((video) => {
     const matchesSearch = video.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       filter === 'all' ||
@@ -51,7 +101,7 @@ export function BunnyLibraryModal({
           <div>
             <h2 className="text-2xl font-bold text-white mb-1">🎞️ BIBLIOTHÈQUE BUNNY STREAM</h2>
             <p className="text-sm text-gray-400">
-              {videos.length} vidéo{videos.length > 1 ? 's' : ''} disponible{videos.length > 1 ? 's' : ''}
+              {videosWithAssignments.length} vidéo{videosWithAssignments.length > 1 ? 's' : ''} disponible{videosWithAssignments.length > 1 ? 's' : ''}
             </p>
             {selectedLessonTitle && onSelectVideo && (
               <div className="mt-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm">
@@ -88,7 +138,7 @@ export function BunnyLibraryModal({
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
               }`}
             >
-              Toutes ({videos.length})
+              Toutes ({videosWithAssignments.length})
             </button>
             <button
               onClick={() => setFilter('assigned')}
@@ -159,7 +209,7 @@ export function BunnyLibraryModal({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredVideos.map((video) => {
-                const thumbnailUrl = getBunnyThumbnail(video.guid);
+                const thumbnailUrl = VideoService.getThumbnailUrl(video.guid);
                 return (
                   <div
                     key={video.guid}
@@ -179,7 +229,7 @@ export function BunnyLibraryModal({
                         />
                         {video.length > 0 && (
                           <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 rounded text-xs text-white">
-                            {formatDuration(video.length)}
+                            {VideoService.formatDuration(video.length)}
                           </div>
                         )}
                       </div>

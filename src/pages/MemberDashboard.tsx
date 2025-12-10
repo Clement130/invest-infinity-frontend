@@ -5,8 +5,6 @@ import { motion } from 'framer-motion';
 import { useSession } from '../hooks/useSession';
 import {
   getUserStats,
-  getActiveChallenges,
-  getUpcomingEvents,
 } from '../services/memberStatsService';
 import { getUserProgressSummary } from '../services/progressService';
 import EmptyState from '../components/common/EmptyState';
@@ -17,9 +15,7 @@ import AnimatedProgress from '../components/ui/AnimatedProgress';
 
 // Lazy load composants lourds pour améliorer les performances
 const ProgressChecklist = lazy(() => import('../components/member/ProgressChecklist'));
-const EventsCalendar = lazy(() => import('../components/member/EventsCalendar'));
 const BadgesDisplay = lazy(() => import('../components/member/BadgesDisplay'));
-const ChallengesList = lazy(() => import('../components/member/ChallengesList'));
 const XpTrackMeter = lazy(() => import('../components/member/XpTrackMeter'));
 const DailyGoalsCard = lazy(() => import('../components/member/DailyGoalsCard'));
 import {
@@ -222,18 +218,6 @@ export default function MemberDashboard() {
   });
 
   // Queries optimisées pour mobile - paresseuses
-  const challengesQuery = useQuery({
-    queryKey: ['member-challenges', user?.id],
-    queryFn: () => getActiveChallenges(user?.id || ''),
-    enabled: !!user?.id && !isMobile, // Désactivé sur mobile
-  });
-
-  const eventsQuery = useQuery({
-    queryKey: ['member-events', user?.id],
-    queryFn: () => getUpcomingEvents(user?.id || ''),
-    enabled: !!user?.id && !isMobile, // Désactivé sur mobile
-  });
-
   const modulesQuery = useQuery({
     queryKey: ['modules', 'client'],
     queryFn: () => getModules(),
@@ -247,8 +231,6 @@ export default function MemberDashboard() {
   });
 
   const stats = statsQuery.data;
-  const challenges = challengesQuery.data || [];
-  const events = eventsQuery.data || [];
   const modules = modulesQuery.data || [];
   const progressSummary = progressQuery.data;
 
@@ -294,8 +276,6 @@ export default function MemberDashboard() {
   // Considérer le chargement terminé si timeout ou si les queries sont terminées
   const isLoading = loadingTimeout ? false : (
     statsQuery.isLoading ||
-    (challengesQuery.isLoading && !isMobile) ||
-    (eventsQuery.isLoading && !isMobile) ||
     (modulesQuery.isLoading && !isMobile) ||
     (progressQuery.isLoading && !isMobile)
   );

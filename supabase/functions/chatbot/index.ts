@@ -56,6 +56,24 @@ interface ChatbotContext {
 }
 
 /**
+ * Mappe les valeurs de licence de la base de données vers les noms marketing
+ */
+function mapLicenseToOfferName(license: string | null | undefined): string {
+  if (!license || license === 'none') return '';
+  
+  const mapping: Record<string, string> = {
+    'entree': 'Starter',
+    'starter': 'Starter', // Fallback pour compatibilité
+    'transformation': 'Premium',
+    'pro': 'Premium', // Fallback pour compatibilité
+    'immersion': 'Bootcamp Élite',
+    'elite': 'Bootcamp Élite', // Fallback pour compatibilité
+  };
+  
+  return mapping[license] || license;
+}
+
+/**
  * Génère le prompt système adapté au contexte utilisateur
  */
 function generateSystemPrompt(context: ChatbotContext): string {
@@ -458,12 +476,15 @@ serve(async (req) => {
                 userRole = 'prospect';
               }
 
+              // Mapper la licence de la base vers le nom marketing
+              const offerName = mapLicenseToOfferName(profile.license);
+              
               // Enrichir le contexte avec les infos serveur (plus fiables)
               userContext = {
                 userRole,
                 userName: profile.first_name || undefined,
                 userEmail: user.email || undefined,
-                customerOffers: profile.license && profile.license !== 'none' ? [profile.license] : undefined,
+                customerOffers: offerName ? [offerName] : undefined,
                 ...context, // Garder les éventuelles infos supplémentaires du frontend
               };
               // S'assurer que le rôle serveur prend le dessus
@@ -504,53 +525,107 @@ serve(async (req) => {
       ...userMessages
     ];
 
-    // 8. Call OpenAI API with limits
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', // Cost effective model
-        messages: contextMessages,
-        max_tokens: 800, // Augmenté pour permettre des réponses plus complètes
-        temperature: 0.7,
-      }),
-    })
+    // 8. Call OpenAI API with limits and timeout
+    const OPENAI_TIMEOUT_MS = 25000; // 25 secondes (Supabase Edge Functions timeout à 30s)
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.text()
-      console.error('OpenAI Error Status:', openaiResponse.status)
-      console.error('OpenAI Error Body:', errorData)
+    try {
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini', // Cost effective model
+          messages: contextMessages,
+          max_tokens: 800, // Augmenté pour permettre des réponses plus complètes
+          temperature: 0.7,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!openaiResponse.ok) {
+        const errorData = await openaiResponse.text();
+        console.error('OpenAI Error Status:', openaiResponse.status);
+        console.error('OpenAI Error Body:', errorData);
+        
+        // Gestion spécifique des erreurs OpenAI
+        let errorMessage = 'Une erreur est survenue lors de la génération de la réponse.';
+        if (openaiResponse.status === 401) {
+          errorMessage = 'Erreur d\'authentification avec le service IA.';
+        } else if (openaiResponse.status === 429) {
+          errorMessage = 'Le service est temporairement surchargé. Réessayez dans quelques instants.';
+        } else if (openaiResponse.status === 500 || openaiResponse.status === 502 || openaiResponse.status === 503) {
+          errorMessage = 'Le service IA est temporairement indisponible. Réessayez dans quelques instants.';
+        }
+        
+        return new Response(
+          JSON.stringify({ error: errorMessage }),
+          { 
+            status: 502, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      const data = await openaiResponse.json();
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('OpenAI Response format error:', JSON.stringify(data));
+        return new Response(
+          JSON.stringify({ error: 'Format de réponse invalide du service IA.' }),
+          { 
+            status: 502, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // 9. Return result
       return new Response(
-        JSON.stringify({ error: `Erreur OpenAI (${openaiResponse.status}): ${errorData}` }),
+        JSON.stringify(data),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.error('OpenAI request timeout');
+        return new Response(
+          JSON.stringify({ error: 'La requête a pris trop de temps. Réessayez avec une question plus courte.' }),
+          { 
+            status: 504, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      console.error('OpenAI fetch error:', fetchError);
+      return new Response(
+        JSON.stringify({ error: 'Erreur de connexion au service IA. Réessayez dans quelques instants.' }),
         { 
           status: 502, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
-      )
+      );
     }
 
-    const data = await openaiResponse.json()
-
-    // 9. Return result
-    return new Response(
-      JSON.stringify(data),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Chatbot function error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error' }),
+      JSON.stringify({ error: 'Une erreur interne est survenue. Réessayez dans quelques instants.' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    )
+    );
   }
 })

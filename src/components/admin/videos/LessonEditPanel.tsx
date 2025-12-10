@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, X, Upload, Trash2, ExternalLink, Play, Eye, Video } from 'lucide-react';
-import { getThumbnailUrl, formatDuration } from '../../../lib/bunny';
+import { VideoService } from '../../../services/videoService';
 import { SecureVideoPreview } from './SecureVideoPreview';
 import type { TrainingLesson } from '../../../types/training';
 import toast from 'react-hot-toast';
@@ -94,7 +94,7 @@ export function LessonEditPanel({
   }
 
   const hasVideo = Boolean(formData.bunny_video_id);
-  const thumbnailUrl = hasVideo ? getThumbnailUrl(formData.bunny_video_id) : null;
+  const thumbnailUrl = hasVideo ? VideoService.getThumbnailUrl(formData.bunny_video_id) : null;
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-6">
@@ -194,7 +194,7 @@ export function LessonEditPanel({
                   </div>
                   {videoMetadata && (
                     <div className="text-xs text-gray-400">
-                      Durée: {formatDuration(videoMetadata.length)}
+                      Durée: {VideoService.formatDuration(videoMetadata.length)}
                     </div>
                   )}
                 </div>

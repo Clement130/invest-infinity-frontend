@@ -145,18 +145,36 @@ export async function getUserProgressSummary(userId: string): Promise<UserProgre
       const moduleDetail = moduleDetails.find((detail) => detail.moduleId === lesson.module_id);
 
       if (module && moduleDetail) {
-        continueLearning = {
-          moduleId: module.id,
-          moduleTitle: module.title,
-          lessonId: lesson.id,
-          lessonTitle: lesson.title,
-          completionRate: moduleDetail.completionRate,
-        };
+        // Vérifier si la dernière leçon vue est complétée
+        const isLessonCompleted = latestEntry.done === true;
+        
+        if (isLessonCompleted && moduleDetail.nextLessonId) {
+          // Si la leçon est complétée, retourner la prochaine leçon non complétée du même module
+          continueLearning = {
+            moduleId: module.id,
+            moduleTitle: module.title,
+            lessonId: moduleDetail.nextLessonId,
+            lessonTitle: moduleDetail.nextLessonTitle ?? 'Leçon suivante',
+            completionRate: moduleDetail.completionRate,
+          };
+        } else if (!isLessonCompleted) {
+          // Si la leçon n'est pas complétée, retourner cette leçon
+          continueLearning = {
+            moduleId: module.id,
+            moduleTitle: module.title,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            completionRate: moduleDetail.completionRate,
+          };
+        }
+        // Si la leçon est complétée et qu'il n'y a pas de prochaine leçon dans ce module,
+        // on laisse continueLearning undefined pour chercher dans les autres modules
       }
     }
   }
 
   if (!continueLearning) {
+    // Chercher le premier module non complété avec une leçon à faire
     const firstModuleToStart = moduleDetails.find((detail) => !detail.isCompleted && detail.nextLessonId);
     if (firstModuleToStart) {
       continueLearning = {

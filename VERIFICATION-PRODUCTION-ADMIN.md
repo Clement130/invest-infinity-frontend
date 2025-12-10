@@ -87,3 +87,6 @@ npm run test:admin
 
 **Note :** Playwright doit être installé (`npm install`) pour que le script fonctionne.
 
+
+
+

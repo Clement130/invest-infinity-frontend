@@ -39,8 +39,7 @@ export async function getModules(options?: {
     let query = supabase
       .from('training_modules')
       .select('*')
-      .order('position', { ascending: true })
-      .order('created_at', { ascending: true });
+      .order('position', { ascending: true });
 
     if (!options?.includeInactive) {
       query = query.eq('is_active', true);
@@ -112,8 +111,7 @@ export async function getLessonsForModule(moduleId: string): Promise<TrainingLes
     .from('training_lessons')
     .select('id, module_id, title, description, bunny_video_id, position, is_preview, section_title, created_at')
     .eq('module_id', moduleId)
-    .order('position', { ascending: true })
-    .order('created_at', { ascending: true });
+    .order('position', { ascending: true });
 
   if (error) {
     console.error('Erreur lors de la récupération des leçons:', error);
@@ -186,8 +184,7 @@ export async function getAccessibleModulesForUser(
     .from('training_modules')
     .select('*, training_access!inner(user_id)')
     .eq('training_access.user_id', userId)
-    .order('position', { ascending: true })
-    .order('created_at', { ascending: true });
+    .order('position', { ascending: true });
 
   if (error) {
     console.error('Erreur lors de la récupération des modules accessibles:', error);

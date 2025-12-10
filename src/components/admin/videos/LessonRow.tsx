@@ -1,7 +1,7 @@
 import { CheckCircle2, AlertCircle, Edit2, Trash2, Video as VideoIcon, ExternalLink, GripVertical, ArrowRight } from 'lucide-react';
 import { LessonStatusIndicator } from './StatusIndicators';
 import type { TrainingLesson } from '../../../types/training';
-import { formatDuration } from '../../../utils/admin/bunnyStreamAPI';
+import { VideoService } from '../../../services/videoService';
 
 interface LessonRowProps {
   lesson: TrainingLesson;

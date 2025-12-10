@@ -13,8 +13,6 @@ import {
   Settings,
   X,
   BookOpen,
-  Target,
-  Calendar,
   Sparkles,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -39,27 +37,17 @@ const mockNotifications: Notification[] = [
   },
   {
     id: '2',
-    title: 'Défi complété !',
-    message: 'Félicitations ! Tu as terminé le défi de la semaine.',
-    time: 'Hier',
+    title: 'Nouvelle leçon disponible',
+    message: 'Une nouvelle leçon a été ajoutée à ta formation.',
+    time: 'Il y a 1j',
     read: false,
-    type: 'success',
-  },
-  {
-    id: '3',
-    title: 'Live session demain',
-    message: 'N\'oublie pas la session live de trading demain à 14h.',
-    time: 'Il y a 2j',
-    read: true,
-    type: 'warning',
+    type: 'info',
   },
 ];
 
 const searchSuggestions = [
   { type: 'module', icon: BookOpen, label: 'Étape 1 - La Fondation', path: '/app/modules/etape-1' },
   { type: 'module', icon: BookOpen, label: 'Stratégie ICT', path: '/app/modules/strategie-ict' },
-  { type: 'page', icon: Target, label: 'Mes Défis', path: '/app/challenges' },
-  { type: 'page', icon: Calendar, label: 'Événements', path: '/app/events' },
   { type: 'page', icon: Settings, label: 'Paramètres', path: '/app/settings' },
 ];
 

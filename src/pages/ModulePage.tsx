@@ -198,12 +198,20 @@ export default function ModulePage() {
     if (!layout) {
       const sectionsList: Section[] = [];
 
-      // Ajouter les sections définies par section_title
-      lessonsBySection.forEach((sectionLessons, sectionTitle) => {
-        sectionsList.push({
-          id: `${moduleSlug}-section-${slugify(sectionTitle)}`,
+      // Ajouter les sections définies par section_title, triées par la position minimale de leurs leçons
+      const sectionsArray = Array.from(lessonsBySection.entries())
+        .map(([sectionTitle, sectionLessons]) => ({
           title: sectionTitle,
           lessons: sectionLessons.sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+          minPosition: Math.min(...sectionLessons.map(l => l.position ?? 0)),
+        }))
+        .sort((a, b) => a.minPosition - b.minPosition);
+
+      sectionsArray.forEach(({ title, lessons }) => {
+        sectionsList.push({
+          id: `${moduleSlug}-section-${slugify(title)}`,
+          title,
+          lessons,
         });
       });
 

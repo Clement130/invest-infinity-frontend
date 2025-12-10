@@ -15,8 +15,6 @@ import {
   LayoutDashboard,
   BookOpen,
   TrendingUp,
-  Target,
-  Calendar,
   Settings,
   LogOut,
   X,
@@ -60,23 +58,10 @@ const navItems: NavItem[] = [
     gradient: 'from-green-500 to-emerald-500',
   },
   {
-    label: 'Défis',
-    icon: Target,
-    path: '/app/challenges',
-    badge: 2,
-    gradient: 'from-orange-500 to-amber-500',
-  },
-  {
     label: 'Partenariats',
     icon: Handshake,
     path: '/app/partnerships',
     gradient: 'from-amber-500 to-orange-500',
-  },
-  {
-    label: 'Événements',
-    icon: Calendar,
-    path: '/app/events',
-    gradient: 'from-purple-500 to-violet-500',
   },
 ];
 

@@ -18,9 +18,7 @@ import {
   BarChart3,
   FileText,
   Eye,
-  Target,
   Video,
-  Calendar,
   CalendarCheck,
   Settings,
   GraduationCap,
@@ -70,8 +68,6 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'Engagement',
     items: [
-      { id: 'challenges', label: 'Défis', icon: Target, path: '/admin/challenges' },
-      { id: 'events', label: 'Événements', icon: Calendar, path: '/admin/events' },
       { id: 'immersion', label: 'Immersion Élite', icon: GraduationCap, path: '/admin/immersion' },
       { id: 'appointments', label: 'Demandes RDV', icon: CalendarCheck, path: '/admin/appointments' },
       { id: 'support', label: 'Messages & Support', icon: MessageSquare, path: '/admin/support' },

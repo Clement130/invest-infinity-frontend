@@ -30,7 +30,7 @@
 
 @keyframes moveLeft {
   0% { transform: translateX(4px); opacity: 0; }
-  20% { opacity: 1; }
+  33% { opacity: 1; }
   80% { opacity: 1; }
   100% { transform: translateX(calc(-100% - 4px)); opacity: 0; }
 }
@@ -104,14 +104,20 @@ body {
   @apply bg-black text-white;
 }
 
+/* Premium Selection */
+::selection {
+  background-color: rgba(236, 72, 153, 0.3); /* Pink 500 with opacity */
+  color: white;
+}
+
 /* Section Snap Points */
 section {
   scroll-margin-top: 80px;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar Premium */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px; /* Plus fin */
 }
 
 ::-webkit-scrollbar-track {
@@ -119,13 +125,14 @@ section {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-pink-500 rounded-full;
+  @apply bg-white/10 rounded-full; /* Plus subtil par défaut */
   border: 2px solid transparent;
   background-clip: padding-box;
+  transition: background-color 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-pink-600;
+  @apply bg-pink-500/50; /* Couleur au survol */
 }
 
 /* Smooth Scroll Behavior */

@@ -30,9 +30,11 @@ function log(color, message) {
     console.log(`${color}${message}${colors.reset}`);
 }
 
-function generateSecureToken(videoId, tokenKey, expiryHours = 24) {
+function generateSecureToken(videoId, tokenKey, libraryId, expiryHours = 24) {
     const expires = Math.floor(Date.now() / 1000) + (expiryHours * 3600);
-    const tokenString = tokenKey + videoId + expires;
+    // Nouvelle formule : token_security_key + /{libraryId}/{videoId} + expires
+    const path = `/${libraryId}/${videoId}`;
+    const tokenString = tokenKey + path + expires;
     const hash = crypto.createHash('sha256').update(tokenString).digest('hex');
     return { token: hash, expires };
 }
@@ -104,15 +106,16 @@ async function runTests() {
     await testUrl(unprotectedUrl, 'URL sans token d\'authentification');
     console.log('');
 
-    // Test 2: URL avec token valide
-    const { token, expires } = generateSecureToken(testVideoId, embedTokenKey);
+    // Test 2: URL avec token valide (nouvelle formule avec path)
+    const { token, expires } = generateSecureToken(testVideoId, embedTokenKey, libraryId);
     const protectedUrl = `${embedBaseUrl}/${libraryId}/${testVideoId}?token=${token}&expires=${expires}`;
     await testUrl(protectedUrl, 'URL avec token d\'authentification valide');
     console.log('');
 
     // Test 3: URL avec token expiré
     const expiredExpires = Math.floor(Date.now() / 1000) - 3600; // Expiré il y a 1h
-    const expiredTokenString = embedTokenKey + testVideoId + expiredExpires;
+    const expiredPath = `/${libraryId}/${testVideoId}`;
+    const expiredTokenString = embedTokenKey + expiredPath + expiredExpires;
     const expiredToken = crypto.createHash('sha256').update(expiredTokenString).digest('hex');
     const expiredUrl = `${embedBaseUrl}/${libraryId}/${testVideoId}?token=${expiredToken}&expires=${expiredExpires}`;
     await testUrl(expiredUrl, 'URL avec token expiré');

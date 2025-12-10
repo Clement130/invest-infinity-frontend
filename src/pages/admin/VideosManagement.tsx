@@ -21,14 +21,51 @@ const MoveLessonModal = lazy(() => import('../../components/admin/videos/MoveLes
 // Type pour RealTimeGuide
 type GuideState = any;
 import { useFormationsHierarchy } from '../../hooks/admin/useFormationsHierarchy';
-import { useBunnyLibrary } from '../../hooks/admin/useBunnyLibrary';
+import { useVideoManagement } from '../../hooks/useVideoManagement';
 import { createOrUpdateLesson, deleteLesson, createOrUpdateModule, deleteModule, moveLessonToModule } from '../../services/trainingService';
 import type { TrainingLesson, TrainingModule } from '../../types/training';
+import { supabase } from '../../lib/supabaseClient';
+import { useQuery } from '@tanstack/react-query';
 
 export default function VideosManagement() {
   const queryClient = useQueryClient();
   const { hierarchy, isLoading: isLoadingHierarchy, refetch } = useFormationsHierarchy();
-  const { orphanVideos } = useBunnyLibrary();
+  const { videos } = useVideoManagement();
+
+  // Récupérer les leçons pour calculer les vidéos orphelines
+  const { data: lessons } = useQuery({
+    queryKey: ['admin', 'lessons-for-library'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('training_lessons')
+        .select(`
+          id,
+          title,
+          bunny_video_id,
+          training_modules!inner (
+            id,
+            title
+          )
+        `);
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        title: string;
+        bunny_video_id: string | null;
+        training_modules: {
+          id: string;
+          title: string;
+        };
+      }>;
+    },
+  });
+
+  // Calculer les vidéos orphelines
+  const orphanVideos = useMemo(() => {
+    return videos.filter((video) => {
+      return !lessons?.some((lesson) => lesson.bunny_video_id === video.guid);
+    });
+  }, [videos, lessons]);
 
   // State management
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
@@ -76,6 +113,27 @@ export default function VideosManagement() {
     return hierarchy.modules.find((m) => m.lessons.some((l) => l.id === selectedLesson.id));
   }, [selectedLesson, hierarchy.modules]);
 
+  // Helper pour invalider toutes les queries liées aux modules/leçons
+  const invalidateAllTrainingQueries = useCallback((moduleId?: string) => {
+    // Invalider les queries admin
+    queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+    queryClient.invalidateQueries({ queryKey: ['admin', 'bunny-library'] });
+    queryClient.invalidateQueries({ queryKey: ['admin', 'modules'] });
+    queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
+    
+    // Invalider les queries côté client
+    queryClient.invalidateQueries({ queryKey: ['modules'] });
+    queryClient.invalidateQueries({ queryKey: ['modules', 'client'] });
+    queryClient.invalidateQueries({ queryKey: ['lessons'] });
+    queryClient.invalidateQueries({ queryKey: ['module-with-lessons'] });
+    
+    // Si un moduleId est fourni, invalider spécifiquement ce module
+    if (moduleId) {
+      queryClient.invalidateQueries({ queryKey: ['module-with-lessons', moduleId] });
+      queryClient.invalidateQueries({ queryKey: ['lessons', moduleId] });
+    }
+  }, [queryClient]);
+
   // Mutations
   const updateLessonMutation = useMutation({
     mutationFn: async (data: Partial<TrainingLesson> & { id: string; module_id?: string; title?: string }) => {
@@ -100,11 +158,7 @@ export default function VideosManagement() {
       } as any);
     },
     onSuccess: (updatedLesson) => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'bunny-library'] });
-      // Invalider aussi les queries côté client pour rafraîchir l'affichage
-      queryClient.invalidateQueries({ queryKey: ['module-with-lessons'] });
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      invalidateAllTrainingQueries(updatedLesson.module_id);
       toast.success('Leçon mise à jour avec succès');
       setGuideState('success');
       setTimeout(() => setGuideState('idle'), 2000);
@@ -116,10 +170,15 @@ export default function VideosManagement() {
 
   const deleteLessonMutation = useMutation({
     mutationFn: async (lessonId: string) => {
+      // Récupérer le module_id avant suppression pour invalider le cache
+      const lesson = hierarchy.modules
+        .flatMap(m => m.lessons)
+        .find(l => l.id === lessonId);
       await deleteLesson(lessonId);
+      return lesson?.module_id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+    onSuccess: (moduleId) => {
+      invalidateAllTrainingQueries(moduleId);
       toast.success('Leçon supprimée');
       if (selectedLessonId) setSelectedLessonId(null);
     },
@@ -133,7 +192,7 @@ export default function VideosManagement() {
       return createOrUpdateModule(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+      invalidateAllTrainingQueries();
       toast.success('Module créé avec succès');
       setShowModuleModal(false);
       setEditingModule(null);
@@ -148,8 +207,8 @@ export default function VideosManagement() {
     mutationFn: async (data: Partial<TrainingModule> & { title: string; id: string }) => {
       return createOrUpdateModule(data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+    onSuccess: (_data, variables) => {
+      invalidateAllTrainingQueries(variables.id);
       toast.success('Module mis à jour');
       setShowModuleModal(false);
       setEditingModule(null);
@@ -162,9 +221,10 @@ export default function VideosManagement() {
   const deleteModuleMutation = useMutation({
     mutationFn: async (moduleId: string) => {
       await deleteModule(moduleId);
+      return moduleId;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+    onSuccess: (moduleId) => {
+      invalidateAllTrainingQueries(moduleId);
       toast.success('Module supprimé');
     },
     onError: (error: any) => {
@@ -176,8 +236,8 @@ export default function VideosManagement() {
     mutationFn: async (data: Partial<TrainingLesson> & { title: string; module_id: string }) => {
       return createOrUpdateLesson(data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+    onSuccess: (_data, variables) => {
+      invalidateAllTrainingQueries(variables.module_id);
       toast.success('Leçon créée avec succès');
       setShowLessonModal(false);
       setEditingLesson(null);
@@ -206,8 +266,10 @@ export default function VideosManagement() {
         )
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+    onSuccess: (_data, variables) => {
+      // Invalider pour tous les modules concernés
+      const moduleIds = [...new Set(variables.map(l => l.module_id))];
+      moduleIds.forEach(moduleId => invalidateAllTrainingQueries(moduleId));
       toast.success('Ordre des leçons mis à jour');
     },
     onError: (error: any) => {
@@ -228,7 +290,7 @@ export default function VideosManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+      invalidateAllTrainingQueries();
       toast.success('Ordre des modules mis à jour');
     },
     onError: (error: any) => {
@@ -412,7 +474,15 @@ export default function VideosManagement() {
       // Capturer l'ID de la leçon depuis les variables de la mutation pour éviter le stale closure
       const movedLessonId = variables.lessonId;
       
-      queryClient.invalidateQueries({ queryKey: ['admin', 'formations-hierarchy'] });
+      // Invalider pour l'ancien et le nouveau module
+      const oldModule = hierarchy.modules
+        .flatMap(m => m.lessons)
+        .find(l => l.id === movedLessonId)?.module_id;
+      invalidateAllTrainingQueries(variables.newModuleId);
+      if (oldModule && oldModule !== variables.newModuleId) {
+        invalidateAllTrainingQueries(oldModule);
+      }
+      
       toast.success('Leçon déplacée avec succès');
       setShowMoveLessonModal(false);
       
