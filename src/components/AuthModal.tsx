@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Mail, User, Loader2, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CustomMuiTelInput } from './CustomMuiTelInput';
