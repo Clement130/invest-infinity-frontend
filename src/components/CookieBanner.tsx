@@ -34,15 +34,26 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     window.addEventListener('auth-modal-close', handleModalClose);
 
     // Détecter aussi les modals via les mutations DOM (fallback)
-    const observer = new MutationObserver(() => {
-      const authModal = document.querySelector('[class*="z-[60]"]');
+    // Chercher un modal avec un z-index élevé (60 ou plus) ou contenant "Connexion"
+    const checkForModal = () => {
+      const authModal = Array.from(document.querySelectorAll('[class*="fixed"][class*="inset-0"]')).find(
+        (el) => {
+          const zIndex = window.getComputedStyle(el).zIndex;
+          const hasConnexion = el.querySelector('h2')?.textContent?.includes('Connexion');
+          return (zIndex && parseInt(zIndex) >= 50) || hasConnexion;
+        }
+      );
       setIsModalOpen(!!authModal);
-    });
+    };
 
+    const observer = new MutationObserver(checkForModal);
     observer.observe(document.body, {
       childList: true,
       subtree: true,
     });
+
+    // Vérifier immédiatement
+    checkForModal();
 
     return () => {
       window.removeEventListener('auth-modal-open', handleModalOpen);
