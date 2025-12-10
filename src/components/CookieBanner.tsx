@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Cookie, Settings, Shield, BarChart3, Megaphone } from 'lucide-react';
 
 interface CookieBannerProps {
