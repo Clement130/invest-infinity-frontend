@@ -20,6 +20,10 @@ dist-ssr
 .env.production
 .env.development
 
+# Next.js build outputs
+.next/
+out/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
