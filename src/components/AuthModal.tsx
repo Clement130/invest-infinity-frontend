@@ -259,9 +259,9 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
   // Émettre un événement pour masquer le CookieBanner
   useEffect(() => {
     if (isOpen) {
-      window.dispatchEvent(new Event('auth-modal-open'));
+      document.dispatchEvent(new CustomEvent('auth-modal-open'));
     } else {
-      window.dispatchEvent(new Event('auth-modal-close'));
+      document.dispatchEvent(new CustomEvent('auth-modal-close'));
     }
   }, [isOpen]);
 

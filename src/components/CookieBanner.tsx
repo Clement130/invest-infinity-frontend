@@ -30,35 +30,12 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     const handleModalClose = () => setIsModalOpen(false);
 
     // Écouter les événements personnalisés
-    window.addEventListener('auth-modal-open', handleModalOpen);
-    window.addEventListener('auth-modal-close', handleModalClose);
-
-    // Détecter aussi les modals via les mutations DOM (fallback)
-    // Chercher un modal avec un z-index élevé (60 ou plus) ou contenant "Connexion"
-    const checkForModal = () => {
-      const authModal = Array.from(document.querySelectorAll('[class*="fixed"][class*="inset-0"]')).find(
-        (el) => {
-          const zIndex = window.getComputedStyle(el).zIndex;
-          const hasConnexion = el.querySelector('h2')?.textContent?.includes('Connexion');
-          return (zIndex && parseInt(zIndex) >= 50) || hasConnexion;
-        }
-      );
-      setIsModalOpen(!!authModal);
-    };
-
-    const observer = new MutationObserver(checkForModal);
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    // Vérifier immédiatement
-    checkForModal();
+    document.addEventListener('auth-modal-open', handleModalOpen);
+    document.addEventListener('auth-modal-close', handleModalClose);
 
     return () => {
-      window.removeEventListener('auth-modal-open', handleModalOpen);
-      window.removeEventListener('auth-modal-close', handleModalClose);
-      observer.disconnect();
+      document.removeEventListener('auth-modal-open', handleModalOpen);
+      document.removeEventListener('auth-modal-close', handleModalClose);
     };
   }, []);
 
