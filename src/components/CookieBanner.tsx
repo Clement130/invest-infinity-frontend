@@ -76,14 +76,7 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
 
   return (
     <>
-      {/* Backdrop avec blur */}
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in"
-        onClick={() => setIsVisible(false)}
-        aria-hidden="true"
-      />
-      
-      {/* Bannière principale */}
+      {/* Bannière principale - sans backdrop pour ne pas bloquer l'interface */}
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 slide-in-from-bottom">
         <div className="max-w-4xl mx-auto">
           <div className="relative bg-gradient-to-br from-[#1a1a1f] via-[#1f1f25] to-[#1a1a1f] border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden">
