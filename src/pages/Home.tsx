@@ -7,7 +7,6 @@ import AuthModal from '../components/AuthModal';
 import ScammerWarning from '../components/ScammerWarning';
 import TestimonialCarousel from '../components/TestimonialCarousel';
 import NewsletterForm from '../components/NewsletterForm';
-import { ScrollReveal } from '../components/ui/premium/ScrollReveal';
 
 export default function Home() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -21,34 +20,24 @@ export default function Home() {
       {/* 2. Newsletter Lead Magnet - PDF gratuit */}
       <section className="relative py-20 px-4">
         <div className="max-w-4xl mx-auto">
-          <ScrollReveal animation="fade-up">
-            <NewsletterForm />
-          </ScrollReveal>
+          <NewsletterForm />
         </div>
       </section>
       
       {/* 3. Services / Bénéfices */}
       <div className="relative">
         <div className="absolute -top-32 left-0 right-0 h-32 bg-gradient-to-b from-[rgb(15,15,19,0)] to-[rgb(15,15,19,1)] z-10" />
-        <ScrollReveal animation="fade-up" duration={0.8}>
-          <Services onOpenRegister={() => setIsRegisterOpen(true)} />
-        </ScrollReveal>
+        <Services onOpenRegister={() => setIsRegisterOpen(true)} />
       </div>
       
       {/* 4. Comment ça marche */}
-      <ScrollReveal animation="fade-up" delay={0.2}>
-        <JoinSteps onOpenRegister={() => setIsRegisterOpen(true)} />
-      </ScrollReveal>
+      <JoinSteps onOpenRegister={() => setIsRegisterOpen(true)} />
       
       {/* 5. FAQ */}
-      <ScrollReveal animation="fade-up">
-        <FAQ onOpenRegister={() => setIsRegisterOpen(true)} />
-      </ScrollReveal>
+      <FAQ onOpenRegister={() => setIsRegisterOpen(true)} />
       
       {/* 6. Trustpilot - Dernier argument avant conversion */}
-      <ScrollReveal animation="scale-up">
-        <TestimonialCarousel />
-      </ScrollReveal>
+      <TestimonialCarousel />
       
       {/* Le CTA Final et Disclaimer sont maintenant dans le Footer */}
       
