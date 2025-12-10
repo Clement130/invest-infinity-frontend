@@ -20,8 +20,10 @@ export default function MarketingLayout({
   const [isRGPDModalOpen, setIsRGPDModalOpen] = useState(false);
   const location = useLocation();
   
-  // Ne pas afficher le CookieBanner sur les pages critiques (login, create-password, etc.)
-  const hideCookieBanner = ['/login', '/create-password', '/confirmation'].includes(location.pathname);
+  // Ne pas afficher le CookieBanner sur les pages critiques où il pourrait bloquer l'interface de connexion
+  // Note: /confirmation n'est PAS masqué car le Footer contient "Gérer les cookies",
+  // donc le CookieBanner doit être accessible pour la cohérence UX avec le Footer
+  const hideCookieBanner = ['/login', '/create-password'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
