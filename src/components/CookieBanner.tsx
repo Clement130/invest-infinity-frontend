@@ -13,6 +13,7 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     analytics: false,
     marketing: false,
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Vérifier si le consentement a déjà été donné
@@ -21,6 +22,33 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
       // Délai pour l'animation d'entrée
       setTimeout(() => setIsVisible(true), 100);
     }
+  }, []);
+
+  // Écouter les événements pour détecter quand un modal est ouvert
+  useEffect(() => {
+    const handleModalOpen = () => setIsModalOpen(true);
+    const handleModalClose = () => setIsModalOpen(false);
+
+    // Écouter les événements personnalisés
+    window.addEventListener('auth-modal-open', handleModalOpen);
+    window.addEventListener('auth-modal-close', handleModalClose);
+
+    // Détecter aussi les modals via les mutations DOM (fallback)
+    const observer = new MutationObserver(() => {
+      const authModal = document.querySelector('[class*="z-[60]"]');
+      setIsModalOpen(!!authModal);
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      window.removeEventListener('auth-modal-open', handleModalOpen);
+      window.removeEventListener('auth-modal-close', handleModalClose);
+      observer.disconnect();
+    };
   }, []);
 
   const handleAcceptAll = () => {
@@ -55,7 +83,8 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     setShowSettings(false);
   };
 
-  if (!isVisible) return null;
+  // Ne pas afficher si un modal est ouvert
+  if (!isVisible || isModalOpen) return null;
 
   return (
     <>
