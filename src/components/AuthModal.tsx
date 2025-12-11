@@ -271,10 +271,10 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
   // Utiliser createPortal pour rendre le modal au niveau du body
   // Cela évite les problèmes de positionnement fixed à l'intérieur de conteneurs
   return createPortal(
-    <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-      <div className="relative w-full max-w-2xl max-h-[90vh]">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg blur opacity-75" />
-        <div className="relative bg-black rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 z-[60] flex items-end md:items-center justify-center p-0 md:p-4 overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[90vh] md:max-h-[90vh] md:rounded-lg">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-pink-600 rounded-t-2xl md:rounded-lg blur opacity-75" />
+        <div className="relative bg-black rounded-t-2xl md:rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
           <button
             onClick={onClose}
             className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors z-10"
@@ -282,7 +282,7 @@ export default function AuthModal({ isOpen, onClose, type, redirectTo = 'client'
             <X className="w-6 h-6" />
           </button>
 
-          <div className="p-8">
+          <div className="p-6 md:p-8">
             {type === 'login' ? (
               <>
                 <h2 className="text-2xl font-bold text-white mb-2">
