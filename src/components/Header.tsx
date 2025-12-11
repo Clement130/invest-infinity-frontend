@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Menu, X, User, Shield, Sparkles, ChevronDown } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
@@ -233,9 +234,9 @@ export default function Header() {
           </div>
         </div>
 
-        {isMenuOpen && (
+        {isMenuOpen && createPortal(
           <div
-            className="fixed inset-0 bg-black/95 z-[60] transition-opacity duration-200"
+            className="fixed inset-0 bg-black/95 z-[100] transition-opacity duration-200"
             onClick={() => setIsMenuOpen(false)}
             role="dialog"
             aria-modal="true"
@@ -244,51 +245,46 @@ export default function Header() {
             <div 
               className="absolute inset-0 flex flex-col items-center justify-center space-y-6 py-20 px-4"
               onClick={(e) => e.stopPropagation()}
-              style={{ zIndex: 70 }}
             >
               <button
-                className={`text-white text-2xl font-medium hover:text-pink-500 transition-colors relative z-50 ${
+                className={`text-white text-2xl font-medium hover:text-pink-500 transition-colors ${
                   activeSection === 'services' ? 'text-pink-500' : ''
                 }`}
                 onClick={() => handleClick('services')}
-                style={{ zIndex: 100 }}
               >
                 Accueil
               </button>
               <button
-                className="text-white text-2xl font-medium hover:text-pink-500 transition-colors relative z-50"
+                className="text-white text-2xl font-medium hover:text-pink-500 transition-colors"
                 onClick={() => {
                   setIsMenuOpen(false);
                   navigate('/pricing');
                 }}
-                style={{ zIndex: 100 }}
               >
                 Tarifs
               </button>
               <button
-                className={`text-white text-2xl font-medium hover:text-pink-500 transition-colors relative z-50 ${
+                className={`text-white text-2xl font-medium hover:text-pink-500 transition-colors ${
                   activeSection === 'faq' ? 'text-pink-500' : ''
                 }`}
                 onClick={() => handleClick('faq')}
-                style={{ zIndex: 100 }}
               >
                 FAQ
               </button>
               <button
-                className="text-white text-2xl font-medium hover:text-pink-500 transition-colors relative z-50"
+                className="text-white text-2xl font-medium hover:text-pink-500 transition-colors"
                 onClick={() => {
                   setIsMenuOpen(false);
                   navigate('/contact');
                 }}
-                style={{ zIndex: 100 }}
               >
                 Contact
               </button>
               
               {/* Options du menu mobile */}
-              <div className="flex flex-col items-center gap-4 pt-6 mt-4 border-t border-white/20 w-full max-w-xs px-4 relative" style={{ zIndex: 100 }}>
+              <div className="flex flex-col items-center gap-4 pt-6 mt-4 border-t border-white/20 w-full max-w-xs px-4">
                 <button
-                  className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-violet-500 text-white text-lg font-semibold rounded-xl hover:shadow-2xl hover:shadow-pink-500/50 transition-all flex items-center justify-center gap-3 active:scale-95 relative"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-violet-500 text-white text-lg font-semibold rounded-xl hover:shadow-2xl hover:shadow-pink-500/50 transition-all flex items-center justify-center gap-3 active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
@@ -297,14 +293,13 @@ export default function Header() {
                       handleOptionClick('login', 'client');
                     }, 100);
                   }}
-                  style={{ zIndex: 101 }}
                 >
                   <User size={20} />
                   Espace Client
                 </button>
                 
                 <button
-                  className="w-full px-6 py-4 bg-slate-800 text-white text-lg font-semibold rounded-xl hover:bg-slate-700 transition-all flex items-center justify-center gap-3 border-2 border-violet-500/50 active:scale-95 relative"
+                  className="w-full px-6 py-4 bg-slate-800 text-white text-lg font-semibold rounded-xl hover:bg-slate-700 transition-all flex items-center justify-center gap-3 border-2 border-violet-500/50 active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
@@ -312,14 +307,13 @@ export default function Header() {
                       handleOptionClick('login', 'admin');
                     }, 100);
                   }}
-                  style={{ zIndex: 101 }}
                 >
                   <Shield size={20} />
                   Espace Admin
                 </button>
                 
                 <button
-                  className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl hover:shadow-pink-500/50 transition-all flex items-center justify-center gap-3 active:scale-95 relative"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl hover:shadow-pink-500/50 transition-all flex items-center justify-center gap-3 active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
@@ -327,14 +321,14 @@ export default function Header() {
                       handleOptionClick('register', 'client');
                     }, 100);
                   }}
-                  style={{ zIndex: 101 }}
                 >
                   <Sparkles size={20} />
                   Créer un compte
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </header>
 
