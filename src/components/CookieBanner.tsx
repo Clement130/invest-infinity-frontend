@@ -175,9 +175,35 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     setShowSettings(false);
   };
 
+  // Fonction pour vérifier directement dans le rendu (synchrone)
+  const checkIfShouldHide = () => {
+    // Vérifier l'état React
+    if (isModalOpen || authModalOpening) return true;
+    
+    // Vérifier directement le DOM (synchrone)
+    const menuOpen = document.body.hasAttribute('data-mobile-menu-open') || 
+                     document.body.classList.contains('mobile-menu-open');
+    if (menuOpen) return true;
+    
+    // Vérifier si un modal d'auth est ouvert
+    const allFixed = Array.from(document.querySelectorAll('.fixed.inset-0'));
+    for (const el of allFixed) {
+      const zIndex = parseInt(window.getComputedStyle(el).zIndex);
+      if (zIndex >= 50) {
+        const hasAuthContent = el.textContent?.includes('Connexion') || 
+                              el.textContent?.includes('Connecte-toi') ||
+                              el.textContent?.includes('Connexion Admin') ||
+                              el.querySelector('input[type="email"]') ||
+                              el.querySelector('input[type="password"]');
+        if (hasAuthContent) return true;
+      }
+    }
+    
+    return false;
+  };
+
   // Ne pas afficher si pas visible ou si un modal/menu est ouvert
-  // Inclure authModalOpening pour éviter le flash pendant la transition
-  if (!isVisible || isModalOpen || authModalOpening) return null;
+  if (!isVisible || checkIfShouldHide()) return null;
 
   return (
     <>
