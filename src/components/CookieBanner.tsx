@@ -53,12 +53,24 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
 
     // Fonction pour vérifier si un modal d'auth est ouvert
     const checkAuthModalOpen = () => {
-      // Vérifier si un modal d'auth existe dans le DOM
-      const authModal = document.querySelector('[role="dialog"]') || 
-                       document.querySelector('.fixed.inset-0.z-50') ||
-                       document.querySelector('[class*="auth-modal"]') ||
-                       document.querySelector('[class*="AuthModal"]');
-      return !!authModal;
+      // Vérifier tous les éléments fixed avec z-index élevé (>= 50)
+      const allFixed = Array.from(document.querySelectorAll('.fixed.inset-0'));
+      for (const el of allFixed) {
+        const zIndex = parseInt(window.getComputedStyle(el).zIndex);
+        if (zIndex >= 50) {
+          // Vérifier si c'est un modal d'auth par le contenu
+          const hasAuthContent = el.textContent?.includes('Connexion') || 
+                                el.textContent?.includes('Connecte-toi') ||
+                                el.textContent?.includes('Connexion Admin') ||
+                                el.querySelector('input[type="email"]') ||
+                                el.querySelector('input[type="password"]');
+          if (hasAuthContent) return true;
+        }
+      }
+      // Fallback : vérifier par sélecteurs spécifiques
+      return !!(document.querySelector('[role="dialog"]') || 
+                document.querySelector('[class*="auth-modal"]') ||
+                document.querySelector('[class*="AuthModal"]'));
     };
 
     // Observer les changements d'attribut ET de classe sur le body (pour Brave + iOS Safari)
@@ -91,11 +103,22 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
 
     // Fonction pour vérifier si un modal d'auth est ouvert (pour l'interval)
     const checkAuthModalOpenForInterval = () => {
-      const authModal = document.querySelector('[role="dialog"]') || 
-                       document.querySelector('.fixed.inset-0.z-50') ||
-                       document.querySelector('[class*="auth-modal"]') ||
-                       document.querySelector('[class*="AuthModal"]');
-      return !!authModal;
+      // Même logique que checkAuthModalOpen
+      const allFixed = Array.from(document.querySelectorAll('.fixed.inset-0'));
+      for (const el of allFixed) {
+        const zIndex = parseInt(window.getComputedStyle(el).zIndex);
+        if (zIndex >= 50) {
+          const hasAuthContent = el.textContent?.includes('Connexion') || 
+                                el.textContent?.includes('Connecte-toi') ||
+                                el.textContent?.includes('Connexion Admin') ||
+                                el.querySelector('input[type="email"]') ||
+                                el.querySelector('input[type="password"]');
+          if (hasAuthContent) return true;
+        }
+      }
+      return !!(document.querySelector('[role="dialog"]') || 
+                document.querySelector('[class*="auth-modal"]') ||
+                document.querySelector('[class*="AuthModal"]'));
     };
 
     // Vérification périodique pour Brave (fallback) - utilise une ref pour éviter la dépendance circulaire
