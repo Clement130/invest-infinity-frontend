@@ -14,12 +14,9 @@ import {
 } from '../../services/settingsService';
 import { supabase } from '../../lib/supabaseClient';
 import toast from 'react-hot-toast';
-import LicenseStatusWidget from '../../components/admin/LicenseStatusWidget';
-import { useDeveloperRole } from '../../hooks/useDeveloperRole';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'appearance' | 'emails' | 'integrations' | 'chatbot'>('appearance');
-  const { isDeveloper } = useDeveloperRole();
 
   return (
     <div className="space-y-6">
@@ -27,13 +24,6 @@ export default function SettingsPage() {
         <h1 className="text-3xl font-bold text-white mb-2">Paramètres</h1>
         <p className="text-gray-400">Configurez votre plateforme</p>
       </div>
-
-      {/* Widget Protection Développeur - Visible uniquement pour le développeur */}
-      {isDeveloper && (
-        <div>
-          <LicenseStatusWidget />
-        </div>
-      )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-white/10 overflow-x-auto pb-1">

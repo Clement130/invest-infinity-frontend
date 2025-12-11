@@ -2,7 +2,8 @@
  * Script de test pour vérifier :
  * 1. L'accès admin avec butcher13550@gmail.com / Password130!
  * 2. Le rôle developer/admin
- * 3. La fonctionnalité de désactivation des admins si paiement non reçu dans 30 jours
+ * 3. Le statut admin du client (investinfinityfr@gmail.com)
+ * 4. L'accès aux données admin
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -53,7 +54,7 @@ const TEST_EMAIL = 'butcher13550@gmail.com';
 const TEST_PASSWORD = 'Password130!';
 const CLIENT_EMAIL = 'investinfinityfr@gmail.com';
 
-console.log('🧪 Test d\'accès admin et fonctionnalité de désactivation\n');
+console.log('🧪 Test d\'accès admin\n');
 console.log('='.repeat(60));
 
 async function testAdminAccess() {
@@ -112,64 +113,8 @@ async function testAdminAccess() {
 
     console.log(`✅ Rôle ${profile.role} confirmé - Accès admin autorisé`);
 
-    // Test 3: Vérifier l'accès à la licence développeur
-    console.log('\n📋 Test 3: Vérification de l\'accès à la licence développeur');
-    console.log('-'.repeat(60));
-
-    const { data: license, error: licenseError } = await supabase
-      .from('developer_license')
-      .select('*')
-      .maybeSingle();
-
-    if (licenseError) {
-      console.error('❌ Erreur lors de la récupération de la licence:', licenseError.message);
-      console.log('   Code:', licenseError.code);
-      console.log('   Détails:', licenseError.details);
-      return false;
-    }
-
-    if (!license) {
-      console.warn('⚠️  Aucune licence trouvée - création d\'une licence par défaut');
-      const { data: newLicense, error: createError } = await supabase
-        .from('developer_license')
-        .insert({
-          is_active: true,
-          last_payment_date: new Date().toISOString(),
-          admin_revocation_days: 30,
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('❌ Erreur lors de la création de la licence:', createError.message);
-        return false;
-      }
-
-      console.log('✅ Licence créée avec succès');
-      console.log(`   ID: ${newLicense.id}`);
-      console.log(`   Active: ${newLicense.is_active}`);
-      console.log(`   Dernier paiement: ${newLicense.last_payment_date}`);
-      console.log(`   Jours avant révocation: ${newLicense.admin_revocation_days}`);
-    } else {
-      console.log('✅ Licence trouvée');
-      console.log(`   ID: ${license.id}`);
-      console.log(`   Active: ${license.is_active ? '✅ Oui' : '❌ Non'}`);
-      console.log(`   Dernier paiement: ${new Date(license.last_payment_date).toLocaleString('fr-FR')}`);
-      console.log(`   Jours avant révocation: ${license.admin_revocation_days}`);
-
-      // Calculer les jours restants
-      const lastPayment = new Date(license.last_payment_date);
-      const expirationDate = new Date(lastPayment);
-      expirationDate.setDate(expirationDate.getDate() + license.admin_revocation_days);
-      const now = new Date();
-      const daysRemaining = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-      console.log(`   Date d'expiration: ${expirationDate.toLocaleString('fr-FR')}`);
-      console.log(`   Jours restants: ${daysRemaining > 0 ? daysRemaining : 0}`);
-    }
-
-    // Test 4: Vérifier le statut admin du client
-    console.log('\n📋 Test 4: Vérification du statut admin du client');
+    // Test 3: Vérifier le statut admin du client
+    console.log('\n📋 Test 3: Vérification du statut admin du client');
     console.log('-'.repeat(60));
 
     const { data: clientProfile, error: clientError } = await supabase
@@ -190,45 +135,11 @@ async function testAdminAccess() {
       console.log(`   Email: ${clientProfile.email}`);
       console.log(`   Rôle: ${clientProfile.role}`);
       console.log(`   Statut admin: ${clientProfile.role === 'admin' ? '✅ Actif' : '❌ Révoqué'}`);
+      console.log(`   ℹ️  Note: Le système de protection développeur a été retiré. Le client garde son rôle admin de manière permanente.`);
     }
 
-    // Test 5: Vérifier la fonctionnalité de désactivation
-    console.log('\n📋 Test 5: Vérification de la fonctionnalité de désactivation');
-    console.log('-'.repeat(60));
-
-    if (license) {
-      const lastPayment = new Date(license.last_payment_date);
-      const expirationDate = new Date(lastPayment);
-      expirationDate.setDate(expirationDate.getDate() + license.admin_revocation_days);
-      const now = new Date();
-
-      if (now > expirationDate && license.is_active) {
-        console.log('⚠️  La licence est expirée mais toujours active');
-        console.log('   La fonction Edge check-license-daily devrait la désactiver automatiquement');
-      } else if (!license.is_active && license.deactivated_at) {
-        const deactivatedDate = new Date(license.deactivated_at);
-        const revocationDate = new Date(deactivatedDate);
-        revocationDate.setDate(revocationDate.getDate() + license.admin_revocation_days);
-
-        if (now >= revocationDate) {
-          console.log('⚠️  La période de grâce est écoulée');
-          console.log('   Le rôle admin du client devrait être révoqué automatiquement');
-        } else {
-          const daysUntilRevocation = Math.ceil((revocationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          console.log(`ℹ️  Période de grâce active`);
-          console.log(`   Jours avant révocation automatique: ${daysUntilRevocation}`);
-        }
-      } else {
-        const daysRemaining = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        console.log(`✅ Licence active`);
-        console.log(`   Jours restants avant expiration: ${daysRemaining}`);
-        console.log(`   Si aucun paiement n'est reçu dans ${daysRemaining} jours, la licence sera désactivée`);
-        console.log(`   Si la licence reste désactivée pendant ${license.admin_revocation_days} jours supplémentaires, le rôle admin du client sera révoqué`);
-      }
-    }
-
-    // Test 6: Vérifier l'accès aux routes admin (simulation)
-    console.log('\n📋 Test 6: Vérification de l\'accès aux données admin');
+    // Test 4: Vérifier l'accès aux routes admin (simulation)
+    console.log('\n📋 Test 4: Vérification de l\'accès aux données admin');
     console.log('-'.repeat(60));
 
     const { data: allProfiles, error: profilesError } = await supabase
@@ -255,8 +166,7 @@ async function testAdminAccess() {
     console.log('\n📝 Résumé:');
     console.log(`   ✅ Connexion réussie avec ${TEST_EMAIL}`);
     console.log(`   ✅ Rôle ${profile.role} confirmé`);
-    console.log(`   ✅ Accès à la licence développeur confirmé`);
-    console.log(`   ✅ Fonctionnalité de désactivation des admins opérationnelle`);
+    console.log(`   ✅ Statut admin du client vérifié`);
     console.log(`   ✅ Accès aux données admin confirmé`);
 
     return true;

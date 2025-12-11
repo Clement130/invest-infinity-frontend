@@ -235,15 +235,15 @@ export default function Header() {
 
         {isMenuOpen && (
           <div
-            className="fixed inset-0 bg-[#0f0f13]/80 z-[60] transition-opacity duration-200"
+            className="fixed inset-0 bg-black/90 z-[60] transition-opacity duration-200 overflow-y-auto"
             onClick={() => setIsMenuOpen(false)}
-            style={{ display: isMenuOpen ? 'block' : 'none' }}
           >
             <div 
-              className="flex flex-col items-center justify-center h-full space-y-6 relative z-10"
+              className="flex flex-col items-center justify-center min-h-full space-y-6 py-20 relative"
+              onClick={(e) => e.stopPropagation()}
             >
               <button
-                className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
+                className={`text-white text-2xl font-medium hover:text-pink-500 transition-colors ${
                   activeSection === 'services' ? 'text-pink-500' : ''
                 }`}
                 onClick={() => handleClick('services')}
@@ -251,7 +251,7 @@ export default function Header() {
                 Accueil
               </button>
               <button
-                className="text-gray-400 text-xl hover:text-pink-500 transition-colors"
+                className="text-white text-2xl font-medium hover:text-pink-500 transition-colors"
                 onClick={() => {
                   setIsMenuOpen(false);
                   navigate('/pricing');
@@ -260,7 +260,7 @@ export default function Header() {
                 Tarifs
               </button>
               <button
-                className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
+                className={`text-white text-2xl font-medium hover:text-pink-500 transition-colors ${
                   activeSection === 'faq' ? 'text-pink-500' : ''
                 }`}
                 onClick={() => handleClick('faq')}
@@ -268,7 +268,7 @@ export default function Header() {
                 FAQ
               </button>
               <button
-                className="text-gray-400 text-xl hover:text-pink-500 transition-colors"
+                className="text-white text-2xl font-medium hover:text-pink-500 transition-colors"
                 onClick={() => {
                   setIsMenuOpen(false);
                   navigate('/contact');
@@ -278,9 +278,9 @@ export default function Header() {
               </button>
               
               {/* Options du menu mobile */}
-              <div className="flex flex-col items-center gap-4 pt-4 border-t border-white/10 w-full max-w-xs">
+              <div className="flex flex-col items-center gap-4 pt-6 mt-4 border-t border-white/20 w-full max-w-xs px-4">
                 <button
-                  className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 relative z-10"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-violet-500 text-white text-lg font-semibold rounded-xl hover:shadow-2xl hover:shadow-pink-500/50 transition-all flex items-center justify-center gap-3 active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
@@ -290,12 +290,12 @@ export default function Header() {
                     }, 100);
                   }}
                 >
-                  <User size={18} />
+                  <User size={20} />
                   Espace Client
                 </button>
                 
                 <button
-                  className="w-full px-6 py-3 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 border border-violet-500/30 relative z-10"
+                  className="w-full px-6 py-4 bg-slate-800 text-white text-lg font-semibold rounded-xl hover:bg-slate-700 transition-all flex items-center justify-center gap-3 border-2 border-violet-500/50 active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
@@ -304,12 +304,12 @@ export default function Header() {
                     }, 100);
                   }}
                 >
-                  <Shield size={18} />
+                  <Shield size={20} />
                   Espace Admin
                 </button>
                 
                 <button
-                  className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 relative z-10"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-lg font-semibold rounded-xl hover:shadow-2xl hover:shadow-pink-500/50 transition-all flex items-center justify-center gap-3 active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
@@ -318,7 +318,7 @@ export default function Header() {
                     }, 100);
                   }}
                 >
-                  <Sparkles size={18} />
+                  <Sparkles size={20} />
                   Créer un compte
                 </button>
               </div>
