@@ -240,8 +240,7 @@ export default function Header() {
             style={{ display: isMenuOpen ? 'block' : 'none' }}
           >
             <div 
-              className="flex flex-col items-center justify-center h-full space-y-6"
-              onClick={(e) => e.stopPropagation()}
+              className="flex flex-col items-center justify-center h-full space-y-6 relative z-10"
             >
               <button
                 className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
@@ -281,10 +280,14 @@ export default function Header() {
               {/* Options du menu mobile */}
               <div className="flex flex-col items-center gap-4 pt-4 border-t border-white/10 w-full max-w-xs">
                 <button
-                  className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  onClick={() => {
+                  className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 relative z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsMenuOpen(false);
-                    handleOptionClick('login', 'client');
+                    // Petit délai pour s'assurer que le menu se ferme avant d'ouvrir le modal
+                    setTimeout(() => {
+                      handleOptionClick('login', 'client');
+                    }, 100);
                   }}
                 >
                   <User size={18} />
@@ -292,10 +295,13 @@ export default function Header() {
                 </button>
                 
                 <button
-                  className="w-full px-6 py-3 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 border border-violet-500/30"
-                  onClick={() => {
+                  className="w-full px-6 py-3 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 border border-violet-500/30 relative z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsMenuOpen(false);
-                    handleOptionClick('login', 'admin');
+                    setTimeout(() => {
+                      handleOptionClick('login', 'admin');
+                    }, 100);
                   }}
                 >
                   <Shield size={18} />
@@ -303,10 +309,13 @@ export default function Header() {
                 </button>
                 
                 <button
-                  className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  onClick={() => {
+                  className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 relative z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsMenuOpen(false);
-                    handleOptionClick('register', 'client');
+                    setTimeout(() => {
+                      handleOptionClick('register', 'client');
+                    }, 100);
                   }}
                 >
                   <Sparkles size={18} />
