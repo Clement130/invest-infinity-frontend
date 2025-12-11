@@ -95,14 +95,23 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     setShowSettings(false);
   };
 
-  // Ne pas afficher si un modal est ouvert
-  if (!isVisible || isModalOpen) return null;
+  // Ne pas afficher si pas visible
+  if (!isVisible) return null;
 
   return (
     <>
       {/* Bannière principale - sans backdrop pour ne pas bloquer l'interface */}
       {/* z-index réduit à 45 pour être en dessous du menu mobile (z-60) */}
-      <div className="fixed bottom-0 left-0 right-0 z-[45] p-4 md:p-6 slide-in-from-bottom">
+      {/* Masqué via CSS quand le menu mobile est ouvert (data-mobile-menu-open sur body) */}
+      <div 
+        data-cookie-banner
+        className={`fixed bottom-0 left-0 right-0 z-[45] p-4 md:p-6 slide-in-from-bottom transition-opacity duration-200 ${
+          isModalOpen ? 'opacity-0 pointer-events-none invisible' : 'opacity-100 pointer-events-auto visible'
+        }`}
+        style={{
+          display: isModalOpen ? 'none' : 'block',
+        }}
+      >
         <div className="max-w-4xl mx-auto">
           <div className="relative bg-gradient-to-br from-[#1a1a1f] via-[#1f1f25] to-[#1a1a1f] border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden">
             {/* Effet de brillance subtil */}

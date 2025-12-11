@@ -401,3 +401,28 @@ section {
 .animate-in.slide-in-from-top-2 {
   animation: slide-in-from-top-2 0.2s ease-out forwards;
 }
+
+/* ============================================ */
+/* COOKIE BANNER - Masquer quand menu mobile ouvert */
+/* ============================================ */
+
+/* Masquer le cookie banner quand le menu mobile est ouvert (iOS Safari compatible) */
+body.mobile-menu-open [class*="cookie"],
+body[data-mobile-menu-open="true"] [class*="cookie"],
+body.mobile-menu-open [data-cookie-banner],
+body[data-mobile-menu-open="true"] [data-cookie-banner] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Sélecteur spécifique pour le cookie banner via z-index */
+body.mobile-menu-open .z-\[45\],
+body[data-mobile-menu-open="true"] .z-\[45\] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
