@@ -29,15 +29,22 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     const handleModalOpen = () => setIsModalOpen(true);
     const handleModalClose = () => setIsModalOpen(false);
 
+    // Fonction pour vérifier l'état du menu mobile (multiples méthodes pour compatibilité Brave)
+    const checkMenuState = () => {
+      const hasAttr = document.body.hasAttribute('data-mobile-menu-open');
+      const hasClass = document.body.classList.contains('mobile-menu-open');
+      return hasAttr || hasClass;
+    };
+
     // Écouter les événements personnalisés (auth modal et menu mobile)
     document.addEventListener('auth-modal-open', handleModalOpen);
     document.addEventListener('auth-modal-close', handleModalClose);
     document.addEventListener('mobile-menu-open', handleModalOpen);
     document.addEventListener('mobile-menu-close', handleModalClose);
 
-    // Observer les changements d'attribut sur le body pour une détection plus robuste (iOS Safari)
+    // Observer les changements d'attribut ET de classe sur le body (pour Brave + iOS Safari)
     const observer = new MutationObserver(() => {
-      if (document.body.hasAttribute('data-mobile-menu-open')) {
+      if (checkMenuState()) {
         setIsModalOpen(true);
       } else {
         setIsModalOpen(false);
@@ -46,13 +53,25 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
 
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['data-mobile-menu-open'],
+      attributeFilter: ['data-mobile-menu-open', 'class'],
+      attributeOldValue: true,
     });
 
     // Vérifier l'état initial
-    if (document.body.hasAttribute('data-mobile-menu-open')) {
+    if (checkMenuState()) {
       setIsModalOpen(true);
     }
+
+    // Vérification périodique pour Brave (fallback) - utilise une ref pour éviter la dépendance circulaire
+    const interval = setInterval(() => {
+      const menuOpen = checkMenuState();
+      // Utiliser une fonction de callback pour éviter la dépendance
+      setIsModalOpen(prev => {
+        if (menuOpen && !prev) return true;
+        if (!menuOpen && prev) return false;
+        return prev;
+      });
+    }, 100);
 
     return () => {
       document.removeEventListener('auth-modal-open', handleModalOpen);
@@ -60,6 +79,7 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
       document.removeEventListener('mobile-menu-open', handleModalOpen);
       document.removeEventListener('mobile-menu-close', handleModalClose);
       observer.disconnect();
+      clearInterval(interval);
     };
   }, []);
 
@@ -324,4 +344,5 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     </>
   );
 }
+
 

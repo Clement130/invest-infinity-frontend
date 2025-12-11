@@ -92,12 +92,19 @@ export default function Header() {
   };
 
   // Émettre un événement quand le menu mobile s'ouvre/ferme
-  // ET ajouter un attribut data + classe CSS sur le body pour une détection plus robuste (iOS Safari)
+  // ET ajouter un attribut data + classe CSS sur le body pour une détection plus robuste (iOS Safari + Brave)
   useEffect(() => {
     if (isMenuOpen) {
       document.dispatchEvent(new CustomEvent('mobile-menu-open'));
       document.body.setAttribute('data-mobile-menu-open', 'true');
+      // Forcer l'ajout de la classe avec plusieurs tentatives (pour Brave)
       document.body.classList.add('mobile-menu-open');
+      // Double vérification après un court délai
+      setTimeout(() => {
+        if (!document.body.classList.contains('mobile-menu-open')) {
+          document.body.classList.add('mobile-menu-open');
+        }
+      }, 10);
     } else {
       document.dispatchEvent(new CustomEvent('mobile-menu-close'));
       document.body.removeAttribute('data-mobile-menu-open');
