@@ -99,6 +99,8 @@ export default function Header() {
       document.body.setAttribute('data-mobile-menu-open', 'true');
       // Forcer l'ajout de la classe avec plusieurs tentatives (pour Brave)
       document.body.classList.add('mobile-menu-open');
+      // Empêcher le scroll du body quand le menu est ouvert
+      document.body.style.overflow = 'hidden';
       // Double vérification après un court délai
       setTimeout(() => {
         if (!document.body.classList.contains('mobile-menu-open')) {
@@ -109,6 +111,8 @@ export default function Header() {
       document.dispatchEvent(new CustomEvent('mobile-menu-close'));
       document.body.removeAttribute('data-mobile-menu-open');
       document.body.classList.remove('mobile-menu-open');
+      // Réactiver le scroll
+      document.body.style.overflow = '';
     }
   }, [isMenuOpen]);
 
@@ -231,10 +235,14 @@ export default function Header() {
 
         {isMenuOpen && (
           <div
-            className="fixed inset-0 bg-[#0f0f13]/95 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-[#0f0f13]/80 z-[60] transition-opacity duration-200"
             onClick={() => setIsMenuOpen(false)}
+            style={{ display: isMenuOpen ? 'block' : 'none' }}
           >
-            <div className="flex flex-col items-center justify-center h-full space-y-6">
+            <div 
+              className="flex flex-col items-center justify-center h-full space-y-6"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className={`text-gray-400 text-xl hover:text-pink-500 transition-colors ${
                   activeSection === 'services' ? 'text-pink-500' : ''
