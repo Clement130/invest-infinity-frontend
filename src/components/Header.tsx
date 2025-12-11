@@ -92,11 +92,14 @@ export default function Header() {
   };
 
   // Émettre un événement quand le menu mobile s'ouvre/ferme
+  // ET ajouter un attribut data sur le body pour une détection plus robuste (iOS Safari)
   useEffect(() => {
     if (isMenuOpen) {
       document.dispatchEvent(new CustomEvent('mobile-menu-open'));
+      document.body.setAttribute('data-mobile-menu-open', 'true');
     } else {
       document.dispatchEvent(new CustomEvent('mobile-menu-close'));
+      document.body.removeAttribute('data-mobile-menu-open');
     }
   }, [isMenuOpen]);
 
@@ -219,7 +222,7 @@ export default function Header() {
 
         {isMenuOpen && (
           <div
-            className="fixed inset-0 bg-[#0f0f13]/95 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-[#0f0f13]/95 backdrop-blur-sm z-[60]"
             onClick={() => setIsMenuOpen(false)}
           >
             <div className="flex flex-col items-center justify-center h-full space-y-6">

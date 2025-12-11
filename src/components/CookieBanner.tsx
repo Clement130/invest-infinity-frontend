@@ -35,11 +35,31 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     document.addEventListener('mobile-menu-open', handleModalOpen);
     document.addEventListener('mobile-menu-close', handleModalClose);
 
+    // Observer les changements d'attribut sur le body pour une détection plus robuste (iOS Safari)
+    const observer = new MutationObserver(() => {
+      if (document.body.hasAttribute('data-mobile-menu-open')) {
+        setIsModalOpen(true);
+      } else {
+        setIsModalOpen(false);
+      }
+    });
+
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['data-mobile-menu-open'],
+    });
+
+    // Vérifier l'état initial
+    if (document.body.hasAttribute('data-mobile-menu-open')) {
+      setIsModalOpen(true);
+    }
+
     return () => {
       document.removeEventListener('auth-modal-open', handleModalOpen);
       document.removeEventListener('auth-modal-close', handleModalClose);
       document.removeEventListener('mobile-menu-open', handleModalOpen);
       document.removeEventListener('mobile-menu-close', handleModalClose);
+      observer.disconnect();
     };
   }, []);
 
@@ -81,7 +101,8 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
   return (
     <>
       {/* Bannière principale - sans backdrop pour ne pas bloquer l'interface */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 slide-in-from-bottom">
+      {/* z-index réduit à 45 pour être en dessous du menu mobile (z-60) */}
+      <div className="fixed bottom-0 left-0 right-0 z-[45] p-4 md:p-6 slide-in-from-bottom">
         <div className="max-w-4xl mx-auto">
           <div className="relative bg-gradient-to-br from-[#1a1a1f] via-[#1f1f25] to-[#1a1a1f] border border-pink-500/30 rounded-2xl shadow-2xl overflow-hidden">
             {/* Effet de brillance subtil */}
