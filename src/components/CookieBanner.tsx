@@ -14,6 +14,7 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     marketing: false,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [authModalOpening, setAuthModalOpening] = useState(false);
 
   useEffect(() => {
     // Vérifier si le consentement a déjà été donné
@@ -36,18 +37,44 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
       return hasAttr || hasClass;
     };
 
+    // Gestionnaire spécial pour auth-modal-open avec flag
+    const handleAuthModalOpen = () => {
+      setAuthModalOpening(true);
+      setIsModalOpen(true);
+      // Garder le flag pendant 500ms pour couvrir la transition
+      setTimeout(() => setAuthModalOpening(false), 500);
+    };
+
     // Écouter les événements personnalisés (auth modal et menu mobile)
-    document.addEventListener('auth-modal-open', handleModalOpen);
+    document.addEventListener('auth-modal-open', handleAuthModalOpen);
     document.addEventListener('auth-modal-close', handleModalClose);
     document.addEventListener('mobile-menu-open', handleModalOpen);
     document.addEventListener('mobile-menu-close', handleModalClose);
 
+    // Fonction pour vérifier si un modal d'auth est ouvert
+    const checkAuthModalOpen = () => {
+      // Vérifier si un modal d'auth existe dans le DOM
+      const authModal = document.querySelector('[role="dialog"]') || 
+                       document.querySelector('.fixed.inset-0.z-50') ||
+                       document.querySelector('[class*="auth-modal"]') ||
+                       document.querySelector('[class*="AuthModal"]');
+      return !!authModal;
+    };
+
     // Observer les changements d'attribut ET de classe sur le body (pour Brave + iOS Safari)
     const observer = new MutationObserver(() => {
-      if (checkMenuState()) {
+      const menuOpen = checkMenuState();
+      const authModalOpen = checkAuthModalOpen();
+      
+      if (menuOpen || authModalOpen) {
         setIsModalOpen(true);
       } else {
-        setIsModalOpen(false);
+        // Délai avant de remettre à false pour éviter le flash entre menu et modal
+        setTimeout(() => {
+          if (!checkMenuState() && !checkAuthModalOpen()) {
+            setIsModalOpen(false);
+          }
+        }, 150);
       }
     });
 
@@ -62,19 +89,29 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
       setIsModalOpen(true);
     }
 
+    // Fonction pour vérifier si un modal d'auth est ouvert (pour l'interval)
+    const checkAuthModalOpenForInterval = () => {
+      const authModal = document.querySelector('[role="dialog"]') || 
+                       document.querySelector('.fixed.inset-0.z-50') ||
+                       document.querySelector('[class*="auth-modal"]') ||
+                       document.querySelector('[class*="AuthModal"]');
+      return !!authModal;
+    };
+
     // Vérification périodique pour Brave (fallback) - utilise une ref pour éviter la dépendance circulaire
     const interval = setInterval(() => {
       const menuOpen = checkMenuState();
+      const authModalOpen = checkAuthModalOpenForInterval();
       // Utiliser une fonction de callback pour éviter la dépendance
       setIsModalOpen(prev => {
-        if (menuOpen && !prev) return true;
-        if (!menuOpen && prev) return false;
+        if ((menuOpen || authModalOpen) && !prev) return true;
+        if (!menuOpen && !authModalOpen && prev) return false;
         return prev;
       });
     }, 100);
 
     return () => {
-      document.removeEventListener('auth-modal-open', handleModalOpen);
+      document.removeEventListener('auth-modal-open', handleAuthModalOpen);
       document.removeEventListener('auth-modal-close', handleModalClose);
       document.removeEventListener('mobile-menu-open', handleModalOpen);
       document.removeEventListener('mobile-menu-close', handleModalClose);
@@ -115,8 +152,9 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     setShowSettings(false);
   };
 
-  // Ne pas afficher si pas visible
-  if (!isVisible) return null;
+  // Ne pas afficher si pas visible ou si un modal/menu est ouvert
+  // Inclure authModalOpening pour éviter le flash pendant la transition
+  if (!isVisible || isModalOpen || authModalOpening) return null;
 
   return (
     <>
