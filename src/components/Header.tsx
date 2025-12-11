@@ -91,6 +91,15 @@ export default function Header() {
     }
   };
 
+  // Émettre un événement quand le menu mobile s'ouvre/ferme
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.dispatchEvent(new CustomEvent('mobile-menu-open'));
+    } else {
+      document.dispatchEvent(new CustomEvent('mobile-menu-close'));
+    }
+  }, [isMenuOpen]);
+
   return (
     <>
       <header className="header">

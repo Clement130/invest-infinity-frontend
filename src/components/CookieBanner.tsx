@@ -24,18 +24,22 @@ export default function CookieBanner({ onOpenRGPD }: CookieBannerProps) {
     }
   }, []);
 
-  // Écouter les événements pour détecter quand un modal est ouvert
+  // Écouter les événements pour détecter quand un modal ou menu mobile est ouvert
   useEffect(() => {
     const handleModalOpen = () => setIsModalOpen(true);
     const handleModalClose = () => setIsModalOpen(false);
 
-    // Écouter les événements personnalisés
+    // Écouter les événements personnalisés (auth modal et menu mobile)
     document.addEventListener('auth-modal-open', handleModalOpen);
     document.addEventListener('auth-modal-close', handleModalClose);
+    document.addEventListener('mobile-menu-open', handleModalOpen);
+    document.addEventListener('mobile-menu-close', handleModalClose);
 
     return () => {
       document.removeEventListener('auth-modal-open', handleModalOpen);
       document.removeEventListener('auth-modal-close', handleModalClose);
+      document.removeEventListener('mobile-menu-open', handleModalOpen);
+      document.removeEventListener('mobile-menu-close', handleModalClose);
     };
   }, []);
 

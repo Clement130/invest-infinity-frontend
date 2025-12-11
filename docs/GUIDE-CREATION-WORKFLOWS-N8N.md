@@ -279,3 +279,5 @@ Tu peux personnaliser :
 - Les contenus des emails (dans les nodes Code)
 - Les jours/heures d'envoi (dans les triggers Cron)
 - La segmentation (ajouter des conditions SQL basées sur `metadata->segment`)
+
+

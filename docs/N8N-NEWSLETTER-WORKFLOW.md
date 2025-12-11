@@ -342,3 +342,5 @@ WHERE id = '{{$json.id}}';
 Les workflows complets sont exportés dans :
 - `workflows/n8n-newsletter-welcome.json`
 - `workflows/n8n-newsletter-weekly.json`
+
+

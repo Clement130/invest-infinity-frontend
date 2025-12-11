@@ -89,3 +89,5 @@ Après import et activation :
 **Aucun email envoyé** :
 - Vérifie les conditions SQL dans les queries
 - Teste avec un email spécifique en modifiant la query temporairement
+
+

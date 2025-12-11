@@ -140,3 +140,5 @@ Si le script ne fonctionne pas, tu peux importer les fichiers JSON manuellement 
 - [ ] Credentials assignés aux nodes
 - [ ] Workflows activés
 - [ ] Test manuel réussi
+
+
