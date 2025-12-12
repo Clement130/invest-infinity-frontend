@@ -7,21 +7,32 @@ import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PageLoader from '../components/PageLoader';
 import { marketingRoutes, clientRoutes, adminRoutes } from './routes';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 
 const NotFound = lazy(() => import('../pages/NotFound'));
 
-// Composant pour les transitions de page
-const PageTransition = ({ children }: { children: React.ReactNode }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-    exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
-    transition={{ duration: 0.4, ease: "easeOut" }}
-    className="w-full h-full"
-  >
-    {children}
-  </motion.div>
-);
+// Composant pour les transitions de page - optimisé pour mobile
+const PageTransition = ({ children }: { children: React.ReactNode }) => {
+  const { shouldReduceMotion } = useReducedMotion();
+  
+  // Sur mobile ou si l'utilisateur préfère les animations réduites, on simplifie drastiquement
+  if (shouldReduceMotion) {
+    return <div className="w-full h-full">{children}</div>;
+  }
+
+  // Sur desktop, on garde une transition simple sans blur (trop coûteux)
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="w-full h-full"
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 // Layout wrapper persistant pour les routes client /app/*
 function ClientLayoutWrapper() {

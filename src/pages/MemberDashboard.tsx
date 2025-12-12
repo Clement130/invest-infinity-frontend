@@ -332,21 +332,21 @@ export default function MemberDashboard() {
               {/* Background effects - simplifiés sur mobile */}
               {!isMobile && (
                 <>
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-conic from-pink-500/5 via-purple-500/5 to-pink-500/5 rounded-full blur-3xl" />
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-pink-500/10 rounded-full md:blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full md:blur-3xl" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-conic from-pink-500/5 via-purple-500/5 to-pink-500/5 rounded-full md:blur-3xl" />
                 </>
               )}
               {isMobile && (
-                <div className="absolute top-0 right-0 w-48 h-48 bg-pink-500/5 rounded-full blur-2xl" />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-pink-500/5 rounded-full" />
               )}
 
               <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
+                      animate={isMobile ? {} : { scale: [1, 1.1, 1] }}
+                      transition={isMobile ? {} : { repeat: Infinity, duration: 2 }}
                       className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30"
                     >
                       <Zap className="w-7 h-7 text-white" />

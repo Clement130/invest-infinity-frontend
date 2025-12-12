@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, BookOpen, Brain, Users, ArrowRight } from 'lucide-react';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 
 interface ServicesProps {
   onOpenRegister?: () => void;
@@ -69,6 +70,7 @@ const services = [
 
 export default function Services({ onOpenRegister }: ServicesProps) {
   const navigate = useNavigate();
+  const { shouldReduceMotion, isMobile } = useReducedMotion();
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [visibleCards, setVisibleCards] = useState<number[]>([]);
@@ -131,11 +133,22 @@ export default function Services({ onOpenRegister }: ServicesProps) {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => requestAnimationFrame(calculateProgress);
+    // Sur mobile, on réduit la fréquence des calculs pour améliorer les performances
+    const throttleDelay = isMobile ? 100 : 16;
+    let lastTime = 0;
+    
+    const handleScroll = () => {
+      const now = Date.now();
+      if (now - lastTime >= throttleDelay) {
+        lastTime = now;
+        requestAnimationFrame(calculateProgress);
+      }
+    };
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
     calculateProgress();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobile]);
 
   const scrollToSection = (index: number) => {
     const card = cardsRef.current[index];
@@ -175,7 +188,11 @@ export default function Services({ onOpenRegister }: ServicesProps) {
               <div
                 key={index}
                 ref={(el) => (cardsRef.current[index] = el)}
-                className={`transform transition-all duration-1000 ${
+                className={`transform transition-all ${
+                  shouldReduceMotion 
+                    ? 'duration-300' 
+                    : 'duration-1000'
+                } ${
                   visibleCards.includes(index) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
                 }`}
               >
@@ -290,28 +307,36 @@ export default function Services({ onOpenRegister }: ServicesProps) {
 
     <button
       onClick={() => scrollToSection(index)}
-      className={`relative flex items-center transition-all duration-500 group ${
+      className={`relative flex items-center transition-all ${
+        shouldReduceMotion ? 'duration-200' : 'duration-500'
+      } group ${
         index <= activeSection ? 'opacity-100' : 'opacity-50'
       }`}
       style={{ zIndex: 20 }}
     >
       <div
-        className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+        className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+          shouldReduceMotion ? 'duration-200' : 'duration-500'
+        } ${
           index <= activeSection ? 'shadow-[0_0_15px_rgba(236,72,153,0.5)]' : ''
         }`}
         style={{
           backgroundColor: index <= activeSection ? service.color : '#1f1f23',
-          transform: index <= activeSection ? 'scale(1.1)' : 'scale(1)',
+          transform: index <= activeSection && !shouldReduceMotion ? 'scale(1.1)' : 'scale(1)',
         }}
       >
         <service.icon
-          className={`w-5 h-5 transition-colors duration-500 ${
+          className={`w-5 h-5 transition-colors ${
+            shouldReduceMotion ? 'duration-200' : 'duration-500'
+          } ${
             index <= activeSection ? 'text-white' : 'text-gray-600'
           }`}
         />
       </div>
       <div
-        className={`ml-4 transition-all duration-500 ${
+        className={`ml-4 transition-all ${
+          shouldReduceMotion ? 'duration-200' : 'duration-500'
+        } ${
           index <= activeSection ? 'text-white' : 'text-gray-600'
         }`}
       >

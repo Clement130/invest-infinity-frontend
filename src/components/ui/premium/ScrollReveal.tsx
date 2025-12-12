@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useInView, UseInViewOptions } from 'framer-motion';
 import { cn } from '../../../utils/cn';
+import { useReducedMotion } from '../../../hooks/useReducedMotion';
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -21,10 +22,19 @@ export const ScrollReveal = ({
   threshold = 0.1,
   once = true
 }: ScrollRevealProps) => {
+  const { shouldReduceMotion } = useReducedMotion();
   const ref = useRef(null);
   const isInView = useInView(ref, { amount: threshold, once });
 
   const getVariants = () => {
+    // Sur mobile, on simplifie toutes les animations
+    if (shouldReduceMotion) {
+      return {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
+      };
+    }
+
     switch (animation) {
       case 'fade-up':
         return {
@@ -65,7 +75,11 @@ export const ScrollReveal = ({
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
       variants={getVariants()}
-      transition={{ duration, delay, ease: "easeOut" }}
+      transition={{ 
+        duration: shouldReduceMotion ? 0.2 : duration, 
+        delay: shouldReduceMotion ? 0 : delay, 
+        ease: "easeOut" 
+      }}
       className={cn(className)}
     >
       {children}

@@ -14,6 +14,7 @@ import { memo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Grid3X3, List, Clock, CheckCircle2, Play, X } from 'lucide-react';
 import clsx from 'clsx';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 export type FilterKey = 'all' | 'in-progress' | 'completed' | 'not-started';
 export type ViewMode = 'grid' | 'list';
@@ -96,12 +97,13 @@ function ModulesFilters({
   }, [filter]);
 
   const hasActiveFilter = filter !== 'all' || search.length > 0;
-
+  const { shouldReduceMotion } = useReducedMotion();
+  
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
+      transition={shouldReduceMotion ? {} : { delay: 0.3 }}
       className="space-y-4"
     >
       {/* Search & View Toggle Row */}

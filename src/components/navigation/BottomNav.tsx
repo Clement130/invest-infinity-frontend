@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { openMobileSidebar } from './ClientSidebar';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 interface NavItem {
   label: string;
@@ -64,6 +65,7 @@ const navItems: NavItem[] = [
 function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { shouldReduceMotion } = useReducedMotion();
 
   const isActive = useCallback((path: string) => {
     if (path === '/app') {
@@ -87,7 +89,9 @@ function BottomNav() {
       
       {/* Bottom Navigation Bar - Mobile only */}
       <nav 
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-white/10"
+        className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-white/10 ${
+          shouldReduceMotion ? '' : 'backdrop-blur-xl'
+        }`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="flex items-center justify-around px-2">
@@ -101,7 +105,7 @@ function BottomNav() {
                   onClick={() => handleNavClick(item)}
                 className={clsx(
                   'flex flex-col items-center justify-center py-2 px-3 min-w-[64px] min-h-[56px] rounded-xl transition-all duration-200 relative',
-                  'active:scale-95', // Feedback tactile
+                  !shouldReduceMotion && 'active:scale-95', // Feedback tactile seulement si animations activées
                   active
                     ? 'text-pink-400'
                     : 'text-gray-500 hover:text-gray-300'
@@ -117,7 +121,7 @@ function BottomNav() {
                   <Icon 
                     className={clsx(
                       'w-5 h-5 transition-all duration-200',
-                      active && 'scale-110'
+                      active && !shouldReduceMotion && 'scale-110'
                     )} 
                   />
                   {/* Badge de notification */}

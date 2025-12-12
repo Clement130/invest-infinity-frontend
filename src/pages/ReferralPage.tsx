@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import {
   getReferralStats,
   getReferralHistory,
@@ -50,6 +51,7 @@ export default function ReferralPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { shouldReduceMotion } = useReducedMotion();
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'withdrawals'>('overview');
 
@@ -248,84 +250,62 @@ export default function ReferralPage() {
       </div>
 
       {/* Contenu des tabs */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid md:grid-cols-2 gap-6"
-          >
-            {/* Comment ça marche */}
-            <GlassCard className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-pink-400" />
-                Comment ça marche ?
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { step: 1, text: 'Partagez votre code unique à vos amis' },
-                  { step: 2, text: 'Ils obtiennent -10% sur leur achat' },
-                  { step: 3, text: 'Vous gagnez 10% + bonus de commission' },
-                  { step: 4, text: 'Retirez vos gains dès 50€' },
-                ].map(({ step, text }) => (
-                  <div key={step} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-pink-400">
-                      {step}
-                    </div>
-                    <p className="text-gray-300">{text}</p>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
-
-            {/* Avantages */}
-            <GlassCard className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                Vos avantages
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                  <span className="text-gray-400">Commission de base</span>
-                  <span className="font-bold text-white">10%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                  <span className="text-gray-400">Votre bonus actuel</span>
-                  <span className="font-bold text-green-400">+{stats?.bonusRate || 0}%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-lg border border-pink-500/30">
-                  <span className="text-white font-medium">Commission totale</span>
-                  <span className="font-bold text-pink-400">{10 + (stats?.bonusRate || 0)}%</span>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
-
-        {activeTab === 'history' && (
-          <motion.div
-            key="history"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
+      {shouldReduceMotion ? (
+        // Sur mobile, pas d'animation pour éviter les saccades
+        <>
+          {activeTab === 'overview' && (
+            <div className="grid md:grid-cols-2 gap-6">
+              <OverviewContent stats={stats} />
+            </div>
+          )}
+          {activeTab === 'history' && (
             <ReferralHistoryList referrals={referrals || []} isLoading={referralsLoading} />
-          </motion.div>
-        )}
-
-        {activeTab === 'withdrawals' && (
-          <motion.div
-            key="withdrawals"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
+          )}
+          {activeTab === 'withdrawals' && (
             <WithdrawalHistoryList withdrawals={withdrawals || []} isLoading={withdrawalsLoading} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </>
+      ) : (
+        // Sur desktop, on garde les animations mais simplifiées
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="grid md:grid-cols-2 gap-6"
+            >
+              <OverviewContent stats={stats} />
+            </motion.div>
+          )}
+
+          {activeTab === 'history' && (
+            <motion.div
+              key="history"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <ReferralHistoryList referrals={referrals || []} isLoading={referralsLoading} />
+            </motion.div>
+          )}
+
+          {activeTab === 'withdrawals' && (
+            <motion.div
+              key="withdrawals"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <WithdrawalHistoryList withdrawals={withdrawals || []} isLoading={withdrawalsLoading} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Modal de retrait */}
       {showWithdrawalModal && stats && (
@@ -343,6 +323,57 @@ export default function ReferralPage() {
 // ============================================================================
 // Composants internes
 // ============================================================================
+
+function OverviewContent({ stats }: { stats?: ReferralStats }) {
+  return (
+    <>
+      {/* Comment ça marche */}
+      <GlassCard className="p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Gift className="w-5 h-5 text-pink-400" />
+          Comment ça marche ?
+        </h3>
+        <div className="space-y-4">
+          {[
+            { step: 1, text: 'Partagez votre code unique à vos amis' },
+            { step: 2, text: 'Ils obtiennent -10% sur leur achat' },
+            { step: 3, text: 'Vous gagnez 10% + bonus de commission' },
+            { step: 4, text: 'Retirez vos gains dès 50€' },
+          ].map(({ step, text }) => (
+            <div key={step} className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-pink-400">
+                {step}
+              </div>
+              <p className="text-gray-300">{text}</p>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Avantages */}
+      <GlassCard className="p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-green-400" />
+          Vos avantages
+        </h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <span className="text-gray-400">Commission de base</span>
+            <span className="font-bold text-white">10%</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+            <span className="text-gray-400">Votre bonus actuel</span>
+            <span className="font-bold text-green-400">+{stats?.bonusRate || 0}%</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-lg border border-pink-500/30">
+            <span className="text-white font-medium">Commission totale</span>
+            <span className="font-bold text-pink-400">{10 + (stats?.bonusRate || 0)}%</span>
+          </div>
+        </div>
+      </GlassCard>
+    </>
+  );
+}
 
 interface StatCardProps {
   icon: React.ReactNode;

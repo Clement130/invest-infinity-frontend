@@ -218,7 +218,7 @@ export default function ClientApp() {
           animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-white/10 p-6 sm:p-8"
         >
-          <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full md:blur-3xl" />
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-xl shadow-purple-500/30">
               <span className="text-3xl">🎉</span>

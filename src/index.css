@@ -93,8 +93,16 @@
 
 /* Smooth Scroll Container */
 html {
-  scroll-behavior: smooth;
+  /* Sur mobile, on désactive le smooth scroll pour améliorer les performances */
+  scroll-behavior: auto;
   height: 100%;
+}
+
+/* Smooth scroll uniquement sur desktop */
+@media (min-width: 768px) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -205,11 +213,18 @@ section {
   animation: bounce-mobile 3s ease-in-out infinite;
 }
 
-/* Mobile : Ralentir TOUTES les animations */
+/* Mobile : Réduire drastiquement les animations */
 @media (max-width: 768px) {
-  /* Transitions plus longues sur mobile */
+  /* Transitions plus courtes sur mobile pour éviter les saccades */
   * {
-    transition-duration: 0.4s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* Désactiver les transitions complexes */
+  *[class*="transition-all"],
+  *[class*="transition-transform"],
+  *[class*="transition-opacity"] {
+    transition-duration: 0.15s !important;
   }
 
   /* Désactiver complètement les animations agressives sur mobile */
@@ -225,7 +240,7 @@ section {
     animation-duration: 2s !important;
   }
 
-  /* Désactiver les animations de background complexes */
+  /* Désactiver les animations de background complexes sur mobile */
   .animate-pulse-slow,
   .animate-float,
   .animate-move-right,
@@ -241,6 +256,28 @@ section {
   /* Optimiser les éléments qui se transforment */
   .transform {
     will-change: transform;
+  }
+  
+  /* Désactiver backdrop-blur sur mobile (très coûteux) */
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Réduire les effets de blur */
+  [class*="blur-"] {
+    filter: blur(0) !important;
+  }
+  
+  /* Désactiver les shadows complexes sur mobile */
+  [class*="shadow-"] {
+    box-shadow: none !important;
+  }
+  
+  /* Garder seulement les shadows simples */
+  .shadow-sm,
+  .shadow {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   }
 }
 
