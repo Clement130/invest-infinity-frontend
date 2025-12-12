@@ -1,5 +1,5 @@
 import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import MarketingLayout from '../layouts/MarketingLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -7,6 +7,8 @@ import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PageLoader from '../components/PageLoader';
 import { marketingRoutes, clientRoutes, adminRoutes } from './routes';
+
+const NotFound = lazy(() => import('../pages/NotFound'));
 
 // Composant pour les transitions de page
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
@@ -117,15 +119,9 @@ export default function AppRouter() {
             <Route
               path="*"
               element={
-                <div className="min-h-screen flex items-center justify-center bg-black text-white">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold mb-4">404</h1>
-                    <p className="text-gray-400 mb-8">Page non trouvée</p>
-                    <a href="/" className="text-pink-500 hover:text-pink-600">
-                      Retour à l'accueil
-                    </a>
-                  </div>
-                </div>
+                <PageTransition>
+                  <NotFound />
+                </PageTransition>
               }
             />
           </Routes>
@@ -191,15 +187,9 @@ export default function AppRouter() {
              <Route
               path="*"
               element={
-                <div className="min-h-screen flex items-center justify-center bg-black text-white">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold mb-4">404</h1>
-                    <p className="text-gray-400 mb-8">Page non trouvée</p>
-                    <a href="/" className="text-pink-500 hover:text-pink-600">
-                      Retour à l'accueil
-                    </a>
-                  </div>
-                </div>
+                <PageTransition>
+                  <NotFound />
+                </PageTransition>
               }
             />
         </Routes>
