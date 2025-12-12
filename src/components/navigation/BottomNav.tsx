@@ -16,7 +16,6 @@ import {
   LayoutDashboard,
   BookOpen,
   TrendingUp,
-  Target,
   Menu,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -48,12 +47,6 @@ const navItems: NavItem[] = [
     label: 'Progression',
     icon: TrendingUp,
     path: '/app/progress',
-  },
-  {
-    label: 'Défis',
-    icon: Target,
-    path: '/app/challenges',
-    badge: 2,
   },
   {
     label: 'Plus',

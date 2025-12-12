@@ -99,15 +99,6 @@ const navigationItems: CommandPaletteItem[] = [
     category: 'Navigation',
   },
   {
-    id: 'nav-challenges',
-    type: 'navigation',
-    label: 'Défis',
-    description: 'Gérer les défis',
-    path: '/admin/challenges',
-    keywords: ['challenges', 'défis', 'challenges'],
-    category: 'Navigation',
-  },
-  {
     id: 'nav-preview',
     type: 'navigation',
     label: 'Vue Client',
