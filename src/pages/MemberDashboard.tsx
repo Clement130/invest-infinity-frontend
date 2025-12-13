@@ -144,7 +144,7 @@ function MobileDashboard({
       <div className="grid grid-cols-2 gap-3">
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/app/modules')}
+          onClick={() => navigate('/app')}
           className="bg-white/5 hover:bg-white/10 rounded-xl p-4 text-center transition-colors"
         >
           <BookOpen className="w-6 h-6 mx-auto mb-2 text-blue-400" />
