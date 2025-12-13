@@ -13,8 +13,8 @@ import { Sparkles } from 'lucide-react';
 import { memo } from 'react';
 import clsx from 'clsx';
 
-const CONTACT_EMAIL = 'clement.ia.consulting@gmail.com';
-const MAILTO_LINK = `mailto:${CONTACT_EMAIL}`;
+const CONTACT_WEBSITE = 'https://www.obsidian-autonomy.com/';
+const CONTACT_LABEL = 'obsidian-autonomy.com';
 
 interface ExpertContactProps {
   variant?: 'compact' | 'expanded';
@@ -25,7 +25,9 @@ function ExpertContact({ variant = 'compact', className }: ExpertContactProps) {
   if (variant === 'compact') {
     return (
       <a
-        href={MAILTO_LINK}
+        href={CONTACT_WEBSITE}
+        target="_blank"
+        rel="noopener noreferrer"
         className={clsx(
           'group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300',
           'opacity-70 hover:opacity-100',
@@ -41,7 +43,7 @@ function ExpertContact({ variant = 'compact', className }: ExpertContactProps) {
             Besoin d'un expert IA ?
           </p>
           <p className="text-[10px] text-gray-500 group-hover:text-purple-400/70 transition-colors truncate">
-            {CONTACT_EMAIL}
+            {CONTACT_LABEL}
           </p>
         </div>
       </a>
@@ -69,10 +71,12 @@ function ExpertContact({ variant = 'compact', className }: ExpertContactProps) {
             Si tu cherches à mettre en place de l'IA ou des automatisations, tu peux me contacter.
           </p>
           <a
-            href={MAILTO_LINK}
+            href={CONTACT_WEBSITE}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors group"
           >
-            <span>{CONTACT_EMAIL}</span>
+            <span>{CONTACT_LABEL}</span>
             <Sparkles className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
           </a>
         </div>

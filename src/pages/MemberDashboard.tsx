@@ -625,11 +625,13 @@ export default function MemberDashboard() {
             Besoin d'aide personnalisée ?
           </p>
           <a
-            href="mailto:clement.ia.consulting@gmail.com"
+            href="https://www.obsidian-autonomy.com/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-pink-400 transition-colors duration-200 group"
           >
             <Mail className="w-3.5 h-3.5" />
-            <span>Contactez Clement - Consultant IA & Créateur du site</span>
+            <span>Découvrez Obsidian Autonomy - Automatisations & IA</span>
             <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </a>
         </div>

@@ -13,7 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://invest-infinity-frontend.vercel.app';
-const CONTACT_EMAIL = 'clement.ia.consulting@gmail.com';
+const CONTACT_WEBSITE = 'https://www.obsidian-autonomy.com/';
+const CONTACT_LABEL = 'obsidian-autonomy.com';
 
 console.log('🔍 Vérification du module Expert Contact en production...\n');
 
@@ -23,7 +24,7 @@ const checks = [
     name: 'ClientSidebar.tsx - Module contact sidebar',
     file: join(__dirname, '../src/components/navigation/ClientSidebar.tsx'),
     patterns: [
-      /mailto:clement\.ia\.consulting@gmail\.com/,
+      /https:\/\/www\.obsidian-autonomy\.com\//,
       /Besoin d'un expert IA \?/,
       /Sparkles/,
     ],
@@ -32,7 +33,7 @@ const checks = [
     name: 'SettingsPage.tsx - Section Support avancé',
     file: join(__dirname, '../src/pages/SettingsPage.tsx'),
     patterns: [
-      /mailto:clement\.ia\.consulting@gmail\.com/,
+      /https:\/\/www\.obsidian-autonomy\.com\//,
       /Support avancé/,
       /Si tu cherches à mettre en place de l'IA/,
       /Sparkles/,
@@ -42,7 +43,7 @@ const checks = [
     name: 'ExpertContact.tsx - Composant réutilisable',
     file: join(__dirname, '../src/components/ExpertContact.tsx'),
     patterns: [
-      /clement\.ia\.consulting@gmail\.com/,
+      /obsidian-autonomy\.com/,
       /ExpertContact/,
       /variant.*compact.*expanded/,
     ],
@@ -82,7 +83,7 @@ console.log('   2. Vérifier dans la sidebar (desktop) :');
 console.log('      - Module "Besoin d\'un expert IA ?" visible en bas');
 console.log('      - Opacité réduite (70%) par défaut');
 console.log('      - Hover : opacité 100% + glow violet');
-console.log('      - Clic ouvre mailto:clement.ia.consulting@gmail.com');
+console.log(`      - Clic ouvre ${CONTACT_WEBSITE}`);
 console.log('   3. Aller dans Paramètres (/app/settings) :');
 console.log('      - Section "Support avancé" visible');
 console.log('      - Texte descriptif présent');

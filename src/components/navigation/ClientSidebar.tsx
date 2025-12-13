@@ -344,7 +344,9 @@ function ClientSidebar() {
       {/* Expert Contact - Module discret consulting IA */}
       <div className="px-3 pb-2">
         <a
-          href="mailto:clement.ia.consulting@gmail.com"
+          href="https://www.obsidian-autonomy.com/"
+          target="_blank"
+          rel="noopener noreferrer"
           className="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 opacity-70 hover:opacity-100 hover:bg-purple-500/10"
         >
           <div className="w-8 h-8 rounded-lg bg-white/5 group-hover:bg-purple-500/20 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-purple-500/20">
@@ -355,7 +357,7 @@ function ClientSidebar() {
               Besoin d'un expert IA ?
             </p>
             <p className="text-[10px] text-gray-500 group-hover:text-purple-400/70 transition-colors truncate">
-              clement.ia.consulting@gmail.com
+              obsidian-autonomy.com
             </p>
           </div>
         </a>
