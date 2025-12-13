@@ -392,7 +392,7 @@ function ClientSidebar() {
       </AnimatePresence>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 z-40 w-72 bg-slate-950/95 backdrop-blur-xl border-r border-white/5">
+      <aside className="hidden lg:block fixed inset-y-0 left-0 z-40 w-72 bg-slate-950 border-r border-white/5">
         <SidebarContent />
       </aside>
 
@@ -404,7 +404,7 @@ function ClientSidebar() {
             animate="open"
             exit="closed"
             variants={sidebarVariants}
-            className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-slate-950/98 backdrop-blur-xl border-r border-white/5"
+            className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 border-r border-white/5"
           >
             <SidebarContent />
           </motion.aside>
