@@ -49,11 +49,6 @@ export default function Welcome() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-900/10 via-black to-black pt-32 pb-20">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/4 -left-20 w-60 h-60 bg-pink-600/10 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -74,8 +69,7 @@ export default function Welcome() {
         </div>
 
         {/* Profile Form */}
-        <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-pink-800 rounded-2xl blur opacity-20" />
+        <div className="relative overflow-hidden">
           <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-pink-500/10">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Budget Input */}

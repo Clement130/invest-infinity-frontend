@@ -35,8 +35,6 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
       {/* Animated background gradients */}
       <div className="relative w-full overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-pink-50 via-white to-white" />
-        <div className="absolute -top-24 left-1/4 w-96 h-96 bg-pink-100/50 rounded-full filter blur-3xl animate-pulse" />
-        <div className="absolute -bottom-48 right-1/4 w-96 h-96 bg-pink-200/50 rounded-full filter blur-3xl animate-pulse delay-1000" />
       </div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-[1]">
@@ -111,8 +109,6 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
             onClick={() => navigate('/pricing')}
             className="group relative"
           >
-            {/* Button gradient background with blur effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 to-pink-500 rounded-full blur opacity-75 group-hover:opacity-100 transition-all duration-500" />
             
             {/* Button content */}
             <div className="relative px-8 py-4 bg-white rounded-full flex items-center space-x-2 transform hover:scale-105 transition-all duration-500 shadow-lg">

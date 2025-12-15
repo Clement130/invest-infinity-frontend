@@ -77,10 +77,6 @@ export const PremiumButton = ({
         {children}
       </span>
 
-      {/* Background Glow for Primary */}
-      {glowEffect && variant === 'primary' && (
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 hover:opacity-100 transition-opacity duration-500 blur-xl" />
-      )}
     </motion.button>
   );
 };

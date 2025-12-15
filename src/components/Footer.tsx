@@ -17,11 +17,6 @@ export default function Footer({ onOpenRGPD }: FooterProps) {
     <footer className="bg-[#0f0f13]">
       {/* CTA Section intégrée */}
       <div className="relative py-16 overflow-hidden">
-        {/* Points de lumière néon */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/10 rounded-full filter blur-[100px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-pink-500/10 rounded-full filter blur-[100px]" />
-        </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <h3 className="text-2xl sm:text-3xl font-bold text-white mb-8">
@@ -31,7 +26,6 @@ export default function Footer({ onOpenRGPD }: FooterProps) {
             onClick={() => navigate('/pricing')}
             className="group relative inline-flex items-center"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-pink-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
             
             <div className="relative px-8 py-4 bg-[#1f1f23] rounded-full flex items-center space-x-2 transform hover:scale-105 transition-all duration-500 border border-pink-500/20">
               <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-500">
@@ -45,8 +39,6 @@ export default function Footer({ onOpenRGPD }: FooterProps) {
 
       {/* Disclaimer complet */}
       <div className="border-t border-white/5 relative">
-        {/* Glow effect similaire au bouton CTA */}
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-pink-500/10 blur-2xl opacity-50" />
         
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
           {/* Container avec même background que le bouton CTA */}

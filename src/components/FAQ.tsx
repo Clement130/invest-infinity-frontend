@@ -116,12 +116,6 @@ export default function FAQ({ onOpenRegister }: FAQProps) {
 
   return (
     <section id="faq" className="relative bg-[#0f0f13] py-16 sm:py-24 lg:py-32 overflow-hidden">
-      {/* Dégradés d'arrière-plan */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full filter blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse" style={{ animationDelay: '0.5s' }} />
-      </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header Section */}

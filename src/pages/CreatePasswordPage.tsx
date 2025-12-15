@@ -216,11 +216,6 @@ export default function CreatePasswordPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f13] text-white flex items-center justify-center px-4">
-      {/* Points de lumière néon */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-500/20 rounded-full filter blur-[100px] animate-pulse delay-1000" />
-      </div>
 
       <div className="relative w-full max-w-md">
         <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-pink-500/30 rounded-2xl p-8 shadow-2xl">

@@ -163,12 +163,6 @@ export default function Services({ onOpenRegister }: ServicesProps) {
 
   return (
     <section ref={sectionRef} id="services" className="py-24 bg-[#0f0f13] relative overflow-visible">
-      {/* Points de lumière néon */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/30 rounded-full filter blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-pink-500/30 rounded-full filter blur-[100px] animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/20 rounded-full filter blur-[150px] animate-pulse delay-500" />
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
@@ -353,7 +347,6 @@ export default function Services({ onOpenRegister }: ServicesProps) {
         {/* CTA Button */}
         <div className="mt-20 text-center">
           <button onClick={() => navigate('/pricing')} className="group relative inline-flex items-center">
-            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-pink-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500" />
 
             <div className="relative px-8 py-4 bg-[#1f1f23] rounded-full flex items-center space-x-2 transform hover:scale-105 transition-all duration-500 border border-pink-500/20">
               <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pink-500">

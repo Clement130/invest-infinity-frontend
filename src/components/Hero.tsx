@@ -67,27 +67,6 @@ export default function Hero({ onOpenRegister }: HeroProps) {
         {/* Overlay principal */}
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-black/40" />
         
-        {/* Effets de lumière dynamiques */}
-        <div className="absolute inset-0">
-          <motion.div 
-            animate={{ 
-              opacity: [0.3, 0.6, 0.3], 
-              scale: [1, 1.2, 1],
-            }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/20 rounded-full filter blur-[100px] hidden md:block" 
-          />
-          <motion.div 
-            animate={{ 
-              opacity: [0.2, 0.5, 0.2], 
-              scale: [1.2, 1, 1.2],
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full filter blur-[100px] hidden md:block" 
-          />
-          {/* Mobile version */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-pink-500/15 rounded-full filter blur-[80px] md:hidden" />
-        </div>
       </motion.div>
 
       {/* Contenu principal */}

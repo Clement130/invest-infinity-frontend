@@ -148,8 +148,6 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 w-full">

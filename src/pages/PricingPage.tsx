@@ -10,6 +10,8 @@ import SocialProofBanner from '../components/SocialProofBanner';
 import { getAllOffers, type OfferId, type OfferConfig } from '../config/offers';
 import CalendlyEliteModal from '../components/CalendlyEliteModal';
 import { useAuth } from '../context/AuthContext';
+import SEO from '../components/SEO';
+import { generateProductStructuredData } from '../utils/structuredData';
 
 // URL de la fonction checkout publique (sans vérification JWT)
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
@@ -39,6 +41,19 @@ export default function PricingPage() {
     
     return () => clearTimeout(timeout);
   }, []);
+
+  // Structured data pour les offres
+  const offers = getAllOffers();
+  const structuredData = offers.map(offer => 
+    generateProductStructuredData(
+      offer.name,
+      offer.description || `Formation trading ${offer.name}`,
+      offer.price.toString(),
+      'EUR',
+      `https://investinfinity.fr/pricing#${offer.offerId}`,
+      'https://investinfinity.fr/logo.png'
+    )
+  );
 
   // Fonction helper pour générer la liste des features depuis la config
   // MISE À JOUR : Nouveaux contenus (Novembre 2025)
@@ -191,13 +206,16 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f13] text-white">
+      <SEO
+        title="Tarifs - Invest Infinity"
+        description="Découvrez nos offres de formation trading : Starter (147€), Premium (497€) et Bootcamp Élite (1997€). Choisissez la formule qui correspond à vos objectifs. Garantie 14 jours, communauté active, accompagnement personnalisé."
+        keywords="tarifs trading, prix formation trading, offre trading, formation trading prix, invest infinity tarifs, bootcamp trading, formation premium trading"
+        url="https://investinfinity.fr/pricing"
+        type="product"
+        structuredData={structuredData}
+      />
       {/* Header */}
       <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Background glow effects - désactivés/ralentis sur mobile via CSS */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse md:animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-500/20 rounded-full filter blur-[100px] animate-pulse md:animate-pulse md:delay-1000" />
-        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
@@ -395,9 +413,6 @@ export default function PricingPage() {
         {/* Dégradés d'arrière-plan - animations désactivées sur mobile via CSS global */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Sur mobile : opacité réduite et animation plus lente via CSS */}
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full filter blur-[100px] hidden md:block md:animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] hidden md:block md:animate-pulse" style={{ animationDelay: '0.5s' }} />
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

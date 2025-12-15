@@ -332,9 +332,6 @@ export default function MemberDashboard() {
               {/* Background effects - simplifiés sur mobile */}
               {!isMobile && (
                 <>
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-pink-500/10 rounded-full md:blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full md:blur-3xl" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-conic from-pink-500/5 via-purple-500/5 to-pink-500/5 rounded-full md:blur-3xl" />
                 </>
               )}
               {isMobile && (
@@ -625,13 +622,11 @@ export default function MemberDashboard() {
             Besoin d'aide personnalisée ?
           </p>
           <a
-            href="https://www.obsidian-autonomy.com/"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:clement.ia.consulting@gmail.com"
             className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-pink-400 transition-colors duration-200 group"
           >
             <Mail className="w-3.5 h-3.5" />
-            <span>Découvrez Obsidian Autonomy - Automatisations & IA</span>
+            <span>Contactez Clement - Consultant IA & Créateur du site</span>
             <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </a>
         </div>

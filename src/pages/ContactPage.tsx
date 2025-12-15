@@ -13,6 +13,8 @@ import {
   Bot,
   Zap
 } from 'lucide-react';
+import SEO from '../components/SEO';
+import { generateOrganizationStructuredData } from '../utils/structuredData';
 
 // ============================================
 // Icônes SVG personnalisées pour les réseaux sociaux
@@ -222,16 +224,20 @@ export default function ContactPage() {
     }
   };
 
+  const structuredData = generateOrganizationStructuredData();
+
   return (
     <div className="min-h-screen bg-[#0f0f13] text-white">
+      <SEO
+        title="Contact - Invest Infinity"
+        description="Contactez l'équipe Invest Infinity pour toute question sur nos formations trading, le Bootcamp Élite ou votre situation. Réponse rapide garantie."
+        keywords="contact invest infinity, support trading, aide formation trading, question trading"
+        url="https://investinfinity.fr/contact"
+        type="website"
+        structuredData={structuredData}
+      />
       {/* Header avec dégradés */}
       <section className="relative pt-32 pb-16 overflow-hidden">
-        {/* Dégradés d'arrière-plan */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/20 rounded-full filter blur-[100px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-500/20 rounded-full filter blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-400/10 rounded-full filter blur-[150px] animate-pulse" style={{ animationDelay: '0.5s' }} />
-        </div>
 
         <div className="max-w-6xl mx-auto px-4 relative z-10">
           <motion.div

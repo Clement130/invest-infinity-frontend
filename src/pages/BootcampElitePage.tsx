@@ -2,6 +2,8 @@ import { useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Crown, Star, Zap, Trophy, Users, Clock, Video } from 'lucide-react';
 import BootcampBookingSection from '../components/BootcampBookingSection';
+import SEO from '../components/SEO';
+import { generateCourseStructuredData } from '../utils/structuredData';
 
 // ============================================
 // Page de réservation Bootcamp Élite
@@ -14,19 +16,31 @@ export default function BootcampElitePage() {
     window.scrollTo(0, 0);
   }, []);
 
+  const structuredData = generateCourseStructuredData(
+    'Bootcamp Élite - Formation Trading Intensive',
+    'Formation intensive en présentiel à Marseille. 5 jours d\'immersion complète avec coaching personnalisé, stratégies avancées et groupe limité à 5-8 élèves. Le programme ultime pour devenir trader professionnel.',
+    'https://investinfinity.fr/bootcamp-elite',
+    '1997',
+    'EUR',
+    'https://investinfinity.fr/logo.png'
+  );
+
   return (
     <div className="min-h-screen bg-[#050816] text-white">
+      <SEO
+        title="Bootcamp Élite - Formation Trading Intensive à Marseille | Invest Infinity"
+        description="Formation intensive en présentiel à Marseille. 5 jours d'immersion complète avec coaching personnalisé, stratégies avancées et groupe limité à 5-8 élèves. Le programme ultime pour devenir trader professionnel."
+        keywords="bootcamp trading, formation trading présentiel, immersion trading marseille, formation trading intensive, coaching trading, trader professionnel"
+        url="https://investinfinity.fr/bootcamp-elite"
+        type="course"
+        structuredData={structuredData}
+      />
       {/* ============================================ */}
       {/* HERO SECTION */}
       {/* ============================================ */}
       <section className="relative pt-28 pb-12 lg:pt-36 lg:pb-16 overflow-hidden">
         {/* Background effects - désactivés/simplifiés sur mobile */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Gradient statique sur mobile, complet sur desktop */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] md:w-[800px] h-[300px] md:h-[600px] bg-gradient-to-b from-pink-500/20 via-purple-500/10 to-transparent rounded-full filter blur-[80px] md:blur-[100px]" />
-          {/* Effets animés uniquement sur desktop */}
-          <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-amber-500/15 rounded-full filter blur-[80px] hidden md:block md:animate-pulse" />
-          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-pink-500/15 rounded-full filter blur-[80px] hidden md:block md:animate-pulse md:delay-1000" />
         </div>
 
         {/* Grid pattern overlay */}

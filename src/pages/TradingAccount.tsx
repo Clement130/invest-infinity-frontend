@@ -39,8 +39,6 @@ export default function TradingAccount() {
           <div className="grid grid-cols-1 md:grid-cols-7 gap-8">
             {/* ---------------------- OPTION 1 À GAUCHE (col-span-3) ---------------------- */}
             <div className="md:col-span-3 relative self-start">
-              {/* Lueur discrète */}
-              <div className="absolute -inset-1 bg-gradient-to-br from-[#6E44FF] to-[#FF6ECB] rounded-2xl blur opacity-30 pointer-events-none" />
               <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-7 border border-[#6E44FF]/20 shadow-lg flex flex-col">
                 {/* En-tête Option 1 */}
                 <div className="flex flex-col items-center text-center gap-2 mb-6">
@@ -112,8 +110,6 @@ export default function TradingAccount() {
 
             {/* ---------------------- OPTION 2 À DROITE (col-span-4) ---------------------- */}
             <div className="md:col-span-4 relative">
-              {/* Lueur discrète */}
-              <div className="absolute -inset-1 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl blur opacity-20 pointer-events-none" />
               <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-emerald-500/20 shadow-xl flex flex-col">
                 {/* Badge “Recommandé” */}
                 <div className="absolute top-0 right-0 mt-2 mr-2 bg-emerald-400 text-black px-3 py-1 rounded-bl-lg text-xs font-bold z-10">

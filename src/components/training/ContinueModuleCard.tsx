@@ -55,9 +55,6 @@ function ContinueModuleCard({
       {/* Animated gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-pink-500/15 to-purple-500/10" />
       
-      {/* Glow effects - réduits sur mobile */}
-      <div className="absolute top-0 right-0 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-pink-500/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-24 sm:w-36 lg:w-48 h-24 sm:h-36 lg:h-48 bg-orange-500/10 rounded-full blur-3xl" />
       
       {/* Hover glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-pink-500/0 via-pink-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

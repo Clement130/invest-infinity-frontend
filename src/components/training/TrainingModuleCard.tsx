@@ -142,7 +142,7 @@ function TrainingModuleCard({
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={clsx(
-        // Mobile-first: rounded plus petit, largeur contrôlée
+        // Mobile-first: rounded plus petit, largeur contrôlée, overflow-hidden pour contenir les effets
         'group relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl cursor-pointer',
         'bg-gradient-to-br from-slate-900 via-slate-950 to-black',
         'border border-white/10 shadow-xl',
@@ -154,11 +154,6 @@ function TrainingModuleCard({
         'w-full'
       )}
     >
-      {/* Glow effect on hover */}
-      <div className={clsx(
-        'absolute -inset-1 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10',
-        `bg-gradient-to-r ${config.progress}`
-      )} />
 
       {/* Top gradient bar - animated on hover */}
       <motion.div

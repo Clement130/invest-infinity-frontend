@@ -185,8 +185,6 @@ function ClientSidebar() {
       {/* User Card */}
       <div className="p-4">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-white/5 p-4">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
 
           <div className="relative space-y-4">
             <div className="flex items-center gap-3">
@@ -344,9 +342,7 @@ function ClientSidebar() {
       {/* Expert Contact - Module discret consulting IA */}
       <div className="px-3 pb-2">
         <a
-          href="https://www.obsidian-autonomy.com/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="mailto:clement.ia.consulting@gmail.com"
           className="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 opacity-70 hover:opacity-100 hover:bg-purple-500/10"
         >
           <div className="w-8 h-8 rounded-lg bg-white/5 group-hover:bg-purple-500/20 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-purple-500/20">
@@ -357,7 +353,7 @@ function ClientSidebar() {
               Besoin d'un expert IA ?
             </p>
             <p className="text-[10px] text-gray-500 group-hover:text-purple-400/70 transition-colors truncate">
-              obsidian-autonomy.com
+              clement.ia.consulting@gmail.com
             </p>
           </div>
         </a>
