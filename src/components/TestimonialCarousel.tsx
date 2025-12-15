@@ -24,7 +24,7 @@ const TestimonialCarousel = () => {
   const trustpilotUrl = `https://fr.trustpilot.com/review/${trustpilotConfig.domain}`;
 
   return (
-    <section className="py-20 bg-[#05070d] relative overflow-hidden">
+    <section className="py-20 bg-[#05070d] relative">
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 space-y-4">

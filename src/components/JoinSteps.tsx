@@ -46,8 +46,6 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
   3 étapes{' '}
   <span className="relative inline-block">
     <span className="relative z-10">simples</span>
-    {/* Effet de surlignage */}
-    <span className="absolute inset-x-0 bottom-0 h-2 bg-pink-400/50 rounded-sm"></span>
   </span>
   {' '}pour commencer
 </h2>
