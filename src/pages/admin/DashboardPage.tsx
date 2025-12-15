@@ -26,9 +26,10 @@ export default function DashboardPage() {
       console.log('[Dashboard] Chargement des profils...');
       return listProfiles();
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1 * 60 * 1000, // 1 minute (les nouveaux clients doivent apparaître rapidement)
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Rafraîchir quand l'utilisateur revient sur l'onglet
+    refetchInterval: 2 * 60 * 1000, // Rafraîchir automatiquement toutes les 2 minutes
   });
 
   const paymentsQuery = useQuery({
@@ -37,9 +38,10 @@ export default function DashboardPage() {
       console.log('[Dashboard] Chargement des paiements...');
       return getPaymentsForAdmin();
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes (données plus dynamiques)
+    staleTime: 30 * 1000, // 30 secondes (données très dynamiques)
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Rafraîchir quand l'utilisateur revient sur l'onglet
+    refetchInterval: 60 * 1000, // Rafraîchir automatiquement toutes les 60 secondes
   });
 
   const leadsQuery = useQuery({

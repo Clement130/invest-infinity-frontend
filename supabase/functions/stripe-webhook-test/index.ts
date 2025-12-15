@@ -379,11 +379,20 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     }
   }
 
+  // Extraire le montant et la devise de la session Stripe
+  // amount_total est en centimes (ex: 9900 = 99.00 EUR)
+  const amount = session.amount_total || null;
+  const currency = session.currency?.toUpperCase() || 'EUR';
+  const paymentIntentId = session.payment_intent as string | null;
+
   const { error: paymentError } = await supabaseAdmin
     .from('payments')
     .insert({
       user_id: userId,
       stripe_session_id: session.id,
+      stripe_payment_intent: paymentIntentId,
+      amount: amount,
+      currency: currency,
       license_type: license,
       status: passwordToken ? 'pending_password' : 'completed'
     });
