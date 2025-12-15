@@ -104,7 +104,7 @@ function ModulesFilters({
       initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={shouldReduceMotion ? {} : { delay: 0.3 }}
-      className="space-y-4"
+      className="space-y-4 w-full max-w-full"
     >
       {/* Search & View Toggle Row */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
@@ -182,8 +182,10 @@ function ModulesFilters({
             'flex items-center gap-2 sm:gap-2.5 overflow-x-auto scrollbar-hide flex-1',
             'pb-1 -mb-1', // Hide scrollbar but keep scroll
             'snap-x snap-mandatory scroll-smooth',
-            // Padding right pour que le dernier filtre soit visible
-            'pr-4 sm:pr-0'
+            // Padding right pour que le dernier filtre soit visible sur mobile
+            'pr-4 sm:pr-0',
+            // Assure que le scroll ne dépasse pas
+            'min-w-0'
           )}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >

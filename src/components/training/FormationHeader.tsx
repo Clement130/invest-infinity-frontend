@@ -144,7 +144,7 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
     <motion.header
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative overflow-hidden w-full"
+      className="relative overflow-hidden w-full max-w-full"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">

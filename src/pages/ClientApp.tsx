@@ -192,7 +192,7 @@ export default function ClientApp() {
     // - pb-28 pour éviter le chevauchement avec le chatbot ET la BottomNav sur mobile
     // - w-full et overflow-x-hidden pour éviter le scroll horizontal
     // - space-y-4 mobile pour respiration compacte
-    <div className="space-y-4 sm:space-y-5 lg:space-y-8 pb-28 lg:pb-8 w-full overflow-x-hidden">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-8 pb-28 lg:pb-8 w-full max-w-full overflow-x-hidden">
       {/* Header Hero */}
       <FormationHeader 
         stats={statsData}
