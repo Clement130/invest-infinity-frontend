@@ -107,9 +107,9 @@ function ModulesFilters({
       className="space-y-4"
     >
       {/* Search & View Toggle Row */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
         {/* Search Input */}
-        <div className="relative flex-1 max-w-xl group">
+        <div className="relative flex-1 w-full sm:max-w-xl group">
           <Search className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-pink-400" />
           <input
             type="text"
@@ -179,7 +179,7 @@ function ModulesFilters({
         <div 
           ref={filtersScrollRef}
           className={clsx(
-            'flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide flex-1',
+            'flex items-center gap-2 sm:gap-2.5 overflow-x-auto scrollbar-hide flex-1',
             'pb-1 -mb-1', // Hide scrollbar but keep scroll
             'snap-x snap-mandatory scroll-smooth',
             // Padding right pour que le dernier filtre soit visible
@@ -200,10 +200,10 @@ function ModulesFilters({
                 whileTap={{ scale: 0.97 }}
                 className={clsx(
                   // Mobile-first: padding plus compact, texte plus petit
-                  'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5',
+                  'flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3',
                   'rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium',
                   'border transition-all duration-300 whitespace-nowrap snap-start',
-                  'min-h-[40px] sm:min-h-[44px]', // Tap-friendly
+                  'min-h-[44px] sm:min-h-[48px]', // Tap-friendly
                   isActive ? item.activeColor : item.color,
                   isActive && 'shadow-lg'
                 )}

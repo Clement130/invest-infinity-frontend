@@ -253,12 +253,12 @@ export default function ClientApp() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center justify-between"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0"
         >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl sm:text-3xl">🎬</span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white">Tes modules</h2>
-            <span className="px-2.5 py-1 rounded-lg bg-white/10 text-sm text-gray-400 font-medium">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <span className="text-xl sm:text-2xl lg:text-3xl">🎬</span>
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Tes modules</h2>
+            <span className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-white/10 text-xs sm:text-sm text-gray-400 font-medium">
               {filteredModules.length} module{filteredModules.length > 1 ? 's' : ''}
             </span>
           </div>
