@@ -103,7 +103,7 @@ const StatCard = memo(function StatCard({
         'sm:hover:shadow-lg sm:hover:scale-[1.02] sm:hover:-translate-y-0.5',
         c.glow,
         // Assure que la carte ne dépasse pas
-        'w-full min-w-0'
+        'w-full min-w-0 max-w-full'
       )}
     >
       {/* Glow effect - plus petit sur mobile */}
