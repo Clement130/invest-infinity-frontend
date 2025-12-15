@@ -34,7 +34,7 @@
 - ✅ src/pages/MemberDashboard.tsx
 - ✅ src/services/chatbotService.ts ⭐ (nouveau service)
 - ✅ supabase/migrations/20250124000000_add_achievement_badges.sql
-- ✅ verify-deployment.js (nouveau)
+- ✅ scripts/test-production.js (script principal de test)
 - ✅ vite.config.ts
 
 **Statistiques du commit :**

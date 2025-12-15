@@ -84,10 +84,25 @@ let PRICE_TO_LICENSE_CACHE: Record<string, string> | null = null;
 let LICENSE_CACHE_TIMESTAMP = 0;
 const LICENSE_CACHE_TTL = 5 * 60 * 1000;
 
-const LICENSE_HIERARCHY: Record<string, number> = {
+// Hiérarchie des licences PROFILE (utilisées dans profiles.license)
+const PROFILE_LICENSE_HIERARCHY: Record<string, number> = {
   'entree': 1,
   'transformation': 2,
   'immersion': 3
+};
+
+// Hiérarchie des licences SYSTÈME (utilisées dans modules.required_license)
+const SYSTEM_LICENSE_HIERARCHY: Record<string, number> = {
+  'starter': 1,
+  'pro': 2,
+  'elite': 3
+};
+
+// Mapping licence profile → licence système
+const PROFILE_TO_SYSTEM_LICENSE: Record<string, string> = {
+  'entree': 'starter',
+  'transformation': 'pro',
+  'immersion': 'elite',
 };
 
 // Fallback LIVE prices
@@ -369,7 +384,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     secureLog('License verification passed', { license: verifyProfile?.license });
   }
 
-  const userLicenseLevel = LICENSE_HIERARCHY[license] || 1;
+  // Convertir la licence profile en licence système pour la comparaison
+  const userSystemLicense = PROFILE_TO_SYSTEM_LICENSE[license] || 'starter';
+  const userLicenseLevel = SYSTEM_LICENSE_HIERARCHY[userSystemLicense] || 1;
 
   const { data: modules } = await supabaseAdmin
     .from('training_modules')
@@ -377,8 +394,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
   
   if (modules && modules.length > 0) {
     const accessibleModules = modules.filter(m => {
-      const requiredLicense = m.required_license || 'entree';
-      const requiredLevel = LICENSE_HIERARCHY[requiredLicense] || 1;
+      // required_license est déjà en format système (starter, pro, elite)
+      const requiredLicense = m.required_license;
+      if (!requiredLicense || !['starter', 'pro', 'elite'].includes(requiredLicense)) {
+        // Module sans licence requise définie = refuser l'accès par sécurité
+        return false;
+      }
+      const requiredLevel = SYSTEM_LICENSE_HIERARCHY[requiredLicense] || 1;
       return userLicenseLevel >= requiredLevel;
     });
 

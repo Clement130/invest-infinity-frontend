@@ -25,10 +25,6 @@ const TestimonialCarousel = () => {
 
   return (
     <section className="py-20 bg-[#05070d] relative overflow-hidden">
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="w-96 h-96 bg-emerald-500 blur-[180px] absolute -top-20 -left-10" />
-        <div className="w-96 h-96 bg-cyan-500 blur-[220px] absolute bottom-0 right-0" />
-      </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 space-y-4">

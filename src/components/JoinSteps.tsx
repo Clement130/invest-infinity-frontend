@@ -70,8 +70,6 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
               
               {/* Card */}
               <div className="relative h-full">
-                {/* Gradient border effect */}
-                <div className="absolute -inset-[2px] bg-gradient-to-r from-pink-400 via-pink-500 to-pink-400 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-all duration-500" />
                 
                 {/* Main content */}
                 <div className="relative h-full bg-white p-8 rounded-2xl border border-pink-100 group-hover:border-pink-200 transition-all duration-500 shadow-lg">
@@ -84,7 +82,6 @@ export default function JoinSteps({ onOpenRegister }: JoinStepsProps) {
 
                   {/* Icon */}
                   <div className="relative w-16 h-16 mb-8 mt-4">
-                    <div className={`absolute inset-0 bg-gradient-to-r ${step.gradient} rounded-2xl blur transition-all duration-500 group-hover:blur-md opacity-75`} />
                     <div className="relative h-full rounded-2xl bg-white p-4 flex items-center justify-center transform group-hover:scale-110 transition-all duration-500 shadow-lg">
                       <step.icon className="w-8 h-8 text-pink-500" />
                     </div>

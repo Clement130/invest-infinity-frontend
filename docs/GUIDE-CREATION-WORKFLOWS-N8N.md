@@ -281,3 +281,9 @@ Tu peux personnaliser :
 - La segmentation (ajouter des conditions SQL basées sur `metadata->segment`)
 
 
+
+
+
+
+
+

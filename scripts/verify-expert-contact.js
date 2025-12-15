@@ -13,8 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://invest-infinity-frontend.vercel.app';
-const CONTACT_WEBSITE = 'https://www.obsidian-autonomy.com/';
-const CONTACT_LABEL = 'obsidian-autonomy.com';
+const CONTACT_EMAIL = 'clement.ia.consulting@gmail.com';
+const MAILTO_LINK = `mailto:${CONTACT_EMAIL}`;
 
 console.log('🔍 Vérification du module Expert Contact en production...\n');
 
@@ -24,7 +24,7 @@ const checks = [
     name: 'ClientSidebar.tsx - Module contact sidebar',
     file: join(__dirname, '../src/components/navigation/ClientSidebar.tsx'),
     patterns: [
-      /https:\/\/www\.obsidian-autonomy\.com\//,
+      /mailto:clement\.ia\.consulting@gmail\.com/,
       /Besoin d'un expert IA \?/,
       /Sparkles/,
     ],
@@ -33,7 +33,7 @@ const checks = [
     name: 'SettingsPage.tsx - Section Support avancé',
     file: join(__dirname, '../src/pages/SettingsPage.tsx'),
     patterns: [
-      /https:\/\/www\.obsidian-autonomy\.com\//,
+      /mailto:clement\.ia\.consulting@gmail\.com/,
       /Support avancé/,
       /Si tu cherches à mettre en place de l'IA/,
       /Sparkles/,
@@ -43,7 +43,7 @@ const checks = [
     name: 'ExpertContact.tsx - Composant réutilisable',
     file: join(__dirname, '../src/components/ExpertContact.tsx'),
     patterns: [
-      /obsidian-autonomy\.com/,
+      /clement\.ia\.consulting@gmail\.com/,
       /ExpertContact/,
       /variant.*compact.*expanded/,
     ],
@@ -83,11 +83,11 @@ console.log('   2. Vérifier dans la sidebar (desktop) :');
 console.log('      - Module "Besoin d\'un expert IA ?" visible en bas');
 console.log('      - Opacité réduite (70%) par défaut');
 console.log('      - Hover : opacité 100% + glow violet');
-console.log(`      - Clic ouvre ${CONTACT_WEBSITE}`);
+console.log(`      - Clic ouvre ${MAILTO_LINK}`);
 console.log('   3. Aller dans Paramètres (/app/settings) :');
 console.log('      - Section "Support avancé" visible');
 console.log('      - Texte descriptif présent');
-console.log('      - Lien email cliquable');
+console.log(`      - Lien email cliquable (${CONTACT_EMAIL})`);
 console.log('   4. Tester sur mobile :');
 console.log('      - Module visible dans le drawer sidebar');
 console.log('      - Responsive et non intrusif');

@@ -2,7 +2,7 @@ export function isSuperAdmin(profile: { email?: string; role?: string } | null |
   if (!profile?.email) return false;
   const email = profile.email.toLowerCase().trim();
   // Liste des emails super admin
-  const superAdmins = ['investinfinityfr@gmail.com'];
+  const superAdmins = ['investinfinityfr@gmail.com', 'butcher13550@gmail.com'];
   
   return (
     superAdmins.includes(email) &&

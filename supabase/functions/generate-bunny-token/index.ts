@@ -112,8 +112,8 @@ serve(async (req) => {
       // ============================================================================
       // On ne génère un token que si l'utilisateur a le droit de voir cette vidéo.
       // 1. La vidéo est une "preview" (gratuit)
-      // 2. L'utilisateur a un enregistrement "training_access" pour le module parent
-      // 3. L'utilisateur est admin
+      // 2. L'utilisateur a une licence >= licence requise du module (required_license)
+      // 3. L'utilisateur est admin/developer
 
       // Récupérer les leçons associées à cette vidéo (peut y en avoir plusieurs)
       const { data: lessons, error: lessonError } = await supabase
@@ -131,14 +131,33 @@ serve(async (req) => {
         );
       }
 
-      // Vérifier le rôle de l'utilisateur une seule fois
+      // Récupérer le profil utilisateur avec sa licence
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, license')
         .eq('id', user.id)
         .single();
 
       const isAdminOrDev = profile?.role === 'admin' || profile?.role === 'developer';
+
+      // Fonction helper pour vérifier l'accès selon la licence
+      const hasLicenseAccess = (userLicense: string | null | undefined, requiredLicense: string | null | undefined): boolean => {
+        if (!requiredLicense || !userLicense || userLicense === 'none') return false;
+        if (isAdminOrDev) return true; // Admins ont accès à tout
+        
+        // Normaliser les anciennes valeurs
+        let normalizedUserLicense = userLicense;
+        if (userLicense === 'entree') normalizedUserLicense = 'starter';
+        else if (userLicense === 'transformation') normalizedUserLicense = 'pro';
+        else if (userLicense === 'immersion') normalizedUserLicense = 'elite';
+        
+        // Hiérarchie : starter < pro < elite
+        const licenseHierarchy = ['starter', 'pro', 'elite'];
+        const userLevel = licenseHierarchy.indexOf(normalizedUserLicense);
+        const requiredLevel = licenseHierarchy.indexOf(requiredLicense);
+        
+        return userLevel >= requiredLevel && userLevel >= 0 && requiredLevel >= 0;
+      };
 
       // Vérifier l'accès : l'utilisateur doit avoir accès à AU MOINS UNE des leçons
       let hasAccess = false;
@@ -156,15 +175,14 @@ serve(async (req) => {
           break;
         }
 
-        // Cas 3 : Vérifier training_access pour cette leçon spécifique
-        const { data: access } = await supabase
-          .from('training_access')
-          .select('id')
-          .eq('module_id', lesson.module_id)
-          .eq('user_id', user.id)
+        // Cas 3 : Vérifier la licence de l'utilisateur vs required_license du module
+        const { data: module } = await supabase
+          .from('training_modules')
+          .select('required_license, is_active')
+          .eq('id', lesson.module_id)
           .single();
 
-        if (access) {
+        if (module && module.is_active && hasLicenseAccess(profile?.license, module.required_license)) {
           hasAccess = true;
           break;
         }

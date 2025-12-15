@@ -1,0 +1,35 @@
+# robots.txt pour Invest Infinity
+# https://investinfinity.fr/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /create-password
+Disallow: /success
+Disallow: /confirmation
+Disallow: /start
+Disallow: /discord
+
+# Sitemap
+Sitemap: https://www.investinfinity.fr/sitemap.xml
+
+# Crawl-delay pour éviter la surcharge
+Crawl-delay: 1
+
+# Spécifique pour Google
+User-agent: Googlebot
+Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /api/
+
+# Spécifique pour Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /api/
+

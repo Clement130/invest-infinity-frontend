@@ -14,7 +14,7 @@
 #### 1. **Initialisation des Données** ⭐⭐⭐
 ```sql
 -- Exécuter dans Supabase Dashboard > SQL Editor
--- Fichier: SUPABASE-SQL-INIT.sql
+-- Fichier: supabase/SUPABASE-SQL-INIT.sql
 
 -- Items boutique (5 items)
 INSERT INTO public.store_items...

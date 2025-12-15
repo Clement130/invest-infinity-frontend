@@ -192,7 +192,6 @@ export default function Services({ onOpenRegister }: ServicesProps) {
               >
                 <div className="relative">
                   {/* Neon glow effect */}
-                  <div className="absolute -inset-0.5 bg-pink-500 opacity-20 blur-lg rounded-3xl group-hover:opacity-30 transition duration-500" />
 
                   <div className="relative bg-[#1f1f23] rounded-3xl overflow-hidden shadow-[0_0_25px_rgba(236,72,153,0.15)]">
                     <div className="grid md:grid-cols-2 gap-0">

@@ -12,6 +12,8 @@ import {
 } from '../services/immersionSessionsService';
 import CalendlyEliteModal from '../components/CalendlyEliteModal';
 import { useAuth } from '../context/AuthContext';
+import SEO from '../components/SEO';
+import { generateCourseStructuredData } from '../utils/structuredData';
 
 // URL de la fonction checkout publique
 const CHECKOUT_PUBLIC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-public`;
@@ -118,8 +120,25 @@ export default function ImmersionElitePage() {
     }
   };
 
+  const structuredData = generateCourseStructuredData(
+    'Bootcamp Élite - Immersion Trading',
+    'Formation intensive en présentiel à Marseille. 5 jours d\'immersion complète avec coaching personnalisé, stratégies avancées et groupe limité à 5-8 élèves. Le programme ultime pour devenir trader professionnel.',
+    'https://investinfinity.fr/immersion-elite',
+    '1997',
+    'EUR',
+    'https://investinfinity.fr/logo.png'
+  );
+
   return (
     <div className="min-h-screen bg-[#0f0f13] text-white">
+      <SEO
+        title="Bootcamp Élite - Immersion Trading à Marseille | Invest Infinity"
+        description="Formation intensive en présentiel à Marseille. 5 jours d'immersion complète avec coaching personnalisé, stratégies avancées et groupe limité à 5-8 élèves. Le programme ultime pour devenir trader professionnel."
+        keywords="bootcamp trading, formation trading présentiel, immersion trading marseille, formation trading intensive, coaching trading, trader professionnel"
+        url="https://investinfinity.fr/immersion-elite"
+        type="course"
+        structuredData={structuredData}
+      />
       {/* Header avec bouton retour */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">

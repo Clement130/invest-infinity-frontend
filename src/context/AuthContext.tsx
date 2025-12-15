@@ -14,7 +14,7 @@ import type { Tables } from '../types/supabase';
 
 type ProfileRow = Tables<'profiles'>;
 
-type LicenseType = 'none' | 'starter' | 'pro' | 'elite';
+type LicenseType = 'none' | 'entree' | 'transformation' | 'immersion';
 
 interface AuthContextType {
   user: User | null;

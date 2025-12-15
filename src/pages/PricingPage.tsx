@@ -460,7 +460,6 @@ export default function PricingPage() {
                     className="relative group"
                   >
                     {/* Glow effect au hover - désactivé sur mobile */}
-                    <div className="absolute -inset-0.5 bg-pink-500 opacity-0 group-hover:opacity-20 blur-lg rounded-2xl transition duration-500 hidden md:block" />
                     
                     {/* Conteneur de l'accordéon */}
                     <div className="relative bg-[#1f1f23] rounded-2xl overflow-hidden border border-pink-500/10 transition-all duration-500 hover:border-pink-500/20">

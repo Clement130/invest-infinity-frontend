@@ -57,7 +57,11 @@ function calculateFormationsCount(
   if (userSystemLicense !== 'none') {
     modules.forEach(module => {
       // Les modules utilisent 'starter', 'pro', 'elite' dans required_license
-      const moduleRequiredLicense = module.required_license || 'starter';
+      // Ne pas utiliser de fallback - si required_license est null, refuser l'accès
+      const moduleRequiredLicense = module.required_license;
+      if (!moduleRequiredLicense || !['starter', 'pro', 'elite'].includes(moduleRequiredLicense)) {
+        return; // Module sans licence requise définie = accès refusé (skip ce module)
+      }
       
       // Vérifier si la licence utilisateur permet l'accès à ce module
       if (hasLicenseAccess(userSystemLicense, moduleRequiredLicense)) {
@@ -377,7 +381,11 @@ function UserDetailModal({
   const modulesAccessibleByLicense = useMemo(() => {
     if (userSystemLicense === 'none') return [];
     return modules.filter(module => {
-      const moduleRequiredLicense = module.required_license || 'starter';
+      // Ne pas utiliser de fallback - si required_license est null, refuser l'accès
+      const moduleRequiredLicense = module.required_license;
+      if (!moduleRequiredLicense || !['starter', 'pro', 'elite'].includes(moduleRequiredLicense)) {
+        return false; // Module sans licence requise définie = accès refusé
+      }
       return hasLicenseAccess(userSystemLicense, moduleRequiredLicense);
     });
   }, [modules, userSystemLicense]);

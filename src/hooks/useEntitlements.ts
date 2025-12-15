@@ -4,9 +4,11 @@
  * Utilise la configuration des offres pour déterminer ce à quoi l'utilisateur a accès
  * selon sa licence actuelle.
  * 
- * IMPORTANT: La DB stocke les licences directement en format système:
- * - profiles.license: 'none' | 'starter' | 'pro' | 'elite'
+ * IMPORTANT: La DB stocke les licences en format profile pour les utilisateurs:
+ * - profiles.license: 'none' | 'entree' | 'transformation' | 'immersion'
  * - training_modules.required_license: 'starter' | 'pro' | 'elite'
+ * 
+ * Mapping: entree → starter, transformation → pro, immersion → elite
  */
 
 import { useMemo } from 'react';
@@ -80,8 +82,9 @@ export function useEntitlements(): UserEntitlements {
   const { profile } = useSession();
   
   const entitlements = useMemo(() => {
-    // Check Super Admin - accès total
-    if (isSuperAdmin(profile)) {
+    // Check Admin/Developer - accès total à tout
+    // Tous les admins (admin ou developer) ont accès à tout, pas seulement les super admins
+    if (profile?.role === 'admin' || profile?.role === 'developer') {
       return {
         systemLicense: 'elite' as const,
         offer: OFFERS.immersion_elite,
@@ -100,7 +103,13 @@ export function useEntitlements(): UserEntitlements {
     // Fonction pour vérifier l'accès à un module
     // Les modules ont required_license: 'starter' | 'pro' | 'elite'
     const checkModuleAccess = (module: TrainingModule): boolean => {
-      const moduleRequiredLicense = module.required_license || 'starter';
+      // PROBLÈME CORRIGÉ: Ne pas utiliser de fallback 'starter' par défaut
+      // Si required_license est null/undefined, refuser l'accès (sécurité)
+      const moduleRequiredLicense = module.required_license;
+      if (!moduleRequiredLicense || !['starter', 'pro', 'elite'].includes(moduleRequiredLicense)) {
+        // Module sans licence requise définie = accès refusé par sécurité
+        return false;
+      }
       // hasLicenseAccess vérifie si userLicense >= requiredLicense dans la hiérarchie
       return hasLicenseAccess(systemLicense, moduleRequiredLicense);
     };

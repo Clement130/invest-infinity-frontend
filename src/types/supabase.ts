@@ -16,7 +16,7 @@ export type Database = {
           full_name: string | null
           avatar_url: string | null
           role: 'client' | 'admin' | 'developer'
-          license: 'none' | 'starter' | 'pro' | 'elite'
+          license: 'none' | 'entree' | 'transformation' | 'immersion'
           license_valid_until: string | null
           stripe_customer_id: string | null
           created_at: string
@@ -28,7 +28,7 @@ export type Database = {
           full_name?: string | null
           avatar_url?: string | null
           role?: 'client' | 'admin' | 'developer'
-          license?: 'none' | 'starter' | 'pro' | 'elite'
+          license?: 'none' | 'entree' | 'transformation' | 'immersion'
           license_valid_until?: string | null
           stripe_customer_id?: string | null
           created_at?: string
@@ -40,7 +40,7 @@ export type Database = {
           full_name?: string | null
           avatar_url?: string | null
           role?: 'client' | 'admin' | 'developer'
-          license?: 'none' | 'starter' | 'pro' | 'elite'
+          license?: 'none' | 'entree' | 'transformation' | 'immersion'
           license_valid_until?: string | null
           stripe_customer_id?: string | null
           created_at?: string
@@ -107,7 +107,7 @@ export type Database = {
           amount: number | null
           currency: string
           status: 'pending' | 'pending_password' | 'completed' | 'failed' | 'refunded'
-          license_type: 'starter' | 'pro' | 'elite' | null
+          license_type: 'entree' | 'transformation' | 'immersion' | null
           created_at: string
         }
         Insert: {

@@ -608,12 +608,10 @@ export default function SettingsPage() {
                   Si tu cherches à mettre en place de l'IA ou des automatisations, tu peux me contacter.
                 </p>
                 <a
-                  href="https://www.obsidian-autonomy.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="mailto:clement.ia.consulting@gmail.com"
                   className="inline-flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors group"
                 >
-                  <span>obsidian-autonomy.com</span>
+                  <span>clement.ia.consulting@gmail.com</span>
                   <Sparkles className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
               </div>
