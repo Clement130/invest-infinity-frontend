@@ -150,7 +150,7 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
       <div className="absolute inset-0 -z-10 overflow-hidden">
       </div>
 
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8 w-full">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 w-full max-w-full">
         {/* Title Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -191,7 +191,7 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
         </motion.div>
 
         {/* Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full max-w-full">
           <StatCard
             label="Total"
             value={stats.total}
