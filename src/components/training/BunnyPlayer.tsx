@@ -43,10 +43,20 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [embedUrl, setEmbedUrl] = useState<string>('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [wasPlayingBeforeOrientationChange, setWasPlayingBeforeOrientationChange] = useState<boolean | null>(null);
+  const [savedCurrentTime, setSavedCurrentTime] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const trackerRef = useRef<VideoProgressTracker | null>(null);
   const playerRef = useRef<PlayerJS | null>(null);
   const progressCheckIntervalRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const orientationChangeTimeoutRef = useRef<number | null>(null);
+  // Refs pour sauvegarder l'état lors des changements d'orientation
+  const savedStateRef = useRef<{ wasPlaying: boolean | null; currentTime: number | null }>({
+    wasPlaying: null,
+    currentTime: null,
+  });
 
   // Déterminer le type d'erreur à afficher
   const isTestVideo = videoId?.startsWith('test-');
@@ -160,6 +170,206 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     }
   }, [videoId, onProgress]);
 
+  // Fonction pour sauvegarder l'état de lecture avant un changement d'orientation
+  const savePlaybackState = useCallback(async () => {
+    if (!playerRef.current) return;
+    
+    try {
+      playerRef.current.getPaused((paused: boolean) => {
+        const wasPlaying = !paused;
+        savedStateRef.current.wasPlaying = wasPlaying;
+        setWasPlayingBeforeOrientationChange(wasPlaying);
+        console.log('[BunnyPlayer] État sauvegardé - était en lecture:', wasPlaying);
+      });
+      
+      playerRef.current.getCurrentTime((currentTime: number) => {
+        savedStateRef.current.currentTime = currentTime;
+        setSavedCurrentTime(currentTime);
+        console.log('[BunnyPlayer] Temps sauvegardé:', currentTime);
+      });
+    } catch (error) {
+      console.error('[BunnyPlayer] Erreur lors de la sauvegarde de l\'état:', error);
+    }
+  }, []);
+
+  // Fonction pour restaurer l'état de lecture après un changement d'orientation
+  const restorePlaybackState = useCallback(async () => {
+    if (!playerRef.current) {
+      console.log('[BunnyPlayer] Player non disponible pour la restauration');
+      return;
+    }
+    
+    // Utiliser les valeurs des refs pour éviter les problèmes de closure
+    const savedState = savedStateRef.current;
+    const timeToRestore = savedState.currentTime;
+    const wasPlaying = savedState.wasPlaying;
+    
+    if (timeToRestore === null && wasPlaying === null) {
+      console.log('[BunnyPlayer] Aucun état à restaurer');
+      return;
+    }
+    
+    try {
+      // Attendre que le player soit prêt avec un timeout de sécurité
+      let attempts = 0;
+      const maxAttempts = 20; // 2 secondes max
+      
+      await new Promise<void>((resolve) => {
+        const checkReady = () => {
+          attempts++;
+          if (playerRef.current) {
+            try {
+              playerRef.current.get((data: any) => {
+                if (data || attempts >= maxAttempts) {
+                  resolve();
+                } else {
+                  setTimeout(checkReady, 100);
+                }
+              });
+            } catch (error) {
+              // Si le player n'est pas encore prêt, réessayer
+              if (attempts < maxAttempts) {
+                setTimeout(checkReady, 100);
+              } else {
+                resolve();
+              }
+            }
+          } else {
+            resolve();
+          }
+        };
+        checkReady();
+      });
+
+      // Restaurer le temps de lecture si sauvegardé
+      if (timeToRestore !== null && playerRef.current) {
+        try {
+          playerRef.current.setCurrentTime(timeToRestore);
+          console.log('[BunnyPlayer] Temps restauré:', timeToRestore);
+        } catch (error) {
+          console.error('[BunnyPlayer] Erreur lors de la restauration du temps:', error);
+        }
+      }
+
+      // Restaurer l'état de lecture (play/pause)
+      if (wasPlaying !== null && playerRef.current) {
+        if (wasPlaying) {
+          // Attendre un peu pour que la vidéo soit prête après le changement d'orientation
+          setTimeout(() => {
+            try {
+              playerRef.current?.play();
+              console.log('[BunnyPlayer] Lecture restaurée');
+            } catch (error) {
+              console.error('[BunnyPlayer] Erreur lors de la reprise de lecture:', error);
+            }
+          }, 600); // Délai augmenté pour laisser le temps au navigateur
+        } else {
+          try {
+            playerRef.current.pause();
+            console.log('[BunnyPlayer] Pause restaurée');
+          } catch (error) {
+            console.error('[BunnyPlayer] Erreur lors de la pause:', error);
+          }
+        }
+      }
+      
+      // Réinitialiser les états sauvegardés
+      savedStateRef.current = { wasPlaying: null, currentTime: null };
+      setSavedCurrentTime(null);
+      setWasPlayingBeforeOrientationChange(null);
+    } catch (error) {
+      console.error('[BunnyPlayer] Erreur lors de la restauration de l\'état:', error);
+      // Réinitialiser quand même les états en cas d'erreur
+      savedStateRef.current = { wasPlaying: null, currentTime: null };
+      setSavedCurrentTime(null);
+      setWasPlayingBeforeOrientationChange(null);
+    }
+  }, []);
+
+  // Gestionnaire pour les changements d'orientation
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      console.log('[BunnyPlayer] Changement d\'orientation détecté');
+      
+      // Sauvegarder l'état avant le changement
+      savePlaybackState();
+      
+      // Nettoyer le timeout précédent s'il existe
+      if (orientationChangeTimeoutRef.current) {
+        clearTimeout(orientationChangeTimeoutRef.current);
+      }
+      
+      // Attendre que l'orientation soit stabilisée avant de restaurer
+      orientationChangeTimeoutRef.current = window.setTimeout(() => {
+        restorePlaybackState();
+      }, 800); // Délai pour laisser le temps au navigateur de gérer le changement
+    };
+
+    // Écouter les changements d'orientation
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    // Écouter aussi les changements de taille de fenêtre (pour les appareils qui ne déclenchent pas orientationchange)
+    const handleResize = () => {
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const wasLandscape = containerRef.current?.dataset.orientation === 'landscape';
+      
+      if (isLandscape !== wasLandscape) {
+        containerRef.current?.setAttribute('data-orientation', isLandscape ? 'landscape' : 'portrait');
+        handleOrientationChange();
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Initialiser l'orientation
+    const initialOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+    if (containerRef.current) {
+      containerRef.current.setAttribute('data-orientation', initialOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleResize);
+      if (orientationChangeTimeoutRef.current) {
+        clearTimeout(orientationChangeTimeoutRef.current);
+      }
+    };
+  }, [savePlaybackState, restorePlaybackState]);
+
+  // Gestionnaire pour les événements de plein écran
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      
+      setIsFullscreen(isCurrentlyFullscreen);
+      console.log('[BunnyPlayer] État plein écran:', isCurrentlyFullscreen);
+      
+      // Si on sort du plein écran, restaurer l'état de lecture si nécessaire
+      if (!isCurrentlyFullscreen && savedStateRef.current.wasPlaying !== null) {
+        setTimeout(() => {
+          restorePlaybackState();
+        }, 300);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, [restorePlaybackState]);
+
   const handleIframeLoad = useCallback(() => {
     setIsLoading(false);
 
@@ -190,6 +400,17 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
               trackerRef.current.handleProgress(event);
               if (onProgress) onProgress(event);
             }
+          });
+
+          // Écouter les événements de pause/play pour maintenir la synchronisation
+          playerRef.current?.on('play', () => {
+            console.log('[BunnyPlayer] Lecture démarrée');
+            setWasPlayingBeforeOrientationChange(true);
+          });
+
+          playerRef.current?.on('pause', () => {
+            console.log('[BunnyPlayer] Lecture en pause');
+            setWasPlayingBeforeOrientationChange(false);
           });
 
           // Démarrer le suivi périodique pour les mises à jour de last_viewed
@@ -298,12 +519,22 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   }
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+    <div 
+      ref={containerRef}
+      className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl"
+      style={{
+        // Amélioration du FOV lors des changements d'orientation
+        transition: 'transform 0.3s ease-out',
+        transform: isFullscreen ? 'scale(1)' : 'scale(1)',
+        // Assurer que le conteneur maintient ses proportions
+        willChange: 'transform',
+      }}
+    >
       <iframe
         ref={iframeRef}
         src={embedUrl}
         className="w-full h-full"
-        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;"
         allowFullScreen
         title="Lecteur vidéo Bunny Stream"
         onLoad={handleIframeLoad}
@@ -311,6 +542,11 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
         style={{
           backgroundColor: '#000',
           minHeight: '100%',
+          // Amélioration du rendu lors des changements d'orientation
+          objectFit: 'contain',
+          // Préserver les proportions lors des rotations
+          transform: 'translateZ(0)', // Force l'accélération matérielle
+          backfaceVisibility: 'hidden', // Améliore les performances lors des rotations
         }}
       />
     </div>
