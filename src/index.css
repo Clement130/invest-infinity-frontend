@@ -154,6 +154,24 @@ section {
 @supports (-webkit-touch-callout: none) {
   body {
     -webkit-overflow-scrolling: touch;
+    /* Améliorer les performances de scroll sur iOS */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
+/* Optimisations de performance pour mobile */
+@media (max-width: 768px) {
+  /* Forcer l'accélération GPU pour les éléments qui scrollent */
+  html, body {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Réduire les reflows/repaints */
+  section, div {
+    contain: layout style paint;
   }
 }
 
@@ -215,16 +233,25 @@ section {
 
 /* Mobile : Réduire drastiquement les animations */
 @media (max-width: 768px) {
+  /* Utiliser GPU acceleration pour les transformations */
+  * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  
   /* Transitions plus courtes sur mobile pour éviter les saccades */
   * {
-    transition-duration: 0.2s !important;
+    transition-duration: 0.15s !important;
+    transition-timing-function: ease-out !important;
   }
   
   /* Désactiver les transitions complexes */
   *[class*="transition-all"],
   *[class*="transition-transform"],
   *[class*="transition-opacity"] {
-    transition-duration: 0.15s !important;
+    transition-duration: 0.1s !important;
   }
 
   /* Désactiver complètement les animations agressives sur mobile */
@@ -253,9 +280,20 @@ section {
     animation: gradient-mobile 15s ease infinite !important;
   }
 
-  /* Optimiser les éléments qui se transforment */
+  /* Optimiser les éléments qui se transforment - mais limiter will-change */
   .transform {
-    will-change: transform;
+    will-change: auto;
+  }
+  
+  /* Utiliser will-change uniquement pendant les animations actives */
+  .stat-card,
+  [class*="animate-"] {
+    will-change: transform, opacity;
+  }
+  
+  /* Réinitialiser will-change après animation */
+  .stat-card[style*="opacity: 1"] {
+    will-change: auto;
   }
   
   /* Désactiver backdrop-blur sur mobile (très coûteux) */
@@ -315,7 +353,66 @@ section {
 }
 
 @supports (content-visibility: auto) {
-  /* Masquer le contenu hors écran pour améliorer les performances */
+  .mobile-optimized {
+    content-visibility: auto;
+  }
+}
+
+/* Optimisations spécifiques pour le lecteur vidéo sur mobile */
+@media (max-width: 768px) {
+  /* Conteneur vidéo optimisé pour mobile */
+  [class*="aspect-video"] {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  
+  /* Iframe vidéo optimisée pour mobile */
+  iframe[title*="vidéo"],
+  iframe[title*="video"],
+  iframe[title*="Lecteur"] {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Prévenir les problèmes de zoom sur iOS */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: pan-x pan-y;
+    /* Améliorer le rendu lors des rotations */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+  
+  /* Améliorer les transitions lors des changements d'orientation */
+  @media (orientation: portrait) {
+    [class*="aspect-video"] {
+      transition: transform 0.2s ease-out;
+    }
+  }
+  
+  @media (orientation: landscape) {
+    [class*="aspect-video"] {
+      transition: transform 0.2s ease-out;
+    }
+  }
+}
+
+/* Support iOS spécifique */
+@supports (-webkit-touch-callout: none) {
+  iframe[title*="vidéo"],
+  iframe[title*="video"],
+  iframe[title*="Lecteur"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    /* Prévenir le zoom sur double-tap iOS */
+    touch-action: pan-x pan-y;
+  }
+}
+/* Masquer le contenu hors écran pour améliorer les performances */
   .content-visibility-auto {
     content-visibility: auto;
   }

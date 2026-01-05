@@ -254,15 +254,30 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       // Restaurer l'état de lecture (play/pause)
       if (wasPlaying !== null && playerRef.current) {
         if (wasPlaying) {
+          // Délai plus long sur mobile pour laisser le temps au navigateur et à l'OS de gérer le changement
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          const delay = isMobile ? 1000 : 600;
+          
           // Attendre un peu pour que la vidéo soit prête après le changement d'orientation
           setTimeout(() => {
             try {
               playerRef.current?.play();
-              console.log('[BunnyPlayer] Lecture restaurée');
+              console.log('[BunnyPlayer] Lecture restaurée (mobile:', isMobile, ')');
             } catch (error) {
               console.error('[BunnyPlayer] Erreur lors de la reprise de lecture:', error);
+              // Réessayer une fois après un court délai sur mobile
+              if (isMobile) {
+                setTimeout(() => {
+                  try {
+                    playerRef.current?.play();
+                    console.log('[BunnyPlayer] Réessai de lecture réussi');
+                  } catch (retryError) {
+                    console.error('[BunnyPlayer] Échec du réessai:', retryError);
+                  }
+                }, 500);
+              }
             }
-          }, 600); // Délai augmenté pour laisser le temps au navigateur
+          }, delay);
         } else {
           try {
             playerRef.current.pause();
@@ -286,10 +301,13 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     }
   }, []);
 
-  // Gestionnaire pour les changements d'orientation
+  // Détection mobile pour ajuster les délais
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  // Gestionnaire pour les changements d'orientation (optimisé pour mobile)
   useEffect(() => {
     const handleOrientationChange = () => {
-      console.log('[BunnyPlayer] Changement d\'orientation détecté');
+      console.log('[BunnyPlayer] Changement d\'orientation détecté (mobile:', isMobile, ')');
       
       // Sauvegarder l'état avant le changement
       savePlaybackState();
@@ -299,24 +317,40 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
         clearTimeout(orientationChangeTimeoutRef.current);
       }
       
+      // Délai plus long sur mobile pour laisser le temps au navigateur et à l'OS
+      const delay = isMobile ? 1200 : 800;
+      
       // Attendre que l'orientation soit stabilisée avant de restaurer
       orientationChangeTimeoutRef.current = window.setTimeout(() => {
         restorePlaybackState();
-      }, 800); // Délai pour laisser le temps au navigateur de gérer le changement
+      }, delay);
     };
 
-    // Écouter les changements d'orientation
+    // Écouter les changements d'orientation (iOS et Android)
     window.addEventListener('orientationchange', handleOrientationChange);
     
-    // Écouter aussi les changements de taille de fenêtre (pour les appareils qui ne déclenchent pas orientationchange)
+    // Écouter screen.orientation pour Android moderne
+    if (window.screen?.orientation) {
+      window.screen.orientation.addEventListener('change', handleOrientationChange);
+    }
+    
+    // Écouter aussi les changements de taille de fenêtre (fallback pour desktop et certains mobiles)
+    let resizeTimeout: number | null = null;
     const handleResize = () => {
-      const isLandscape = window.innerWidth > window.innerHeight;
-      const wasLandscape = containerRef.current?.dataset.orientation === 'landscape';
-      
-      if (isLandscape !== wasLandscape) {
-        containerRef.current?.setAttribute('data-orientation', isLandscape ? 'landscape' : 'portrait');
-        handleOrientationChange();
+      // Debounce pour éviter trop d'appels
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
       }
+      
+      resizeTimeout = window.setTimeout(() => {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const wasLandscape = containerRef.current?.dataset.orientation === 'landscape';
+        
+        if (isLandscape !== wasLandscape) {
+          containerRef.current?.setAttribute('data-orientation', isLandscape ? 'landscape' : 'portrait');
+          handleOrientationChange();
+        }
+      }, 300);
     };
     
     window.addEventListener('resize', handleResize);
@@ -329,12 +363,18 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
 
     return () => {
       window.removeEventListener('orientationchange', handleOrientationChange);
+      if (window.screen?.orientation) {
+        window.screen.orientation.removeEventListener('change', handleOrientationChange);
+      }
       window.removeEventListener('resize', handleResize);
       if (orientationChangeTimeoutRef.current) {
         clearTimeout(orientationChangeTimeoutRef.current);
       }
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
     };
-  }, [savePlaybackState, restorePlaybackState]);
+  }, [savePlaybackState, restorePlaybackState, isMobile]);
 
   // Gestionnaire pour les événements de plein écran
   useEffect(() => {
@@ -518,16 +558,24 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     );
   }
 
+  // Détection mobile pour les styles
+  const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   return (
     <div 
       ref={containerRef}
       className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl"
       style={{
         // Amélioration du FOV lors des changements d'orientation
-        transition: 'transform 0.3s ease-out',
+        transition: isMobileDevice ? 'transform 0.2s ease-out' : 'transform 0.3s ease-out',
         transform: isFullscreen ? 'scale(1)' : 'scale(1)',
         // Assurer que le conteneur maintient ses proportions
         willChange: 'transform',
+        // Optimisations spécifiques mobile
+        WebkitTransform: 'translateZ(0)', // iOS Safari
+        WebkitBackfaceVisibility: 'hidden', // iOS Safari
+        // Prévenir le zoom sur double-tap iOS
+        touchAction: 'pan-x pan-y',
       }}
     >
       <iframe
@@ -546,7 +594,15 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
           objectFit: 'contain',
           // Préserver les proportions lors des rotations
           transform: 'translateZ(0)', // Force l'accélération matérielle
+          WebkitTransform: 'translateZ(0)', // iOS Safari
           backfaceVisibility: 'hidden', // Améliore les performances lors des rotations
+          WebkitBackfaceVisibility: 'hidden', // iOS Safari
+          // Optimisations spécifiques mobile
+          WebkitTouchCallout: 'none', // Désactiver le menu contextuel iOS
+          WebkitUserSelect: 'none', // Désactiver la sélection iOS
+          userSelect: 'none',
+          // Prévenir le zoom sur double-tap
+          touchAction: 'pan-x pan-y',
         }}
       />
     </div>
