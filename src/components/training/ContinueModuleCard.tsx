@@ -47,7 +47,7 @@ function ContinueModuleCard({
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
-      className="group relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl cursor-pointer w-full"
+      className="group relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl cursor-pointer w-full max-w-full"
     >
       {/* Background with gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-black" />
@@ -62,9 +62,9 @@ function ContinueModuleCard({
       {/* Border */}
       <div className="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl border border-white/10 group-hover:border-pink-500/30 transition-colors duration-300" />
 
-      {/* Content */}
-      <div className="relative p-3 sm:p-4 lg:p-6 xl:p-8">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
+      {/* Content - padding réduit sur mobile pour éviter le rognage */}
+      <div className="relative p-3 sm:p-4 lg:p-6 xl:p-8 max-w-full overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-2.5 sm:gap-4 lg:gap-6 xl:gap-8 min-w-0">
           {/* Left: Icon/Thumbnail */}
           <div className="flex-shrink-0">
             {thumbnail ? (

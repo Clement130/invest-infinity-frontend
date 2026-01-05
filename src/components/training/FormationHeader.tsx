@@ -96,37 +96,37 @@ const StatCard = memo(function StatCard({
       transition={{ delay, duration: 0.4, ease: 'easeOut' }}
       className={clsx(
         // Mobile-first: padding réduit, rounded plus petit
-        'relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-3.5 lg:p-5',
+        'relative overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl p-2.5 sm:p-3.5 lg:p-5',
         'bg-gradient-to-br backdrop-blur-sm',
         'border transition-all duration-300',
         `${c.bg} ${c.border}`,
         'sm:hover:shadow-lg sm:hover:scale-[1.02] sm:hover:-translate-y-0.5',
         c.glow,
-        // Assure que la carte ne dépasse pas
-        'w-full min-w-0 max-w-full'
+        // Assure que la carte ne dépasse pas et force le truncate
+        'w-full min-w-0 max-w-full overflow-hidden'
       )}
     >
       {/* Glow effect - plus petit sur mobile */}
       <div className="absolute top-0 right-0 w-12 sm:w-20 h-12 sm:h-20 bg-white/5 rounded-full blur-2xl" />
       
-      <div className="relative flex items-center gap-2 sm:gap-2.5 lg:gap-4">
+      <div className="relative flex items-center gap-1.5 sm:gap-2.5 lg:gap-4 min-w-0">
         {/* Icon - plus petit sur mobile */}
         <div className={clsx(
-          'w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0',
+          'w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0',
           'bg-gradient-to-br shadow-lg',
           c.icon, c.glow
         )}>
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+          <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
         </div>
         
-        {/* Text - tronqué si nécessaire */}
+        {/* Text - tronqué si nécessaire avec min-w-0 pour forcer le truncate */}
         <div className="flex-1 min-w-0 overflow-hidden">
-          <p className={clsx('text-[10px] sm:text-xs lg:text-sm font-medium truncate', c.text)}>{label}</p>
+          <p className={clsx('text-[9px] sm:text-xs lg:text-sm font-medium truncate', c.text)}>{label}</p>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: delay + 0.2 }}
-            className={clsx('text-xl sm:text-2xl lg:text-3xl font-bold', c.value)}
+            className={clsx('text-lg sm:text-2xl lg:text-3xl font-bold truncate', c.value)}
           >
             {value}
           </motion.p>
@@ -144,13 +144,13 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
     <motion.header
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative overflow-hidden w-full max-w-full"
+      className="relative overflow-hidden w-full max-w-full px-0"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
       </div>
 
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8 w-full max-w-full">
+      <div className="space-y-3 sm:space-y-4 lg:space-y-8 w-full max-w-full">
         {/* Title Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -168,12 +168,12 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
             <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
           </motion.div>
 
-          {/* Text */}
-          <div className="space-y-0.5 sm:space-y-1 lg:space-y-2 min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">
+          {/* Text - min-w-0 pour forcer le truncate */}
+          <div className="space-y-0.5 sm:space-y-1 lg:space-y-2 min-w-0 flex-1 overflow-hidden">
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white truncate">
               Espace Formation
             </h1>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-400 truncate">
+            <p className="text-xs sm:text-sm lg:text-lg text-gray-400 truncate">
               {greeting}
             </p>
           </div>
@@ -191,7 +191,8 @@ function FormationHeader({ stats, userName }: FormationHeaderProps) {
         </motion.div>
 
         {/* Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full max-w-full">
+        {/* gap-1.5 sur mobile pour éviter le rognage, min-w-0 pour forcer le truncate */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2.5 lg:gap-4 w-full max-w-full">
           <StatCard
             label="Total"
             value={stats.total}
