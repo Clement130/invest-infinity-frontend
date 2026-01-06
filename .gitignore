@@ -11,6 +11,8 @@ lerna-debug.log*
 *-check-*.png
 *-test-error.png
 *-test-screenshot.png
+*-test-failed.png
+*-test-login-*.png
 TEST-PRODUCTION-*.json
 test-result.txt
 
@@ -40,3 +42,7 @@ out/
 # Google API credentials (NE JAMAIS COMMITER)
 credentials.json
 token.json
+
+# Fichiers générés par scripts
+bunny-videos.json
+scripts/bunny-videos.json

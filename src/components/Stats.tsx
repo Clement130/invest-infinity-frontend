@@ -1,41 +1,44 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { Users, Bell, BookOpen } from 'lucide-react';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 
-export default function Stats() {
+function Stats() {
   const statsRef = useRef<HTMLDivElement>(null);
+  const { shouldReduceMotion, isMobile } = useReducedMotion();
+  const [entryProgress, setEntryProgress] = useState(0);
 
-  // Animation d'entrée au scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!statsRef.current) return;
+  // Animation d'entrée au scroll - optimisée avec CSS variables
+  const calculateProgress = React.useCallback(() => {
+    if (!statsRef.current) return;
 
-      const statsRect = statsRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      const distanceFromViewport = statsRect.top - viewportHeight;
-      const entryProgress = Math.max(0, Math.min(1, 1 - distanceFromViewport / viewportHeight));
-      
-      const cards = statsRef.current.querySelectorAll('.stat-card');
-      cards.forEach((card) => {
-        const startY = '50';
-        const startScale = 0.8;
-        
-        const currentY = startY * (1 - entryProgress);
-        const currentScale = startScale + ((1 - startScale) * entryProgress);
-        const currentOpacity = entryProgress;
-        
-        (card as HTMLElement).style.transform = `
-          translateY(${currentY}%)
-          scale(${currentScale})
-        `;
-        (card as HTMLElement).style.opacity = currentOpacity.toString();
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    const statsRect = statsRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    const distanceFromViewport = statsRect.top - viewportHeight;
+    const progress = Math.max(0, Math.min(1, 1 - distanceFromViewport / viewportHeight));
+    
+    setEntryProgress(progress);
+    
+    // Utiliser CSS variables au lieu de modifier directement le style
+    if (statsRef.current) {
+      statsRef.current.style.setProperty('--entry-progress', progress.toString());
+    }
   }, []);
+
+  // Utiliser le hook optimisé pour le scroll
+  useOptimizedScroll({
+    throttleMs: isMobile ? 100 : 16,
+    disableOnMobile: shouldReduceMotion,
+    onScroll: calculateProgress,
+  });
+
+  // Calculer les valeurs CSS une seule fois
+  const startY = 50;
+  const startScale = 0.8;
+  const currentY = startY * (1 - entryProgress);
+  const currentScale = startScale + ((1 - startScale) * entryProgress);
+  const currentOpacity = entryProgress;
 
   const stats = [
     {
@@ -75,11 +78,14 @@ export default function Stats() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="stat-card relative transition-all duration-500 ease-out will-change-transform"
+              className="stat-card relative transition-all duration-500 ease-out"
               style={{ 
                 transformOrigin: 'center center',
-                opacity: 0,
-                transform: 'translateY(50%) scale(0.8)'
+                opacity: shouldReduceMotion ? 1 : currentOpacity,
+                transform: shouldReduceMotion 
+                  ? 'translateY(0) scale(1)' 
+                  : `translateY(${currentY}%) scale(${currentScale})`,
+                willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
               }}
             >
               {/* Gradient border effect */}
@@ -109,3 +115,5 @@ export default function Stats() {
     </section>
   );
 }
+
+export default memo(Stats);

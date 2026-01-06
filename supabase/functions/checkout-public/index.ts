@@ -193,6 +193,7 @@ serve(async (req) => {
       mode: 'payment',
       success_url: finalSuccessUrl,
       cancel_url: finalCancelUrl,
+      allow_promotion_codes: true, // Active les codes promotionnels Stripe
       metadata: {
         priceId: priceId,
         createdAt: new Date().toISOString(),

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, BookOpen, Brain, Users, ArrowRight } from 'lucide-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 
 interface ServicesProps {
   onOpenRegister?: () => void;
@@ -78,7 +79,7 @@ export default function Services({ onOpenRegister }: ServicesProps) {
   const progressBarRef = useRef<HTMLDivElement>(null); // conservé au cas où
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-  const calculateProgress = () => {
+  const calculateProgress = useCallback(() => {
     if (!sectionRef.current) return;
 
     const section = sectionRef.current;
@@ -98,16 +99,28 @@ export default function Services({ onOpenRegister }: ServicesProps) {
 
     setScrollProgress(Math.max(0, Math.min(1, progress)));
 
+    // Optimiser la détection de la section active
+    const viewportCenter = viewportHeight / 2;
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+    
     cardsRef.current.forEach((card, index) => {
       if (card) {
         const cardRect = card.getBoundingClientRect();
         const cardCenter = cardRect.top + cardRect.height / 2;
-        if (cardCenter > 0 && cardCenter < viewportHeight) {
-          setActiveSection(index);
+        const distance = Math.abs(cardCenter - viewportCenter);
+        
+        if (distance < closestDistance && cardCenter > 0 && cardCenter < viewportHeight) {
+          closestDistance = distance;
+          closestIndex = index;
         }
       }
     });
-  };
+    
+    if (closestIndex !== activeSection) {
+      setActiveSection(closestIndex);
+    }
+  }, [activeSection]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -132,23 +145,13 @@ export default function Services({ onOpenRegister }: ServicesProps) {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    // Sur mobile, on réduit la fréquence des calculs pour améliorer les performances
-    const throttleDelay = isMobile ? 100 : 16;
-    let lastTime = 0;
-    
-    const handleScroll = () => {
-      const now = Date.now();
-      if (now - lastTime >= throttleDelay) {
-        lastTime = now;
-        requestAnimationFrame(calculateProgress);
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    calculateProgress();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  // Utiliser le hook optimisé pour le scroll
+  useOptimizedScroll({
+    throttleMs: isMobile ? 100 : 16,
+    disableOnMobile: shouldReduceMotion,
+    onScroll: calculateProgress,
+    deps: [activeSection],
+  });
 
   const scrollToSection = (index: number) => {
     const card = cardsRef.current[index];

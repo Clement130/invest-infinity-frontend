@@ -19,15 +19,32 @@ export default function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let rafId: number | null = null;
+    let lastScrollY = window.scrollY;
+    
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setIsAtTop(scrollPosition < 50);
+      if (rafId !== null) return;
+      
+      rafId = requestAnimationFrame(() => {
+        const scrollPosition = window.scrollY;
+        // Éviter les mises à jour inutiles
+        if (Math.abs(scrollPosition - lastScrollY) > 10) {
+          setIsAtTop(scrollPosition < 50);
+          lastScrollY = scrollPosition;
+        }
+        rafId = null;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   // Fermer le dropdown quand on clique en dehors
