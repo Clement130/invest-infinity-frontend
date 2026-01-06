@@ -120,7 +120,7 @@ export default function DashboardHeader() {
   return (
     <>
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/60 border-b border-white/5">
-        <div className="px-4 lg:px-6 py-3">
+        <div className="px-3 sm:px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between gap-4">
             {/* Left: Greeting (hidden on mobile) - No animation on navigation */}
             <div className="hidden md:flex flex-col">
