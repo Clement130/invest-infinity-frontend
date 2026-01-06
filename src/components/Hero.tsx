@@ -171,6 +171,7 @@ export default function Hero({ onOpenRegister }: HeroProps) {
             </p>
           </motion.div>
         </motion.div>
+        </motion.div>
       ) : (
         <div 
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 mt-20"
