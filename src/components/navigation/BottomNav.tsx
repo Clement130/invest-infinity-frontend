@@ -97,15 +97,8 @@ function BottomNav() {
   const { shouldReduceMotion } = useReducedMotion();
   const isLandscape = useIsLandscape();
 
-  // Détecter si on est sur une page de lecture vidéo
-  const isVideoPage = location.pathname.includes('/lessons/');
-
-  // Masquer la bottom nav en mode paysage sur une page vidéo
-  // Cela évite les bugs d'affichage lors de la rotation
-  if (isLandscape && isVideoPage) {
-    return null;
-  }
-
+  // IMPORTANT: Tous les hooks doivent être appelés AVANT tout return conditionnel
+  // pour respecter les règles des hooks React (même nombre d'appels à chaque rendu)
   const isActive = useCallback((path: string) => {
     if (path === '/app') {
       return location.pathname === '/app';
@@ -120,6 +113,16 @@ function BottomNav() {
       navigate(item.path);
     }
   }, [navigate]);
+
+  // Détecter si on est sur une page de lecture vidéo
+  const isVideoPage = location.pathname.includes('/lessons/');
+
+  // Masquer la bottom nav en mode paysage sur une page vidéo
+  // Cela évite les bugs d'affichage lors de la rotation
+  // NOTE: Ce return conditionnel est APRÈS tous les hooks
+  if (isLandscape && isVideoPage) {
+    return null;
+  }
 
   return (
     <>
