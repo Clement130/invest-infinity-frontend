@@ -65,100 +65,6 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   // ============================================================================
-  // INITIALISATION & NETTOYAGE
-  // ============================================================================
-  
-  /**
-   * Initialiser le tracker de progression
-   */
-  useEffect(() => {
-    if (userId && lessonId) {
-      console.log('[BunnyPlayer] Création du tracker pour:', { userId, lessonId, videoId });
-      trackerRef.current = new VideoProgressTracker(userId, lessonId);
-    } else {
-      console.log('[BunnyPlayer] Tracker non créé - paramètres manquants:', { userId: !!userId, lessonId: !!lessonId });
-    }
-    
-    return () => {
-      // Nettoyage des intervalles
-      if (progressCheckIntervalRef.current) {
-        clearInterval(progressCheckIntervalRef.current);
-        progressCheckIntervalRef.current = null;
-      }
-      if (saveStateIntervalRef.current) {
-        clearInterval(saveStateIntervalRef.current);
-        saveStateIntervalRef.current = null;
-      }
-      
-      // Sauvegarder une dernière fois avant de quitter
-      if (playerRef.current) {
-        persistPlayerState();
-      }
-    };
-  }, [userId, lessonId, videoId, persistPlayerState]);
-  
-  /**
-   * Nettoyage lors du changement de vidéo
-   * Réinitialiser le flag de restauration
-   */
-  useEffect(() => {
-    restorationAttemptedRef.current = false;
-    lastSavedTimeRef.current = 0;
-  }, [videoId, lessonId]);
-
-  // Générer l'URL d'embed SÉCURISÉE avec token via Edge Function
-  useEffect(() => {
-    setHasError(false);
-    setErrorMessage('');
-    setIsLoading(true);
-    setEmbedUrl('');
-
-    // Vérifier si c'est un ID de test (qui ne fonctionnera pas)
-    if (videoId && videoId.startsWith('test-')) {
-      setHasError(true);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!videoId) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Générer l'URL sécurisée via l'Edge Function
-    const fetchSecureUrl = async () => {
-      try {
-        console.log('[BunnyPlayer] Génération du token sécurisé pour:', videoId);
-        const result = await VideoService.getPlaybackUrl(videoId, { expiryHours: 4 }); // Token valide 4h
-        console.log('[BunnyPlayer] URL sécurisée générée');
-        setEmbedUrl(result.embedUrl + '&autoplay=false&preload=true');
-        setIsLoading(false);
-      } catch (error) {
-        console.error('[BunnyPlayer] Erreur génération token:', error);
-        setHasError(true);
-        setErrorMessage(error instanceof Error ? error.message : 'Erreur de chargement');
-        setIsLoading(false);
-      }
-    };
-
-    fetchSecureUrl();
-  }, [videoId]);
-
-  // Timeout pour détecter les vidéos qui ne chargent pas
-  useEffect(() => {
-    if (!isLoading || isMissingVideoId || isTestVideo) return;
-
-    const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('[BunnyPlayer] Timeout: la vidéo prend trop de temps à charger');
-        setIsLoading(false);
-      }
-    }, 15000);
-
-    return () => clearTimeout(timeout);
-  }, [isLoading, videoId, isMissingVideoId, isTestVideo]);
-
-  // ============================================================================
   // GESTION DE LA PERSISTENCE DE L'ÉTAT (sessionStorage)
   // ============================================================================
   
@@ -275,7 +181,101 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       } catch {}
     }
   }, [videoId, lessonId, isMobile]);
+
+  // ============================================================================
+  // INITIALISATION & NETTOYAGE
+  // ============================================================================
   
+  /**
+   * Initialiser le tracker de progression
+   */
+  useEffect(() => {
+    if (userId && lessonId) {
+      console.log('[BunnyPlayer] Création du tracker pour:', { userId, lessonId, videoId });
+      trackerRef.current = new VideoProgressTracker(userId, lessonId);
+    } else {
+      console.log('[BunnyPlayer] Tracker non créé - paramètres manquants:', { userId: !!userId, lessonId: !!lessonId });
+    }
+    
+    return () => {
+      // Nettoyage des intervalles
+      if (progressCheckIntervalRef.current) {
+        clearInterval(progressCheckIntervalRef.current);
+        progressCheckIntervalRef.current = null;
+      }
+      if (saveStateIntervalRef.current) {
+        clearInterval(saveStateIntervalRef.current);
+        saveStateIntervalRef.current = null;
+      }
+      
+      // Sauvegarder une dernière fois avant de quitter
+      if (playerRef.current) {
+        persistPlayerState();
+      }
+    };
+  }, [userId, lessonId, videoId, persistPlayerState]);
+  
+  /**
+   * Nettoyage lors du changement de vidéo
+   * Réinitialiser le flag de restauration
+   */
+  useEffect(() => {
+    restorationAttemptedRef.current = false;
+    lastSavedTimeRef.current = 0;
+  }, [videoId, lessonId]);
+
+  // Générer l'URL d'embed SÉCURISÉE avec token via Edge Function
+  useEffect(() => {
+    setHasError(false);
+    setErrorMessage('');
+    setIsLoading(true);
+    setEmbedUrl('');
+
+    // Vérifier si c'est un ID de test (qui ne fonctionnera pas)
+    if (videoId && videoId.startsWith('test-')) {
+      setHasError(true);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!videoId) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Générer l'URL sécurisée via l'Edge Function
+    const fetchSecureUrl = async () => {
+      try {
+        console.log('[BunnyPlayer] Génération du token sécurisé pour:', videoId);
+        const result = await VideoService.getPlaybackUrl(videoId, { expiryHours: 4 }); // Token valide 4h
+        console.log('[BunnyPlayer] URL sécurisée générée');
+        setEmbedUrl(result.embedUrl + '&autoplay=false&preload=true');
+        setIsLoading(false);
+      } catch (error) {
+        console.error('[BunnyPlayer] Erreur génération token:', error);
+        setHasError(true);
+        setErrorMessage(error instanceof Error ? error.message : 'Erreur de chargement');
+        setIsLoading(false);
+      }
+    };
+
+    fetchSecureUrl();
+  }, [videoId]);
+
+  // Timeout pour détecter les vidéos qui ne chargent pas
+  useEffect(() => {
+    if (!isLoading || isMissingVideoId || isTestVideo) return;
+
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('[BunnyPlayer] Timeout: la vidéo prend trop de temps à charger');
+        setIsLoading(false);
+      }
+    }, 15000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoading, videoId, isMissingVideoId, isTestVideo]);
+
   // ============================================================================
   // SUIVI DE PROGRESSION
   // ============================================================================
