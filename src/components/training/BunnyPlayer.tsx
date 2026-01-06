@@ -418,32 +418,59 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   
   /**
    * Gestionnaire optimisé pour les changements d'orientation
-   * Sauvegarde l'état immédiatement dans sessionStorage
+   * Force le rechargement de l'iframe avec le bon timestamp
    */
   useEffect(() => {
     let orientationChangeTimeout: number | null = null;
+    let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
     
     const handleOrientationChange = () => {
       console.log('[BunnyPlayer] 🔄 Changement d\'orientation détecté');
       
       // Sauvegarder immédiatement dans sessionStorage (AVANT que l'iframe ne soit détruite)
-      persistPlayerState();
-      
-      // Marquer qu'on doit restaurer à la prochaine initialisation
-      restorationAttemptedRef.current = false;
-      
-      // Sur mobile, l'iframe peut se recharger, donc on force une restauration après un délai
-      if (isMobile && orientationChangeTimeout) {
-        clearTimeout(orientationChangeTimeout);
+      if (playerRef.current) {
+        playerRef.current.getPaused((isPaused: boolean) => {
+          playerRef.current?.getCurrentTime((currentTime: number) => {
+            if (typeof currentTime === 'number' && !isNaN(currentTime) && currentTime > 0) {
+              const state = {
+                currentTime,
+                wasPlaying: !isPaused,
+                timestamp: Date.now(),
+              };
+              
+              sessionStorage.setItem(getStorageKey(lessonId, videoId), JSON.stringify(state));
+              console.log('[BunnyPlayer] 💾 État sauvegardé pour rotation:', {
+                time: currentTime.toFixed(2) + 's',
+                playing: state.wasPlaying
+              });
+              
+              // FORCER LE RECHARGEMENT de l'iframe avec le nouveau timestamp
+              if (orientationChangeTimeout) {
+                clearTimeout(orientationChangeTimeout);
+              }
+              
+              orientationChangeTimeout = window.setTimeout(() => {
+                console.log('[BunnyPlayer] 🔄 Rechargement iframe avec timestamp:', currentTime);
+                
+                // Régénérer l'URL avec le timestamp
+                VideoService.getPlaybackUrl(videoId, { expiryHours: 4 })
+                  .then(result => {
+                    const newUrl = result.embedUrl + `&autoplay=${!isPaused}&preload=true&t=${Math.floor(currentTime)}`;
+                    console.log('[BunnyPlayer] 🎬 Nouvelle URL avec t=', Math.floor(currentTime));
+                    setEmbedUrl(newUrl);
+                    restorationAttemptedRef.current = false;
+                  })
+                  .catch(error => {
+                    console.error('[BunnyPlayer] ❌ Erreur rechargement URL:', error);
+                  });
+              }, isMobile ? 800 : 500);
+            }
+          });
+        });
+      } else {
+        console.warn('[BunnyPlayer] ⚠️ Player non disponible lors de la rotation');
+        persistPlayerState();
       }
-      
-      orientationChangeTimeout = window.setTimeout(() => {
-        console.log('[BunnyPlayer] 🔄 Tentative de restauration post-rotation');
-        if (playerRef.current) {
-          // Le player existe toujours, restaurer l'état
-          restorePersistedState();
-        }
-      }, isMobile ? 1500 : 800); // Plus long sur mobile pour laisser le temps à l'iframe de se recharger
     };
 
     const handleVisibilityChange = () => {
@@ -490,22 +517,25 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       }
       
       resizeTimeout = window.setTimeout(() => {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const wasLandscape = containerRef.current?.dataset.orientation === 'landscape';
+        const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         
-        if (isLandscape !== wasLandscape) {
-          containerRef.current?.setAttribute('data-orientation', isLandscape ? 'landscape' : 'portrait');
+        // Détecter un VRAI changement d'orientation (pas juste un resize)
+        if (currentOrientation !== lastOrientation) {
+          console.log('[BunnyPlayer] 📐 Orientation changée:', lastOrientation, '→', currentOrientation);
+          lastOrientation = currentOrientation;
+          containerRef.current?.setAttribute('data-orientation', currentOrientation);
           handleOrientationChange();
+        } else {
+          console.log('[BunnyPlayer] 📏 Simple resize, pas de changement d\'orientation');
         }
-      }, 200);
+      }, 300); // Un peu plus long pour éviter les faux positifs
     };
     
     window.addEventListener('resize', handleResize);
     
     // Initialiser l'orientation
-    const initialOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
     if (containerRef.current) {
-      containerRef.current.setAttribute('data-orientation', initialOrientation);
+      containerRef.current.setAttribute('data-orientation', lastOrientation);
     }
 
     return () => {
