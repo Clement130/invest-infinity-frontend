@@ -413,15 +413,14 @@ section {
   }
 }
 /* Masquer le contenu hors écran pour améliorer les performances */
-  .content-visibility-auto {
-    content-visibility: auto;
-  }
+.content-visibility-auto {
+  content-visibility: auto;
+}
 
-  /* Sections qui peuvent être masquées quand elles sont hors écran */
-  .section-optimizable {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 200px;
-  }
+/* Sections qui peuvent être masquées quand elles sont hors écran */
+.section-optimizable {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 200px;
 }
 
 /* Optimisations pour les listes longues */
