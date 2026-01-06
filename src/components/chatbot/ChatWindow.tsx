@@ -102,14 +102,11 @@ export default function ChatWindow({
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           className="
-            fixed z-50
-            bottom-24 right-4
             w-[calc(100vw-2rem)] max-w-[380px]
             bg-[#0f0f13] border border-pink-500/20
             rounded-2xl shadow-2xl shadow-black/50
             overflow-hidden
             flex flex-col
-            sm:bottom-24 sm:right-6
           "
           style={{
             maxHeight: isMinimized ? 'auto' : 'calc(100vh - 160px)',

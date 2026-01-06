@@ -2915,7 +2915,14 @@ export default function Chatbot() {
 
   return (
     // Position ajustée : bottom-24 sur mobile pour éviter la BottomNav, bottom-6 sur desktop
-    <div className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-50 flex flex-col items-end gap-4">
+    // flex-col-reverse pour que le widget soit en bas et la fenêtre au-dessus
+    <div className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-50 flex flex-col-reverse items-end gap-4">
+      <ChatWidget
+        isOpen={isOpen}
+        onToggle={handleToggle}
+        unreadCount={unreadCount}
+      />
+      
       <ChatWindow
         isOpen={isOpen}
         messages={messages}
@@ -2928,12 +2935,6 @@ export default function Chatbot() {
         isMinimized={isMinimized}
         onToggleMinimize={() => setIsMinimized(prev => !prev)}
         isOnline={isOnline}
-      />
-      
-      <ChatWidget
-        isOpen={isOpen}
-        onToggle={handleToggle}
-        unreadCount={unreadCount}
       />
     </div>
   );
