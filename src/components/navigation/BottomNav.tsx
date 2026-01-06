@@ -10,7 +10,7 @@
  * - Ne chevauche pas le chatbot (chatbot décalé au-dessus)
  */
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -21,6 +21,37 @@ import {
 import clsx from 'clsx';
 import { openMobileSidebar } from './ClientSidebar';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+
+/**
+ * Hook pour détecter si on est en mode paysage sur mobile
+ * Utilisé pour masquer la bottom nav pendant la lecture vidéo
+ */
+function useIsLandscape() {
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      // Vérifier si on est sur mobile ET en paysage
+      const isMobile = window.innerWidth <= 1024;
+      const isLandscapeMode = window.innerWidth > window.innerHeight;
+      setIsLandscape(isMobile && isLandscapeMode);
+    };
+
+    // Vérifier au montage
+    checkOrientation();
+
+    // Écouter les changements
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
+
+  return isLandscape;
+}
 
 interface NavItem {
   label: string;
@@ -59,6 +90,16 @@ function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { shouldReduceMotion } = useReducedMotion();
+  const isLandscape = useIsLandscape();
+
+  // Détecter si on est sur une page de lecture vidéo
+  const isVideoPage = location.pathname.includes('/lessons/');
+
+  // Masquer la bottom nav en mode paysage sur une page vidéo
+  // Cela évite les bugs d'affichage lors de la rotation
+  if (isLandscape && isVideoPage) {
+    return null;
+  }
 
   const isActive = useCallback((path: string) => {
     if (path === '/app') {
@@ -81,11 +122,23 @@ function BottomNav() {
       <div className="lg:hidden h-20" />
       
       {/* Bottom Navigation Bar - Mobile only */}
+      {/* Utilise position: fixed avec des valeurs explicites pour éviter les bugs iOS lors de la rotation */}
       <nav 
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-white/10 ${
+        className={`lg:hidden fixed z-40 bg-slate-950/95 border-t border-white/10 ${
           shouldReduceMotion ? '' : 'backdrop-blur-xl'
         }`}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        style={{ 
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          // Fix iOS rotation bug
+          WebkitTransform: 'translate3d(0, 0, 0)',
+          transform: 'translate3d(0, 0, 0)',
+          // Empêcher le repositionnement lors du resize
+          position: 'fixed',
+          width: '100%',
+        }}
       >
         <div className="flex items-center justify-around px-2">
           {navItems.map((item) => {

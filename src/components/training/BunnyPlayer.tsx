@@ -260,7 +260,18 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   }
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+    <div 
+      className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl"
+      style={{
+        // Empêcher le rechargement de l'iframe lors de la rotation sur iOS
+        WebkitTransform: 'translateZ(0)',
+        transform: 'translateZ(0)',
+        WebkitBackfaceVisibility: 'hidden',
+        backfaceVisibility: 'hidden',
+        // Garder le conteneur stable
+        contain: 'layout style paint',
+      }}
+    >
       <iframe
         ref={iframeRef}
         src={embedUrl}
@@ -270,7 +281,12 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
         title="Lecteur vidéo"
         onLoad={handleIframeLoad}
         onError={() => { setHasError(true); setIsLoading(false); }}
-        style={{ backgroundColor: '#000' }}
+        style={{ 
+          backgroundColor: '#000',
+          // Fix iOS iframe reload on rotation
+          WebkitTransform: 'translateZ(0)',
+          transform: 'translateZ(0)',
+        }}
       />
     </div>
   );
