@@ -417,21 +417,21 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
   // ============================================================================
   
   /**
-   * Gestionnaire optimisé pour les changements d'orientation
-   * Force le rechargement de l'iframe avec le bon timestamp
+   * Gestionnaire optimisé pour les changements d'orientation iOS/Android
+   * Sauvegarde l'état IMMÉDIATEMENT car iOS peut recharger l'iframe
    */
   useEffect(() => {
-    let orientationChangeTimeout: number | null = null;
     let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
     
-    const handleOrientationChange = () => {
-      console.log('[BunnyPlayer] 🔄 Changement d\'orientation détecté');
+    // Fonction de sauvegarde synchrone (appelée AVANT le rechargement iOS)
+    const saveStateSync = () => {
+      if (!playerRef.current || !videoId) return;
       
-      // Sauvegarder immédiatement dans sessionStorage (AVANT que l'iframe ne soit détruite)
-      if (playerRef.current) {
+      try {
+        // Utiliser une approche synchrone pour iOS
         playerRef.current.getPaused((isPaused: boolean) => {
           playerRef.current?.getCurrentTime((currentTime: number) => {
-            if (typeof currentTime === 'number' && !isNaN(currentTime) && currentTime > 0) {
+            if (typeof currentTime === 'number' && !isNaN(currentTime) && currentTime > 1) {
               const state = {
                 currentTime,
                 wasPlaying: !isPaused,
@@ -439,38 +439,23 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
               };
               
               sessionStorage.setItem(getStorageKey(lessonId, videoId), JSON.stringify(state));
-              console.log('[BunnyPlayer] 💾 État sauvegardé pour rotation:', {
-                time: currentTime.toFixed(2) + 's',
-                playing: state.wasPlaying
-              });
-              
-              // FORCER LE RECHARGEMENT de l'iframe avec le nouveau timestamp
-              if (orientationChangeTimeout) {
-                clearTimeout(orientationChangeTimeout);
-              }
-              
-              orientationChangeTimeout = window.setTimeout(() => {
-                console.log('[BunnyPlayer] 🔄 Rechargement iframe avec timestamp:', currentTime);
-                
-                // Régénérer l'URL avec le timestamp
-                VideoService.getPlaybackUrl(videoId, { expiryHours: 4 })
-                  .then(result => {
-                    const newUrl = result.embedUrl + `&autoplay=${!isPaused}&preload=true&t=${Math.floor(currentTime)}`;
-                    console.log('[BunnyPlayer] 🎬 Nouvelle URL avec t=', Math.floor(currentTime));
-                    setEmbedUrl(newUrl);
-                    restorationAttemptedRef.current = false;
-                  })
-                  .catch(error => {
-                    console.error('[BunnyPlayer] ❌ Erreur rechargement URL:', error);
-                  });
-              }, isMobile ? 800 : 500);
+              console.log('[BunnyPlayer] 💾 SAUVEGARDE ROTATION:', currentTime.toFixed(2) + 's', isPaused ? '(pause)' : '(play)');
             }
           });
         });
-      } else {
-        console.warn('[BunnyPlayer] ⚠️ Player non disponible lors de la rotation');
-        persistPlayerState();
+      } catch (e) {
+        console.error('[BunnyPlayer] ❌ Erreur sauvegarde:', e);
       }
+    };
+    
+    const handleOrientationChange = () => {
+      console.log('[BunnyPlayer] 🔄 ROTATION DÉTECTÉE');
+      
+      // Sauvegarder IMMÉDIATEMENT (avant que iOS ne recharge l'iframe)
+      saveStateSync();
+      
+      // Double sauvegarde après un court délai (au cas où)
+      setTimeout(saveStateSync, 100);
     };
 
     const handleVisibilityChange = () => {
@@ -591,24 +576,81 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
 
   /**
    * Initialisation du player après chargement de l'iframe
+   * CRITIQUE: Cette fonction est appelée à CHAQUE rechargement de l'iframe (y compris après rotation)
    */
   const handleIframeLoad = useCallback(() => {
-    console.log('[BunnyPlayer] Iframe chargée, tentative d\'initialisation Player.js');
+    console.log('[BunnyPlayer] 📺 Iframe chargée, initialisation Player.js...');
     setIsLoading(false);
 
     // Initialiser Player.js si disponible
     if (iframeRef.current && window.playerjs && userId && lessonId) {
       try {
+        // Créer une nouvelle instance Player.js (l'ancienne est invalide après rechargement)
         playerRef.current = new window.playerjs.Player(iframeRef.current);
 
         // Attendre que le player soit prêt
         playerRef.current.on('ready', () => {
-          console.log('[BunnyPlayer] Player.js prêt - Restauration de l\'état si disponible');
+          console.log('[BunnyPlayer] ✅ Player.js prêt');
 
-          // 🎯 RESTAURER L'ÉTAT PERSISTÉ IMMÉDIATEMENT avec un délai pour s'assurer que le player est vraiment prêt
-          setTimeout(() => {
-            restorePersistedState();
-          }, 500);
+          // 🎯 RESTAURATION IMMÉDIATE - Vérifier si on a un état sauvegardé
+          const savedStateStr = sessionStorage.getItem(getStorageKey(lessonId, videoId));
+          if (savedStateStr) {
+            try {
+              const savedState = JSON.parse(savedStateStr);
+              const { currentTime, wasPlaying, timestamp } = savedState;
+              const age = Date.now() - timestamp;
+              
+              // Ne restaurer que si l'état est récent (< 5 minutes pour rotation, < 1h pour autres cas)
+              if (age < 300000 && currentTime > 1) { // 5 minutes
+                console.log('[BunnyPlayer] 🔄 État trouvé:', {
+                  time: currentTime.toFixed(2) + 's',
+                  age: Math.round(age / 1000) + 's',
+                  wasPlaying
+                });
+                
+                // REPOSITIONNER IMMÉDIATEMENT
+                playerRef.current?.setCurrentTime(currentTime);
+                console.log('[BunnyPlayer] ⏩ setCurrentTime(' + currentTime.toFixed(2) + ')');
+                
+                // Vérifier que ça a fonctionné après un court délai
+                setTimeout(() => {
+                  playerRef.current?.getCurrentTime((actualTime: number) => {
+                    console.log('[BunnyPlayer] 📍 Position actuelle:', actualTime.toFixed(2) + 's');
+                    
+                    // Si la position n'est pas correcte, réessayer
+                    if (Math.abs(actualTime - currentTime) > 3) {
+                      console.log('[BunnyPlayer] ⚠️ Position incorrecte, nouvelle tentative...');
+                      playerRef.current?.setCurrentTime(currentTime);
+                      
+                      // Troisième tentative après un délai plus long
+                      setTimeout(() => {
+                        playerRef.current?.getCurrentTime((finalTime: number) => {
+                          if (Math.abs(finalTime - currentTime) > 3) {
+                            console.log('[BunnyPlayer] ⚠️ Tentative 3...');
+                            playerRef.current?.setCurrentTime(currentTime);
+                          }
+                        });
+                      }, 500);
+                    }
+                    
+                    // Reprendre la lecture si nécessaire (après positionnement)
+                    if (wasPlaying) {
+                      setTimeout(() => {
+                        playerRef.current?.play();
+                        console.log('[BunnyPlayer] ▶️ Reprise lecture');
+                      }, 300);
+                    }
+                  });
+                }, 200);
+              } else if (age >= 300000) {
+                console.log('[BunnyPlayer] ⏰ État trop ancien:', Math.round(age / 1000) + 's');
+              }
+            } catch (e) {
+              console.warn('[BunnyPlayer] ❌ Erreur parsing état:', e);
+            }
+          } else {
+            console.log('[BunnyPlayer] 📭 Aucun état sauvegardé');
+          }
 
           // Écouter les événements de progression
           playerRef.current?.on('timeupdate', () => {
@@ -617,9 +659,8 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
 
           // Écouter la fin de la vidéo
           playerRef.current?.on('ended', () => {
-            console.log('[BunnyPlayer] Vidéo terminée');
+            console.log('[BunnyPlayer] 🏁 Vidéo terminée');
             if (trackerRef.current) {
-              // Marquer comme complétée à 100%
               const event: VideoProgressEvent = {
                 currentTime: 100,
                 duration: 100,
@@ -629,51 +670,50 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
               if (onProgress) onProgress(event);
             }
             
-            // Nettoyer l'état persisté quand la vidéo est terminée
             try {
               sessionStorage.removeItem(getStorageKey(lessonId, videoId));
-              console.log('[BunnyPlayer] État nettoyé après fin de vidéo');
             } catch {}
           });
 
           // Écouter les événements de pause/play pour sauvegarder l'état
           playerRef.current?.on('play', () => {
-            console.log('[BunnyPlayer] Lecture démarrée');
+            console.log('[BunnyPlayer] ▶️ Play');
             persistPlayerState();
           });
 
           playerRef.current?.on('pause', () => {
-            console.log('[BunnyPlayer] Lecture en pause');
+            console.log('[BunnyPlayer] ⏸️ Pause');
             persistPlayerState();
           });
 
-          // 🔄 SAUVEGARDE PÉRIODIQUE DE L'ÉTAT (toutes les secondes)
-          if (saveStateIntervalRef.current === null) {
-            saveStateIntervalRef.current = window.setInterval(() => {
-              persistPlayerState();
-            }, 1000); // Toutes les secondes
+          // 🔄 SAUVEGARDE PÉRIODIQUE DE L'ÉTAT (toutes les 500ms pour iOS)
+          if (saveStateIntervalRef.current !== null) {
+            clearInterval(saveStateIntervalRef.current);
           }
+          saveStateIntervalRef.current = window.setInterval(() => {
+            persistPlayerState();
+          }, 500); // Plus fréquent pour capturer l'état avant rotation iOS
 
-          // Démarrer le suivi périodique pour les mises à jour de last_viewed
+          // Démarrer le suivi périodique
           if (trackerRef.current && progressCheckIntervalRef.current === null) {
             progressCheckIntervalRef.current = window.setInterval(() => {
               trackerRef.current?.updateLastViewed();
-            }, 30000); // Toutes les 30 secondes
+            }, 30000);
           }
         });
 
-        // Démarrer une vérification initiale après un court délai
+        // Vérification initiale
         setTimeout(() => {
           checkVideoProgress();
         }, 2000);
 
       } catch (error) {
-        console.error('[BunnyPlayer] Erreur lors de l\'initialisation de Player.js:', error);
+        console.error('[BunnyPlayer] ❌ Erreur initialisation Player.js:', error);
       }
     } else if (!window.playerjs) {
-      console.warn('[BunnyPlayer] Player.js n\'est pas disponible - chargement de la bibliothèque...');
+      console.warn('[BunnyPlayer] ⚠️ Player.js non disponible');
     }
-  }, [userId, lessonId, videoId, onProgress, checkVideoProgress, restorePersistedState, persistPlayerState]);
+  }, [userId, lessonId, videoId, onProgress, checkVideoProgress, persistPlayerState]);
 
   const handleIframeError = useCallback(() => {
     setHasError(true);
