@@ -130,7 +130,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <MemoizedSidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative z-10 lg:ml-0">
+      <div className="flex-1 flex flex-col relative z-10 lg:ml-0 max-w-full overflow-x-hidden">
         {/* Header - reste statique lors des navigations */}
         <MemoizedHeader />
 
