@@ -135,6 +135,11 @@ export default function LessonPlayerPage() {
 
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // Réinitialiser isCompleted quand on change de leçon
+  useEffect(() => {
+    setIsCompleted(false);
+  }, [lessonId]);
+
   // Mutation pour marquer comme complétée manuellement
   const markCompletedMutation = useMutation({
     mutationFn: () => markLessonAsCompleted(user!.id, lessonId!),
@@ -163,8 +168,8 @@ export default function LessonPlayerPage() {
       // Invalider les statistiques pour mettre à jour les cartes
       queryClient.invalidateQueries({ queryKey: ['member-stats', user.id] });
       
-      // Feedback visuel pour la progression
-      if (event.percentage >= 90) {
+      // Feedback visuel pour la progression - une seule fois
+      if (event.percentage >= 90 && !isCompleted) {
         setIsCompleted(true);
         toast.success('Leçon complétée ! 🎉', { duration: 3000 });
       }
