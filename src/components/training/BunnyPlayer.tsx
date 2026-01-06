@@ -73,11 +73,20 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
    * Appelé automatiquement toutes les secondes et lors des événements critiques
    */
   const persistPlayerState = useCallback(() => {
-    if (!playerRef.current || !videoId) return;
+    if (!playerRef.current || !videoId) {
+      console.log('[BunnyPlayer] Persistence skip: player ou videoId manquant');
+      return;
+    }
     
     try {
       playerRef.current.getPaused((paused: boolean) => {
         playerRef.current?.getCurrentTime((currentTime: number) => {
+          // Vérifier que currentTime est valide
+          if (typeof currentTime !== 'number' || isNaN(currentTime)) {
+            console.warn('[BunnyPlayer] currentTime invalide:', currentTime);
+            return;
+          }
+          
           // Sauvegarder seulement si le temps a changé (éviter les écritures inutiles)
           if (Math.abs(currentTime - lastSavedTimeRef.current) >= 0.5) {
             const state = {
@@ -87,17 +96,42 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
             };
             
             try {
-              sessionStorage.setItem(getStorageKey(lessonId, videoId), JSON.stringify(state));
+              const storageKey = getStorageKey(lessonId, videoId);
+              sessionStorage.setItem(storageKey, JSON.stringify(state));
               lastSavedTimeRef.current = currentTime;
-              console.log('[BunnyPlayer] État persisté:', state);
+              console.log('[BunnyPlayer] 💾 État persisté:', {
+                time: currentTime.toFixed(2) + 's',
+                playing: state.wasPlaying,
+                key: storageKey.substring(0, 40) + '...'
+              });
+              
+              // Nettoyage des anciennes entrées (> 1 heure) - seulement de temps en temps
+              if (Math.random() < 0.1) { // 10% du temps pour ne pas surcharger
+                const prefix = 'bunny_player_state_';
+                for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                  const key = sessionStorage.key(i);
+                  if (key?.startsWith(prefix)) {
+                    const item = sessionStorage.getItem(key);
+                    if (item) {
+                      try {
+                        const data = JSON.parse(item);
+                        if (Date.now() - data.timestamp > 3600000) {
+                          sessionStorage.removeItem(key);
+                          console.log('[BunnyPlayer] 🧹 État ancien supprimé:', key.substring(0, 40));
+                        }
+                      } catch {}
+                    }
+                  }
+                }
+              }
             } catch (storageError) {
-              console.warn('[BunnyPlayer] Impossible de sauvegarder dans sessionStorage:', storageError);
+              console.warn('[BunnyPlayer] ⚠️ Impossible de sauvegarder dans sessionStorage:', storageError);
             }
           }
         });
       });
     } catch (error) {
-      console.error('[BunnyPlayer] Erreur lors de la persistence:', error);
+      console.error('[BunnyPlayer] ❌ Erreur lors de la persistence:', error);
     }
   }, [videoId, lessonId]);
   
@@ -106,12 +140,16 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
    * Appelé automatiquement au chargement du player
    */
   const restorePersistedState = useCallback(() => {
-    if (!playerRef.current || !videoId || restorationAttemptedRef.current) return;
+    if (!playerRef.current || !videoId) {
+      console.log('[BunnyPlayer] Player ou videoId non disponible pour restauration');
+      return;
+    }
     
     try {
       const savedStateStr = sessionStorage.getItem(getStorageKey(lessonId, videoId));
       if (!savedStateStr) {
         console.log('[BunnyPlayer] Aucun état persisté trouvé');
+        restorationAttemptedRef.current = true;
         return;
       }
       
@@ -123,15 +161,27 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       if (isStateStale) {
         console.log('[BunnyPlayer] État trop ancien, ignoré');
         sessionStorage.removeItem(getStorageKey(lessonId, videoId));
+        restorationAttemptedRef.current = true;
         return;
       }
       
-      console.log('[BunnyPlayer] Restauration de l\'état persisté:', savedState);
+      // Ne pas tenter si déjà fait (sauf si le temps est différent de plus de 2s)
+      if (restorationAttemptedRef.current) {
+        console.log('[BunnyPlayer] Restauration déjà tentée, skip');
+        return;
+      }
+      
+      console.log('[BunnyPlayer] 🔄 Restauration de l\'état persisté:', {
+        currentTime,
+        wasPlaying,
+        age: Math.round((Date.now() - timestamp) / 1000) + 's'
+      });
+      
       restorationAttemptedRef.current = true;
       
-      // Attendre que le player soit prêt (avec retry)
+      // Attendre que le player soit prêt (avec retry plus agressif)
       let attempts = 0;
-      const maxAttempts = 30; // 3 secondes max
+      const maxAttempts = 50; // 5 secondes max
       
       const attemptRestore = () => {
         attempts++;
@@ -139,32 +189,48 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
         if (!playerRef.current) {
           if (attempts < maxAttempts) {
             setTimeout(attemptRestore, 100);
+          } else {
+            console.error('[BunnyPlayer] ❌ Timeout: Player non disponible après', maxAttempts * 100, 'ms');
           }
           return;
         }
         
         try {
-          // Restaurer le temps
-          if (typeof currentTime === 'number' && currentTime > 0) {
+          // Restaurer le temps IMMÉDIATEMENT
+          if (typeof currentTime === 'number' && currentTime > 1) {
             playerRef.current.setCurrentTime(currentTime);
-            console.log('[BunnyPlayer] Temps restauré à:', currentTime);
+            console.log('[BunnyPlayer] ✅ Temps restauré à:', currentTime.toFixed(2), 's');
+            
+            // Vérifier que la restauration a bien fonctionné
+            setTimeout(() => {
+              playerRef.current?.getCurrentTime((verifyTime: number) => {
+                const diff = Math.abs(verifyTime - currentTime);
+                if (diff > 2) {
+                  console.warn('[BunnyPlayer] ⚠️ Écart détecté après restauration:', diff.toFixed(2), 's - Nouvelle tentative');
+                  playerRef.current?.setCurrentTime(currentTime);
+                }
+              });
+            }, 300);
           }
           
           // Restaurer l'état de lecture après un délai
-          const playDelay = isMobile ? 800 : 500;
+          const playDelay = isMobile ? 1000 : 600;
           setTimeout(() => {
             if (playerRef.current && wasPlaying) {
               try {
                 playerRef.current.play();
-                console.log('[BunnyPlayer] Lecture automatiquement reprise');
+                console.log('[BunnyPlayer] ▶️ Lecture automatiquement reprise');
               } catch (playError) {
-                console.warn('[BunnyPlayer] Impossible de reprendre automatiquement (interaction requise)');
+                console.warn('[BunnyPlayer] ⚠️ Impossible de reprendre automatiquement:', playError);
+                // Sur mobile, afficher un message visuel pourrait aider
               }
+            } else {
+              console.log('[BunnyPlayer] ⏸️ Vidéo reste en pause (état sauvegardé)');
             }
           }, playDelay);
           
         } catch (restoreError) {
-          console.error('[BunnyPlayer] Erreur lors de la restauration:', restoreError);
+          console.error('[BunnyPlayer] ❌ Erreur lors de la restauration:', restoreError);
           if (attempts < maxAttempts) {
             setTimeout(attemptRestore, 100);
           }
@@ -174,11 +240,12 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       attemptRestore();
       
     } catch (error) {
-      console.error('[BunnyPlayer] Erreur lors de la lecture de l\'état persisté:', error);
+      console.error('[BunnyPlayer] ❌ Erreur lors de la lecture de l\'état persisté:', error);
       // Nettoyer l'état corrompu
       try {
         sessionStorage.removeItem(getStorageKey(lessonId, videoId));
       } catch {}
+      restorationAttemptedRef.current = true;
     }
   }, [videoId, lessonId, isMobile]);
 
@@ -247,9 +314,35 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     const fetchSecureUrl = async () => {
       try {
         console.log('[BunnyPlayer] Génération du token sécurisé pour:', videoId);
+        
+        // Vérifier si on a un état sauvegardé pour cette vidéo
+        const savedStateStr = sessionStorage.getItem(getStorageKey(lessonId, videoId));
+        let startTime = 0;
+        
+        if (savedStateStr) {
+          try {
+            const savedState = JSON.parse(savedStateStr);
+            const isRecent = (Date.now() - savedState.timestamp) < 3600000; // < 1 heure
+            if (isRecent && savedState.currentTime > 0) {
+              startTime = Math.floor(savedState.currentTime);
+              console.log('[BunnyPlayer] État persisté trouvé, démarrage à:', startTime, 's');
+            }
+          } catch (e) {
+            console.warn('[BunnyPlayer] Impossible de parser l\'état sauvegardé');
+          }
+        }
+        
         const result = await VideoService.getPlaybackUrl(videoId, { expiryHours: 4 }); // Token valide 4h
         console.log('[BunnyPlayer] URL sécurisée générée');
-        setEmbedUrl(result.embedUrl + '&autoplay=false&preload=true');
+        
+        // Ajouter le paramètre de démarrage si on a un état sauvegardé
+        let finalUrl = result.embedUrl + '&autoplay=false&preload=true';
+        if (startTime > 0) {
+          finalUrl += `&t=${startTime}`;
+          console.log('[BunnyPlayer] URL avec timestamp de démarrage:', startTime, 's');
+        }
+        
+        setEmbedUrl(finalUrl);
         setIsLoading(false);
       } catch (error) {
         console.error('[BunnyPlayer] Erreur génération token:', error);
@@ -260,7 +353,7 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     };
 
     fetchSecureUrl();
-  }, [videoId]);
+  }, [videoId, lessonId]);
 
   // Timeout pour détecter les vidéos qui ne chargent pas
   useEffect(() => {
@@ -328,24 +421,51 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
    * Sauvegarde l'état immédiatement dans sessionStorage
    */
   useEffect(() => {
+    let orientationChangeTimeout: number | null = null;
+    
     const handleOrientationChange = () => {
-      console.log('[BunnyPlayer] Changement d\'orientation détecté');
+      console.log('[BunnyPlayer] 🔄 Changement d\'orientation détecté');
       
-      // Sauvegarder immédiatement dans sessionStorage
+      // Sauvegarder immédiatement dans sessionStorage (AVANT que l'iframe ne soit détruite)
       persistPlayerState();
+      
+      // Marquer qu'on doit restaurer à la prochaine initialisation
+      restorationAttemptedRef.current = false;
+      
+      // Sur mobile, l'iframe peut se recharger, donc on force une restauration après un délai
+      if (isMobile && orientationChangeTimeout) {
+        clearTimeout(orientationChangeTimeout);
+      }
+      
+      orientationChangeTimeout = window.setTimeout(() => {
+        console.log('[BunnyPlayer] 🔄 Tentative de restauration post-rotation');
+        if (playerRef.current) {
+          // Le player existe toujours, restaurer l'état
+          restorePersistedState();
+        }
+      }, isMobile ? 1500 : 800); // Plus long sur mobile pour laisser le temps à l'iframe de se recharger
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log('[BunnyPlayer] Page cachée - sauvegarde de l\'état');
+        console.log('[BunnyPlayer] 👁️ Page cachée - sauvegarde de l\'état');
         persistPlayerState();
       } else {
-        console.log('[BunnyPlayer] Page visible - vérification de la restauration');
-        // Ne restaurer que si la page était cachée pendant un changement d'orientation
+        console.log('[BunnyPlayer] 👁️ Page visible - vérification de la restauration');
+        // Permettre une nouvelle tentative de restauration
         if (restorationAttemptedRef.current === false) {
-          restorationAttemptedRef.current = false; // Permettre une nouvelle tentative
+          setTimeout(() => {
+            if (playerRef.current) {
+              restorePersistedState();
+            }
+          }, 500);
         }
       }
+    };
+    
+    const handleBeforeUnload = () => {
+      console.log('[BunnyPlayer] 🚪 Page en cours de déchargement - sauvegarde finale');
+      persistPlayerState();
     };
 
     // Écouter les changements d'orientation (iOS et Android)
@@ -358,6 +478,9 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
     
     // Écouter les changements de visibilité (lorsque l'app passe en arrière-plan)
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Sauvegarder avant que la page ne soit déchargée
+    window.addEventListener('beforeunload', handleBeforeUnload);
     
     // Écouter aussi les changements de taille de fenêtre avec debounce
     let resizeTimeout: number | null = null;
@@ -391,12 +514,16 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
         window.screen.orientation.removeEventListener('change', handleOrientationChange);
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('resize', handleResize);
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
       }
+      if (orientationChangeTimeout) {
+        clearTimeout(orientationChangeTimeout);
+      }
     };
-  }, [persistPlayerState]);
+  }, [persistPlayerState, restorePersistedState, isMobile]);
 
   /**
    * Gestionnaire pour les événements de plein écran
@@ -436,6 +563,7 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
    * Initialisation du player après chargement de l'iframe
    */
   const handleIframeLoad = useCallback(() => {
+    console.log('[BunnyPlayer] Iframe chargée, tentative d\'initialisation Player.js');
     setIsLoading(false);
 
     // Initialiser Player.js si disponible
@@ -445,10 +573,12 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
 
         // Attendre que le player soit prêt
         playerRef.current.on('ready', () => {
-          console.log('[BunnyPlayer] Player.js prêt');
+          console.log('[BunnyPlayer] Player.js prêt - Restauration de l\'état si disponible');
 
-          // 🎯 RESTAURER L'ÉTAT PERSISTÉ IMMÉDIATEMENT
-          restorePersistedState();
+          // 🎯 RESTAURER L'ÉTAT PERSISTÉ IMMÉDIATEMENT avec un délai pour s'assurer que le player est vraiment prêt
+          setTimeout(() => {
+            restorePersistedState();
+          }, 500);
 
           // Écouter les événements de progression
           playerRef.current?.on('timeupdate', () => {
@@ -472,6 +602,7 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
             // Nettoyer l'état persisté quand la vidéo est terminée
             try {
               sessionStorage.removeItem(getStorageKey(lessonId, videoId));
+              console.log('[BunnyPlayer] État nettoyé après fin de vidéo');
             } catch {}
           });
 
@@ -509,6 +640,8 @@ export default function BunnyPlayer({ videoId, userId, lessonId, onProgress }: B
       } catch (error) {
         console.error('[BunnyPlayer] Erreur lors de l\'initialisation de Player.js:', error);
       }
+    } else if (!window.playerjs) {
+      console.warn('[BunnyPlayer] Player.js n\'est pas disponible - chargement de la bibliothèque...');
     }
   }, [userId, lessonId, videoId, onProgress, checkVideoProgress, restorePersistedState, persistPlayerState]);
 
