@@ -1,6 +1,10 @@
 /**
  * BottomNav - Barre de navigation fixe en bas de l'écran (mobile uniquement)
  * 
+ * Version: 2.0.0 - 2026-01-06
+ * - Suppression de la gestion d'orientation complexe
+ * - Masquage simple en mode paysage sur page vidéo
+ * 
  * Caractéristiques :
  * - Visible uniquement sur mobile (< lg)
  * - 5 icônes + labels pour accès rapide aux sections principales
@@ -8,6 +12,7 @@
  * - Zone de clic min 48px de hauteur
  * - Safe area padding pour iPhone avec notch
  * - Ne chevauche pas le chatbot (chatbot décalé au-dessus)
+ * - Masqué en mode paysage sur les pages de vidéo
  */
 
 import { memo, useCallback, useEffect, useState } from 'react';
