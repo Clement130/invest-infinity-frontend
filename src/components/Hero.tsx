@@ -218,14 +218,14 @@ export default function Hero({ onOpenRegister }: HeroProps) {
         </div>
       )}
 
-        {/* Bouton de défilement */}
-        {shouldUseFramerMotion ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5, duration: 1 }}
-            className="absolute bottom-[-100px] left-1/2 transform -translate-x-1/2 z-20"
-          >
+      {/* Bouton de défilement */}
+      {shouldUseFramerMotion ? (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 1 }}
+          className="absolute bottom-[-100px] left-1/2 transform -translate-x-1/2 z-20"
+        >
           <button
             onClick={scrollToServices}
             className="group flex flex-col items-center gap-2"
@@ -242,24 +242,24 @@ export default function Hero({ onOpenRegister }: HeroProps) {
             </div>
           </button>
         </motion.div>
-        ) : (
-          <div className="absolute bottom-[-100px] left-1/2 transform -translate-x-1/2 z-20">
-            <button
-              onClick={scrollToServices}
-              className="group flex flex-col items-center gap-2"
-            >
-              <span className="text-sm font-medium tracking-wider uppercase text-white/80 group-hover:text-white transition-colors">
-                Découvrir
-              </span>
-              <div className="relative">
-                <div className="absolute inset-0 bg-pink-500/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-700 ease-out" />
-                <div className="relative bg-pink-500/10 rounded-full p-2 transition-colors group-hover:bg-pink-500/20">
-                  <ChevronDown className="w-6 h-6 text-white" />
-                </div>
+      ) : (
+        <div className="absolute bottom-[-100px] left-1/2 transform -translate-x-1/2 z-20">
+          <button
+            onClick={scrollToServices}
+            className="group flex flex-col items-center gap-2"
+          >
+            <span className="text-sm font-medium tracking-wider uppercase text-white/80 group-hover:text-white transition-colors">
+              Découvrir
+            </span>
+            <div className="relative">
+              <div className="absolute inset-0 bg-pink-500/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-700 ease-out" />
+              <div className="relative bg-pink-500/10 rounded-full p-2 transition-colors group-hover:bg-pink-500/20">
+                <ChevronDown className="w-6 h-6 text-white" />
               </div>
-            </button>
-          </div>
-        )}
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Vignette */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80 pointer-events-none" />
