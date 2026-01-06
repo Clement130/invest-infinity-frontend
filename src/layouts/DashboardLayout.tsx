@@ -136,6 +136,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Content - seule partie qui change */}
         {/* Padding réduit sur mobile pour éviter le rognage, mais conservé pour l'espacement */}
+        {/* Force rebuild: 2026-01-06 08:40 */}
         <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 overflow-x-hidden overflow-y-auto">
           <div className="max-w-7xl mx-auto w-full max-w-full">
             {children}
