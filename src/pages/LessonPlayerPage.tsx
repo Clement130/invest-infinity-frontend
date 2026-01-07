@@ -1,3 +1,4 @@
+// v2.1 - Toast spam fix: removed automatic completion notification
 import { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
