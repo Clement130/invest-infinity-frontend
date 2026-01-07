@@ -195,12 +195,11 @@ async function getPriceToLicenseMapping(): Promise<Record<string, string>> {
 // ============================================================================
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
-  if (!supabaseAdmin) {
-    throw new Error('Supabase not initialized');
+  if (!supabaseAdmin || !stripe) {
+    throw new Error('Supabase or Stripe not initialized');
   }
 
   const customerEmail = session.customer_email || session.customer_details?.email;
-  const priceId = session.metadata?.priceId;
   const purchaseType = session.metadata?.type;
   const sessionId = session.metadata?.sessionId;
 
@@ -209,11 +208,61 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     return;
   }
 
+  // ============================================================================
+  // RÉCUPÉRATION SÉCURISÉE DU PRICE ID
+  // ============================================================================
+  // CRITIQUE: On récupère le priceId depuis les line_items (source de vérité Stripe)
+  // et NON depuis les metadata qui peuvent être manquantes ou corrompues.
+  // Cela évite le bug où un client qui paie 497€ se retrouve avec le plan Starter.
+  // ============================================================================
+  
+  let priceId: string | null = null;
+  
+  // 1. D'abord essayer de récupérer depuis les line_items de la session
+  try {
+    // Récupérer les line_items avec expand pour avoir les détails du prix
+    const sessionWithLineItems = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['line_items', 'line_items.data.price']
+    });
+    
+    if (sessionWithLineItems.line_items?.data && sessionWithLineItems.line_items.data.length > 0) {
+      const lineItem = sessionWithLineItems.line_items.data[0];
+      if (lineItem.price?.id) {
+        priceId = lineItem.price.id;
+        secureLog('✅ Price ID retrieved from line_items (source of truth)', { priceId });
+      }
+    }
+  } catch (lineItemsError) {
+    secureLog('⚠️ Error retrieving line_items, trying metadata fallback', { 
+      error: lineItemsError instanceof Error ? lineItemsError.message : 'Unknown',
+      sessionId: session.id
+    });
+  }
+  
+  // 2. Fallback sur les metadata UNIQUEMENT si line_items n'a pas fonctionné
+  if (!priceId && session.metadata?.priceId) {
+    priceId = session.metadata.priceId;
+    secureLog('⚠️ Using metadata priceId as fallback', { priceId });
+  }
+  
+  // 3. CRITIQUE: Si on n'a toujours pas de priceId, on REFUSE de continuer
+  // On ne fallback JAMAIS sur 'entree' car cela causerait des erreurs de licence
+  if (!priceId) {
+    secureLog('❌ CRITICAL: No priceId found in line_items OR metadata!', { 
+      sessionId: session.id,
+      email: customerEmail,
+      hasMetadata: !!session.metadata,
+      metadataKeys: session.metadata ? Object.keys(session.metadata) : []
+    });
+    throw new Error(`CRITICAL: Cannot determine priceId for session ${session.id}. Payment received but license cannot be assigned. Manual intervention required.`);
+  }
+
   secureLog('Processing checkout.session.completed', { 
     email: customerEmail, 
     priceId,
     purchaseType,
-    sessionId 
+    sessionId,
+    priceIdSource: session.metadata?.priceId === priceId ? 'metadata' : 'line_items'
   });
 
   // Vérifier si l'utilisateur existe déjà
@@ -282,10 +331,34 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     }
   }
 
-  const priceToLicense = await getPriceToLicenseMapping();
-  const license = priceToLicense[priceId || ''] || 'entree';
+  // ============================================================================
+  // DÉTERMINATION DE LA LICENCE
+  // ============================================================================
+  // CRITIQUE: On ne fallback JAMAIS sur 'entree' si le mapping échoue.
+  // Un client qui paie 497€ DOIT avoir la licence 'transformation' (Premium).
+  // ============================================================================
   
-  secureLog('Assigning license', { license, priceId });
+  const priceToLicense = await getPriceToLicenseMapping();
+  const license = priceToLicense[priceId];
+  
+  // VÉRIFICATION STRICTE: La licence DOIT exister dans le mapping
+  if (!license) {
+    secureLog('❌ CRITICAL: priceId not found in license mapping!', { 
+      priceId,
+      availableMappings: Object.keys(priceToLicense),
+      email: customerEmail
+    });
+    throw new Error(`CRITICAL: priceId ${priceId} not found in license mapping. Payment received but license cannot be assigned. Manual intervention required.`);
+  }
+  
+  // Vérification supplémentaire: la licence doit être valide
+  const validLicenses = ['entree', 'transformation', 'immersion'];
+  if (!validLicenses.includes(license)) {
+    secureLog('❌ CRITICAL: Invalid license value!', { license, priceId });
+    throw new Error(`CRITICAL: Invalid license value "${license}" for priceId ${priceId}. Manual intervention required.`);
+  }
+  
+  secureLog('✅ License determined', { license, priceId, email: customerEmail });
 
   const { error: profileError } = await supabaseAdmin
     .from('profiles')
