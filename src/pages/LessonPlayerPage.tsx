@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -134,10 +134,13 @@ export default function LessonPlayerPage() {
   };
 
   const [isCompleted, setIsCompleted] = useState(false);
+  // Ref pour éviter le spam de notifications (les closures ne voient pas les mises à jour de state)
+  const hasShownCompletionToastRef = useRef(false);
 
-  // Réinitialiser isCompleted quand on change de leçon
+  // Réinitialiser quand on change de leçon
   useEffect(() => {
     setIsCompleted(false);
+    hasShownCompletionToastRef.current = false;
   }, [lessonId]);
 
   // Mutation pour marquer comme complétée manuellement
@@ -168,8 +171,9 @@ export default function LessonPlayerPage() {
       // Invalider les statistiques pour mettre à jour les cartes
       queryClient.invalidateQueries({ queryKey: ['member-stats', user.id] });
       
-      // Feedback visuel pour la progression - une seule fois
-      if (event.percentage >= 90 && !isCompleted) {
+      // Feedback visuel pour la progression - une seule fois (utiliser ref car les closures ne voient pas les updates de state)
+      if (event.percentage >= 90 && !hasShownCompletionToastRef.current) {
+        hasShownCompletionToastRef.current = true;
         setIsCompleted(true);
         toast.success('Leçon complétée ! 🎉', { duration: 3000 });
       }
