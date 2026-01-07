@@ -163,20 +163,17 @@ export default function LessonPlayerPage() {
   });
 
   const handleProgress = async (event: VideoProgressEvent) => {
-    // Invalider les queries de progression pour mettre à jour l'UI
-    if (user?.id) {
-      // Invalider la progression détaillée
+    // Ne rien faire si déjà complétée (éviter les appels inutiles)
+    if (hasShownCompletionToastRef.current) return;
+    
+    // Marquer comme complétée silencieusement quand 90% atteint (pas de toast - trop de spam)
+    if (user?.id && event.percentage >= 90) {
+      hasShownCompletionToastRef.current = true;
+      setIsCompleted(true);
+      // Invalider le cache pour mettre à jour l'UI
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.summary(user.id) });
       queryClient.invalidateQueries({ queryKey: ['member-progress', user.id] });
-      // Invalider les statistiques pour mettre à jour les cartes
       queryClient.invalidateQueries({ queryKey: ['member-stats', user.id] });
-      
-      // Feedback visuel pour la progression - une seule fois (utiliser ref car les closures ne voient pas les updates de state)
-      if (event.percentage >= 90 && !hasShownCompletionToastRef.current) {
-        hasShownCompletionToastRef.current = true;
-        setIsCompleted(true);
-        toast.success('Leçon complétée ! 🎉', { duration: 3000 });
-      }
     }
   };
 
