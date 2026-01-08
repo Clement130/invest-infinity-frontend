@@ -1,15 +1,15 @@
 import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Suspense } from 'react';
+import { motion } from 'framer-motion';
 import MarketingLayout from '../layouts/MarketingLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
-import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PageLoader from '../components/PageLoader';
 import { marketingRoutes, clientRoutes, adminRoutes } from './routes';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 
-const NotFound = lazy(() => import('../pages/NotFound'));
+const NotFound = lazyWithRetry(() => import('../pages/NotFound'));
 
 // Composant pour les transitions de page - optimisé pour mobile
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
