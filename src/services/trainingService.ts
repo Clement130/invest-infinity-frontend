@@ -361,6 +361,25 @@ export async function getAccessList(): Promise<TrainingAccess[]> {
   return (data ?? []).map(mapTrainingAccess);
 }
 
+/**
+ * Récupère les accès manuels d'un utilisateur spécifique
+ * @param userId - ID de l'utilisateur
+ * @returns Liste des module_id auxquels l'utilisateur a accès manuellement
+ */
+export async function getUserManualAccess(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('training_access')
+    .select('module_id')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Erreur lors de la récupération des accès utilisateur:', error);
+    return [];
+  }
+
+  return (data ?? []).map(a => a.module_id);
+}
+
 export async function grantAccess(
   userId: string,
   moduleId: string,

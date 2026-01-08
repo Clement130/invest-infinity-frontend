@@ -186,6 +186,21 @@ serve(async (req) => {
           hasAccess = true;
           break;
         }
+
+        // Cas 4 : Vérifier les accès manuels accordés via training_access
+        // (pour les accès donnés par l'admin indépendamment de la licence)
+        const { data: manualAccess } = await supabase
+          .from('training_access')
+          .select('id, access_type')
+          .eq('user_id', user.id)
+          .eq('module_id', lesson.module_id)
+          .maybeSingle();
+
+        if (manualAccess) {
+          console.log(`[generate-bunny-token] Accès manuel trouvé pour user ${user.id} sur module ${lesson.module_id}`);
+          hasAccess = true;
+          break;
+        }
       }
 
       if (!hasAccess) {

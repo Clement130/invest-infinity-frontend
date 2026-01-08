@@ -2,16 +2,20 @@
  * Hook pour vérifier les entitlements (droits d'accès) d'un utilisateur
  * 
  * Utilise la configuration des offres pour déterminer ce à quoi l'utilisateur a accès
- * selon sa licence actuelle.
+ * selon sa licence actuelle ET les accès manuels accordés par l'admin.
  * 
  * IMPORTANT: La DB stocke les licences en format profile pour les utilisateurs:
  * - profiles.license: 'none' | 'entree' | 'transformation' | 'immersion'
  * - training_modules.required_license: 'starter' | 'pro' | 'elite'
  * 
  * Mapping: entree → starter, transformation → pro, immersion → elite
+ * 
+ * ACCÈS MANUELS: Les accès accordés via training_access sont aussi vérifiés
+ * pour permettre à l'admin de donner des accès spécifiques indépendamment de la licence.
  */
 
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from './useSession';
 import {
   hasLicenseAccess,
@@ -20,6 +24,7 @@ import {
 } from '../config/offers';
 import type { TrainingModule } from '../types/training';
 import { isSuperAdmin } from '../lib/auth';
+import { getUserManualAccess } from '../services/trainingService';
 
 export type SystemLicense = 'starter' | 'pro' | 'elite' | 'none';
 
@@ -77,9 +82,21 @@ function getOfferFromLicense(license: SystemLicense): OfferConfig | null {
 
 /**
  * Hook pour obtenir les entitlements de l'utilisateur actuel
+ * 
+ * Vérifie à la fois :
+ * 1. La licence du profil (profiles.license)
+ * 2. Les accès manuels accordés par l'admin (training_access)
  */
 export function useEntitlements(): UserEntitlements {
-  const { profile } = useSession();
+  const { profile, user } = useSession();
+  
+  // Charger les accès manuels de l'utilisateur
+  const { data: manualAccessModuleIds = [] } = useQuery({
+    queryKey: ['user-manual-access', user?.id],
+    queryFn: () => getUserManualAccess(user!.id),
+    enabled: !!user?.id && profile?.role !== 'admin' && profile?.role !== 'developer',
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   
   const entitlements = useMemo(() => {
     // Check Admin/Developer - accès total à tout
@@ -101,10 +118,15 @@ export function useEntitlements(): UserEntitlements {
     const offer = getOfferFromLicense(systemLicense);
     
     // Fonction pour vérifier l'accès à un module
-    // Les modules ont required_license: 'starter' | 'pro' | 'elite'
+    // Vérifie SOIT la licence SOIT les accès manuels
     const checkModuleAccess = (module: TrainingModule): boolean => {
-      // PROBLÈME CORRIGÉ: Ne pas utiliser de fallback 'starter' par défaut
-      // Si required_license est null/undefined, refuser l'accès (sécurité)
+      // 1. Vérifier les accès manuels accordés par l'admin
+      if (manualAccessModuleIds.includes(module.id)) {
+        return true;
+      }
+      
+      // 2. Vérifier via la licence
+      // Les modules ont required_license: 'starter' | 'pro' | 'elite'
       const moduleRequiredLicense = module.required_license;
       if (!moduleRequiredLicense || !['starter', 'pro', 'elite'].includes(moduleRequiredLicense)) {
         // Module sans licence requise définie = accès refusé par sécurité
@@ -132,7 +154,7 @@ export function useEntitlements(): UserEntitlements {
       hasFeatureAccess: checkFeatureAccess,
       accessibleModules: getAccessibleModules,
     };
-  }, [profile?.license, profile?.email, profile?.role]);
+  }, [profile?.license, profile?.email, profile?.role, manualAccessModuleIds]);
   
   return entitlements;
 }
